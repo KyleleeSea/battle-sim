@@ -41,6 +41,12 @@ const SFX = (() => {
     horn: () => { tone(196, 200, 0.9, 'sawtooth', 0.07); tone(294, 300, 0.9, 'sawtooth', 0.04); },
     click: () => tone(900, 600, 0.04, 'square', 0.03),
     boing: () => tone(170, 430, 0.16, 'sine', 0.12),
+    airhorn: () => { for (const d of [0, 180, 360]) setTimeout(() => { tone(466, 466, 0.16, 'sawtooth', 0.06); tone(587, 587, 0.16, 'sawtooth', 0.04); }, d); },
+    slam: () => { noise(0.5, 'lowpass', 220, 0.9); tone(80, 35, 0.4, 'sine', 0.45); },
+    dig: () => noise(0.25, 'bandpass', 350, 0.5),
+    roar: () => { tone(220, 90, 0.7, 'sawtooth', 0.08); noise(0.6, 'lowpass', 700, 0.4); },
+    specium: () => { tone(1400, 1600, 0.6, 'sine', 0.06); noise(0.6, 'highpass', 3000, 0.25); },
+    bubble: () => { for (let i = 0; i < 3; i++) setTimeout(() => tone(420 + i * 140, 900 + i * 120, 0.07, 'sine', 0.05), i * 70); },
     bang: () => { noise(0.3, 'lowpass', 1400, 0.8); tone(140, 60, 0.2, 'square', 0.08); },
     zap: () => { tone(1400, 180, 0.25, 'sawtooth', 0.06); noise(0.2, 'highpass', 2500, 0.25); },
     pew: () => tone(1700, 380, 0.12, 'square', 0.04),
@@ -66,7 +72,7 @@ const SFX = (() => {
   };
 })();
 
-const W = { units: [], projs: [], parts: [], flashes: [], bolts: [], beams: [], hazards: [], time: 0, state: 'place', over: false, winner: -1, shake: 0, lost: [0, 0], total: [0, 0], battleTime: 0, endT: 0 };
+const W = { units: [], projs: [], parts: [], flashes: [], bolts: [], beams: [], hazards: [], callouts: [], time: 0, state: 'place', over: false, winner: -1, shake: 0, lost: [0, 0], total: [0, 0], battleTime: 0, endT: 0 };
 
 const G = {
   mode: 'sandbox',            // 'sandbox' or 'online'
@@ -145,6 +151,11 @@ const PRESETS = {
   love:    { name: 'Love and hexes', build: (L, t) => { block(L, 'squire', t, 1, 8, 110, 32); block(L, 'bard', t, 1, 2, 170, 100); block(L, 'cupid', t, 1, 5, 240, 50); block(L, 'witch', t, 1, 3, 310, 70); } },
   crew:    { name: 'Pirate crew', build: (L, t) => { block(L, 'fishmonger', t, 1, 6, 110, 40); block(L, 'pirate', t, 1, 8, 200, 34); block(L, 'monkey', t, 1, 6, 270, 40); } },
   forest:  { name: 'Robots and trees', build: (L, t) => { block(L, 'treant', t, 1, 2, 140, 160); block(L, 'robot', t, 1, 6, 250, 44); } },
+  clash:   { name: 'Clash Royale', build: (L, t) => { block(L, 'megaknight', t, 1, 1, 130, 40); block(L, 'hogrider', t, 1, 6, 170, 40); block(L, 'miner', t, 1, 4, 250, 60); block(L, 'musketeer', t, 1, 6, 310, 40); } },
+  lunar:   { name: 'Year of the Dragon', build: (L, t) => { block(L, 'ninja', t, 1, 4, 110, 60); block(L, 'dragon', t, 1, 2, 220, 150); block(L, 'monkey', t, 1, 6, 320, 40); } },
+  party:   { name: 'Another One', build: (L, t) => { block(L, 'databrick', t, 1, 6, 100, 40); block(L, 'squire', t, 1, 10, 150, 30); block(L, 'djkhaled', t, 1, 2, 230, 120); block(L, 'archer', t, 1, 6, 300, 40); } },
+  school:  { name: 'School of fish', build: (L, t) => { block(L, 'fish', t, 1, 6, 180, 50); block(L, 'healer', t, 1, 3, 290, 70); block(L, 'archer', t, 1, 8, 340, 34); } },
+  kaiju:   { name: 'Kaiju attack', build: (L, t) => { block(L, 'ultraman', t, 1, 1, 380, 40); block(L, 'healer', t, 1, 2, 180, 120); } },
   storm:   { name: 'Storm front', build: (L, t) => { block(L, 'squire', t, 1, 10, 110, 30); block(L, 'musketeer', t, 1, 6, 200, 40); block(L, 'storm', t, 1, 4, 280, 60); block(L, 'healer', t, 1, 3, 340, 70); } },
 };
 const SCENARIOS = {
@@ -153,6 +164,9 @@ const SCENARIOS = {
   archers:  { name: 'Archer duel', sides: ['archers', 'archers'] },
   magic:    { name: 'Wizard chaos', sides: ['magic', 'mob'] },
   nuts:     { name: 'Squirrels vs LeBron', sides: ['nuts', 'king'] },
+  clash:    { name: 'Clash Royale vs Year of the Dragon', sides: ['clash', 'lunar'] },
+  party:    { name: 'Another One vs School of fish', sides: ['party', 'school'] },
+  kaiju:    { name: 'Ultraman vs Peasant mob', sides: ['kaiju', 'mob'] },
   circus:   { name: 'Circus vs Farm', sides: ['circus', 'farm'] },
   pirates:  { name: 'Pirates vs Robots', sides: ['crew', 'forest'] },
   love:     { name: 'Love and hexes vs Shield wall', sides: ['love', 'wall'] },
@@ -199,6 +213,9 @@ function eraseAt(x, z, r) {
 }
 
 // ---------- battle flow ----------
+// Height of the tallest giant-sized unit on the field (Ultraman), for framing the camera.
+const tallest = () => W.units.reduce((m, u) => (u.t.colossal ? Math.max(m, 68 * u.S) : m), 0);
+
 // Switches the battlefield: its physics (gravity, ice, lava) and its scenery.
 function applyMap(id) {
   if (!MAPS[id]) return;
@@ -213,15 +230,16 @@ function startBattle(seed) {
   NEXT_ID = 1; seedRng(seed);
   W.units = [];
   for (const team of [0, 1]) for (const a of G.armies[team]) W.units.push(new Unit(a.key, team, a.x, a.z));
-  W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.lost = [0, 0];
+  W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.callouts = []; W.lost = [0, 0];
   W.total = [G.armies[0].length, G.armies[1].length];
   W.time = 0; W.battleTime = 0; W.state = 'battle'; W.over = false; W.winner = -1; W.endT = 0;
   G.bannerShown = false; hideBanner(); hover = null;
+  if (tallest()) View.resetView(tallest());
   SFX.play('horn'); hud();
 }
 
 function backToDeploy() {
-  W.state = 'place'; W.over = false; W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = [];
+  W.state = 'place'; W.over = false; W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.callouts = [];
   W.units = [];
   setArmy(0, G.armies[0]); setArmy(1, G.armies[1]);
   G.bannerShown = false; hideBanner(); hud();
@@ -503,7 +521,7 @@ function wireControls() {
   $('soundBtn').addEventListener('click', () => { SFX.unlock(); const m = SFX.toggle(); $('soundBtn').setAttribute('aria-pressed', String(!m)); $('soundBtn').textContent = m ? 'Sound off' : 'Sound on'; });
   $('zoomIn').addEventListener('click', () => View.zoom(0.8));
   $('zoomOut').addEventListener('click', () => View.zoom(1.25));
-  $('viewBtn').addEventListener('click', () => View.resetView());
+  $('viewBtn').addEventListener('click', () => View.resetView(tallest()));
   const orbit = on => { View.setAuto(on); $('orbitBtn').setAttribute('aria-pressed', String(on)); };
   $('orbitBtn').addEventListener('click', () => orbit(!View.isAuto()));
   window.addEventListener('keydown', e => {
@@ -511,7 +529,7 @@ function wireControls() {
     if (e.code === 'Space') { e.preventDefault(); if (!$('fightBtn').disabled) fightPressed(); }
     else if (/^Digit[1-9]$/.test(e.code)) selectTool(ORDER[+e.code.slice(5) - 1]);
     else if (e.key === 'e' || e.key === 'E') selectTool('erase');
-    else if (e.key === 'r' || e.key === 'R') View.resetView();
+    else if (e.key === 'r' || e.key === 'R') View.resetView(tallest());
     else if (e.key === 'c' || e.key === 'C') orbit(!View.isAuto());
     else if (e.key === 'ArrowLeft') View.rotate(-30, 0);
     else if (e.key === 'ArrowRight') View.rotate(30, 0);

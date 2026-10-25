@@ -63,7 +63,7 @@ function updateProjectiles(W) {
     const rolls = ROLLS[p.kind] !== undefined;
     for (const e of W.units) {
       if (p.kind === 'peel') break;              // peels sail over heads and land
-      if (e.team === p.team) continue;
+      if (e.team === p.team || e.burrow) continue;
       if (!rolls && !e.alive) continue;
       if (p.hits.includes(e.id)) continue;
       const j = projHitsUnit(p, e, ox, oy, oz);
@@ -155,7 +155,7 @@ function updateHazards(W) {
   for (const h of W.hazards) {
     h.life -= DT;
     for (const u of W.units) {
-      if (!u.alive || u.team === h.team || u.stun > 0) continue;
+      if (!u.alive || u.team === h.team || u.stun > 0 || u.burrow) continue;
       const p = u.P, dx = p.x - h.x, dz = p.z - h.z, rr = 8 + u.r * 0.6;
       if (dx * dx + dz * dz > rr * rr) continue;
       const pts = u.body.pts;
@@ -175,6 +175,7 @@ function updateHazards(W) {
 // Blast damage and knockback fall off with distance and hit every unit in range, friend or foe.
 function explode(W, x, y, z, dmg, knock, R0, owner) {
   for (const e of W.units) {
+    if (e.burrow) continue;
     const c = e.body.pts[J.CHEST];
     const dx = c.x - x, dy = c.y - y, dz = c.z - z;
     const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
@@ -239,4 +240,8 @@ function updateParticles(W) {
   W.bolts = W.bolts.filter(b => b.life > 0);
   for (const b of W.beams) b.life -= DT;
   W.beams = W.beams.filter(b => b.life > 0);
+  if (W.callouts) {
+    for (const c of W.callouts) { c.life -= DT; c.y += 20 * DT; }
+    W.callouts = W.callouts.filter(c => c.life > 0);
+  }
 }

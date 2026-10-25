@@ -19,7 +19,7 @@ const World = (() => {
     lights(g, L);
     sky(g, L);
     ground(g, L, map.env, rnd);
-    scenery(g, L, rnd);
+    scenery(g, L, rnd, tick);
     hills(g, L, rnd);
     clouds(g, L, rnd, tick);
     weather(g, L, rnd, tick);
@@ -62,6 +62,104 @@ const World = (() => {
     g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false })));
   }
 
+  // Hardwood planks with court markings, mapped onto the field plane (FIELD_X * 2 + 180 by FIELD_Z + 180).
+  function courtTexture(L) {
+    const PW = FIELD_X * 2 + 180, PH = FIELD_Z + 180;
+    return canvas(1024, Math.round(1024 * PH / PW), (x, w, h) => {
+      const k = w / PW, X = v => (v + PW / 2) * k, Z = v => (v + 90) * k;
+      const r = rng(9);
+      for (let row = 0; row * 10 * k < h; row++) {
+        x.fillStyle = L.stripes[row % 2]; x.fillRect(0, row * 10 * k, w, 10 * k + 1);
+        x.fillStyle = 'rgba(90,50,20,0.25)';
+        for (let j = 0; j < 4; j++) x.fillRect(r() * w, row * 10 * k, 1, 10 * k);
+      }
+      const keyW = 190, keyH = 160, cz = FIELD_Z / 2;
+      x.fillStyle = 'rgba(217,72,59,0.35)'; x.fillRect(X(-FIELD_X), Z(cz - keyH / 2), keyW * k, keyH * k);
+      x.fillStyle = 'rgba(58,111,217,0.35)'; x.fillRect(X(FIELD_X - keyW), Z(cz - keyH / 2), keyW * k, keyH * k);
+      x.strokeStyle = '#ffffff'; x.lineWidth = 3;
+      x.strokeRect(X(-FIELD_X), Z(0), FIELD_X * 2 * k, FIELD_Z * k);
+      x.beginPath(); x.moveTo(X(0), Z(0)); x.lineTo(X(0), Z(FIELD_Z)); x.stroke();
+      x.beginPath(); x.arc(X(0), Z(cz), 60 * k, 0, TAU); x.stroke();
+      x.fillStyle = '#e2711d'; x.beginPath(); x.arc(X(0), Z(cz), 26 * k, 0, TAU); x.fill();
+      x.strokeStyle = PAL.ink; x.lineWidth = 1.5;
+      x.beginPath(); x.arc(X(0), Z(cz), 26 * k, 0, TAU); x.moveTo(X(-26), Z(cz)); x.lineTo(X(26), Z(cz)); x.moveTo(X(0), Z(cz - 26)); x.lineTo(X(0), Z(cz + 26)); x.stroke();
+      x.strokeStyle = '#ffffff'; x.lineWidth = 3;
+      for (const sd of [-1, 1]) {
+        const base = sd * FIELD_X, ft = sd * (FIELD_X - keyW);
+        x.strokeRect(Math.min(X(base), X(ft)), Z(cz - keyH / 2), keyW * k, keyH * k);
+        x.beginPath(); x.arc(X(ft), Z(cz), 60 * k, 0, TAU); x.stroke();
+        // Three-point line: straight from the baseline, then an arc around the basket.
+        const hoop = sd * (FIELD_X - 20), R3 = 240, side = 220, a = Math.asin(side / R3);
+        x.beginPath();
+        x.moveTo(X(base), Z(cz - side)); x.lineTo(X(hoop - sd * R3 * Math.cos(a)), Z(cz - side));
+        if (sd < 0) x.arc(X(hoop), Z(cz), R3 * k, -a, a); else x.arc(X(hoop), Z(cz), R3 * k, PI + a, PI - a, true);
+        x.lineTo(X(base), Z(cz + side));
+        x.stroke();
+      }
+    });
+  }
+
+  // Inside the arena: hoops, bleachers full of a bouncing crowd, a jumbotron and the lights.
+  function arena(g, rnd, tick) {
+    const cz = FIELD_Z / 2;
+    for (const sd of [-1, 1]) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 330, 10), lambert('#3a3f4c'));
+      pole.position.set(sd * (FIELD_X + 190), 165, cz);
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(150, 8, 8), lambert('#3a3f4c'));
+      arm.position.set(sd * (FIELD_X + 115), 310, cz);
+      const board = new THREE.Mesh(new THREE.BoxGeometry(4, 90, 150), lambert('#f4f6fb'));
+      board.position.set(sd * (FIELD_X + 40), 300, cz);
+      const square = new THREE.Mesh(new THREE.BoxGeometry(5, 34, 46), lambert('#d9483b'));
+      square.position.set(sd * (FIELD_X + 40), 286, cz);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(18, 1.6, 8, 24), lambert('#e2711d'));
+      rim.rotation.x = PI / 2; rim.position.set(sd * (FIELD_X + 18), 262, cz);
+      const net = new THREE.Mesh(new THREE.CylinderGeometry(18, 10, 30, 12, 3, true), new THREE.MeshBasicMaterial({ color: '#ffffff', wireframe: true }));
+      net.position.set(sd * (FIELD_X + 18), 246, cz);
+      for (const m of [pole, arm, board, square, rim]) m.castShadow = true;
+      g.add(pole, arm, board, square, rim, net);
+    }
+    // Bleachers: eight stepped rows behind the far sideline and behind each baseline.
+    const seats = [], crowd = [];
+    for (let k = 0; k < 8; k++) {
+      seats.push([0, k * 30 + 15, -170 - k * 45, 1900, 30, 45]);
+      for (let x = -900; x <= 900; x += 30) crowd.push([x + (rnd() - 0.5) * 8, k * 30 + 30, -170 - k * 45]);
+      for (const sd of [-1, 1]) {
+        seats.push([sd * (FIELD_X + 330 + k * 45), k * 30 + 15, cz, 45, 30, FIELD_Z + 300]);
+        for (let z = -120; z <= FIELD_Z + 120; z += 32) crowd.push([sd * (FIELD_X + 330 + k * 45), k * 30 + 30, z + (rnd() - 0.5) * 8]);
+      }
+    }
+    const seatMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert('#2c3a6b'), seats.length);
+    seats.forEach(([x, y, z, sx, sy, sz], i) => place(seatMesh, i, x, y, z, sx, sy, sz));
+    g.add(seatMesh);
+    const bodies = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert('#ffffff'), crowd.length);
+    const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), lambert('#ffffff'), crowd.length);
+    const shirts = ['#d9483b', '#3a6fd9', '#f4b62e', '#ffffff', '#2a2433', '#7be0b8'].map(c => new THREE.Color(c));
+    const skins = ['#f3c9a1', '#d9a57a', '#a8714a', '#6b4229'].map(c => new THREE.Color(c));
+    crowd.forEach((c, i) => { bodies.setColorAt(i, shirts[i % shirts.length]); heads.setColorAt(i, skins[(i * 7) % skins.length]); });
+    g.add(bodies, heads);
+    tick.push(clock => {
+      crowd.forEach(([x, y, z], i) => {
+        const hop = Math.max(0, Math.sin(clock * 6 + i * 1.7)) * 5;
+        place(bodies, i, x, y + 12 + hop, z, 12, 22, 9);
+        place(heads, i, x, y + 29 + hop, z, 6.5, 7, 6.5);
+      });
+      bodies.instanceMatrix.needsUpdate = true; heads.instanceMatrix.needsUpdate = true;
+    });
+    // Jumbotron and the light rigs.
+    const screen = canvas(256, 128, (x, w, h) => {
+      x.fillStyle = '#0d1020'; x.fillRect(0, 0, w, h);
+      x.fillStyle = '#d9483b'; x.fillRect(12, 34, 100, 60);
+      x.fillStyle = '#3a6fd9'; x.fillRect(144, 34, 100, 60);
+      x.fillStyle = '#ffffff'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.fillText('VS', 128, 74);
+    });
+    const tron = new THREE.Mesh(new THREE.BoxGeometry(260, 150, 260), [0, 1, 2, 3, 4, 5].map(i => (i === 2 || i === 3 ? lambert('#1a1d2b') : new THREE.MeshBasicMaterial({ map: screen }))));
+    tron.position.set(0, 1500, cz);
+    g.add(tron);
+    const lamps = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ color: '#fff8e0', fog: false }), 16);
+    for (let i = 0; i < 16; i++) place(lamps, i, -1200 + (i % 8) * 340, 1900, cz - 500 + Math.floor(i / 8) * 1000, 40, 18, 40);
+    g.add(lamps);
+  }
+
   const lavaTexture = () => canvas(256, 256, (x, w, h) => {
     x.fillStyle = '#e8481a'; x.fillRect(0, 0, w, h);
     const r = rng(11);
@@ -81,8 +179,8 @@ const World = (() => {
     plane.rotation.x = -PI / 2; plane.receiveShadow = !L.lavaGround;
     g.add(plane);
 
-    // The field: mown stripes, plus ice cracks or moon dust where the map has them.
-    const tex = canvas(512, 256, (x, w, h) => {
+    // The field: mown stripes (or a hardwood court), plus ice cracks or moon dust where the map has them.
+    const tex = L.court ? courtTexture(L) : canvas(512, 256, (x, w, h) => {
       for (let i = 0; i < 16; i++) { x.fillStyle = L.stripes[i % 2]; x.fillRect(i * 32, 0, 32, h); }
       const r = rng(5);
       if (L.cracks) {
@@ -117,7 +215,7 @@ const World = (() => {
   }
 
   // Props scattered around the field.
-  function scenery(g, L, rnd) {
+  function scenery(g, L, rnd, tick) {
     const spots = [];
     while (spots.length < 110) {
       const a = rnd() * TAU, d = 1100 + rnd() * 2200;
@@ -193,6 +291,9 @@ const World = (() => {
         glow.position.set(600, 1800, -5200); glow.scale.set(260, 120, 260); g.add(glow);
         break;
       }
+      case 'arena':
+        arena(g, rnd, tick);
+        return;
       case 'lollipops': {
         const sticks = add(new THREE.InstancedMesh(cyl, lambert('#ffffff'), n));
         const candy = add(new THREE.InstancedMesh(cyl, lambert('#ffffff'), n));
@@ -219,6 +320,7 @@ const World = (() => {
   }
 
   function hills(g, L, rnd) {
+    if (!L.hills) return;
     const geo = new THREE.SphereGeometry(1, 24, 12), mats = L.hills.map(lambert);
     for (let i = 0; i < 9; i++) {
       const a = (i / 9) * TAU + 0.3, d = 5600 + rnd() * 1400;

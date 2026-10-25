@@ -6,7 +6,7 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-30 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
+38 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
 Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 
 | Unit | Trick |
@@ -26,12 +26,21 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | Robot | A laser that never misses. |
 | Treant | A grumpy old oak that swats whole rows aside. |
 | LeBron James | Bouncing basketballs from range, slam dunks up close. |
+| Fish | Summons little fish, three at a time. |
+| Databrick | A literal brick. Hops onto people; very hard to break. |
+| Hog Rider | Rides a hog. Very fast, has a hammer. |
+| Miner | Tunnels underground and pops up behind enemy lines. |
+| DJ Khaled | Another one: pumps up allies and clones one every other song. |
+| Mega Knight | Leaps onto crowds and lands like a meteor. |
+| Dragon | A Chinese dragon in a rice hat. Breathes fire in a wide cone. |
+| Ultraman | Fifty metres tall, to scale. Crushes what's underfoot; fires the Specium Ray. |
 
 ## Maps
 
 | Map | Twist |
 |---|---|
 | Meadow | None. Rolling green hills. |
+| Basketball Court | Polished hardwood in an arena: feet slip and bodies slide. |
 | Desert | Soft sand: everyone trudges slower and stops sliding sooner. |
 | Frozen Lake | Ice: feet skid and knocked-over units slide a long way. |
 | The Moon | Low gravity: hits send units much higher and further. |

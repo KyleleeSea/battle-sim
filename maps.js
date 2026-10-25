@@ -11,6 +11,15 @@ const MAPS = {
       scenery: 'trees', clouds: { color: '#ffffff', count: 12 },
     },
   },
+  court: {
+    name: 'Basketball Court', blurb: 'Polished hardwood under the arena lights. Feet slip and bodies slide.',
+    env: { friction: 0.88, traction: 0.7, bounce: 0.3 },
+    look: {
+      skyTop: '#07080f', horizon: '#141829', fog: [3200, 9500], ground: '#23273a', court: true, stripes: ['#d9a066', '#cf955b'],
+      hemi: ['#fff6e8', '#4a3a2a', 0.9], sun: ['#ffffff', 0.75], hills: null,
+      scenery: 'arena', clouds: null,
+    },
+  },
   desert: {
     name: 'Desert', blurb: 'Soft sand: everyone trudges a little slower and stops sliding sooner.',
     env: { friction: 0.5, traction: 0.8 },
@@ -57,7 +66,7 @@ const MAPS = {
     },
   },
 };
-const MAP_ORDER = ['meadow', 'desert', 'winter', 'moon', 'volcano', 'candy'];
+const MAP_ORDER = ['meadow', 'court', 'desert', 'winter', 'moon', 'volcano', 'candy'];
 
 function setEnv(id) {
   Object.assign(ENV, ENV_DEFAULT, (MAPS[id] || MAPS.meadow).env);

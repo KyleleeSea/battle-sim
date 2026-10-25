@@ -5,7 +5,7 @@
 // from the same armies and seed, so nothing else has to travel between players.
 
 const Net = (() => {
-  const PROTO = 6;               // Bump whenever the simulation changes (and the ?v= on index.html's scripts).
+  const PROTO = 7;               // Bump whenever the simulation changes (and the ?v= on index.html's scripts).
   const PREFIX = 'mabs-p' + PROTO + '-';
   const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : 0);

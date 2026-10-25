@@ -72,11 +72,32 @@ Object.assign(TYPES, {
   treant:     { name: 'Treant', cost: 900, hp: 1100, S: 1.9, speed: 28, reach: 50, dmg: 70, cd: 2.2, knock: 900, style: 'punch', anim: 1.0, weapon: 'none', hat: 'treant', block: 0, aoe: true, fat: 1.2, heavy: 1.5,
                 blurb: 'A grumpy old oak. Swats whole rows aside.' },
 });
+Object.assign(TYPES, {
+  fish:       { name: 'Fish', cost: 350, hp: 320, S: 1.1, speed: 50, range: 220, dmg: 0, cd: 4, knock: 0, style: 'summon', summon: 'minnow', anim: 0.8, weapon: 'none', hat: 'crown', block: 0, body: 'fish',
+                blurb: 'A large, determined fish. Summons more fish.' },
+  minnow:     { name: 'Little Fish', cost: 0, hp: 26, S: 0.5, speed: 120, reach: 12, dmg: 10, cd: 0.6, knock: 90, style: 'pounce', anim: 0.45, weapon: 'none', hat: 'none', block: 0, body: 'fish',
+                blurb: 'Summoned by a Fish.' },
+  djkhaled:   { name: 'DJ Khaled', cost: 500, hp: 160, S: 1.15, speed: 46, auraR: 180, dmg: 0, cd: 2.5, knock: 0, style: 'aura', aura: 'anotherone', support: true, anim: 0.9, weapon: 'mic', hat: 'dj', block: 0, fat: 1.2,
+                blurb: 'Another one. Pumps up nearby allies and clones one every other song.' },
+  miner:      { name: 'Miner', cost: 250, hp: 140, S: 1, speed: 55, reach: 30, dmg: 28, cd: 1.0, knock: 300, style: 'chop', anim: 0.55, weapon: 'pickaxe', hat: 'miner', block: 0, burrow: true,
+                blurb: 'Tunnels under the battlefield and pops up behind enemy lines.' },
+  megaknight: { name: 'Mega Knight', cost: 700, hp: 900, S: 1.5, speed: 40, reach: 40, dmg: 70, cd: 1.6, knock: 600, style: 'punch', anim: 0.8, weapon: 'mace', hat: 'megaknight', block: 0, aoe: true, fat: 1.35, heavy: 1.8, leap: true,
+                blurb: 'Leaps onto crowds from a distance and lands like a meteor.' },
+  hogrider:   { name: 'Hog Rider', cost: 230, hp: 200, S: 1, speed: 170, reach: 34, dmg: 34, cd: 0.9, knock: 450, style: 'chop', anim: 0.5, weapon: 'hammer', hat: 'hogrider', block: 0, mount: true,
+                blurb: 'Hog Riderrrr! Very fast, very loud, has a hammer.' },
+  dragon:     { name: 'Dragon', cost: 1100, hp: 1000, S: 1.6, speed: 60, range: 170, dmg: 55, cd: 3, knock: 160, style: 'breath', anim: 0.6, weapon: 'none', hat: 'ricehat', block: 0, body: 'dragon', heavy: 1.5,
+                blurb: 'A long, lucky dragon in a rice hat. Breathes fire in a wide cone.' },
+  databrick:  { name: 'Databrick', cost: 200, hp: 700, S: 1, speed: 40, reach: 22, dmg: 40, cd: 1.6, knock: 700, style: 'pounce', anim: 0.6, weapon: 'none', hat: 'none', block: 0, body: 'brick', heavy: 3,
+                blurb: 'A brick. Hops over and lands on people. Very hard to break.' },
+  // Scale 29.5: a body is 67.6 units tall at scale 1 and people are 1.75 m, so this is 50 m.
+  ultraman:   { name: 'Ultraman', cost: 3500, hp: 9000, S: 29.5, speed: 230, range: 800, dmg: 260, cd: 4, knock: 1400, style: 'specium', anim: 1.2, weapon: 'none', hat: 'ultraman', block: 0, stomp: true, colossal: true,
+                blurb: '50 metres tall. Crushes whatever is underfoot and fires the Specium Ray.' },
+});
 TYPES.giant.fat = 1.15;
 const ORDER = ['chicken', 'squirrel', 'peasant', 'grandma', 'squire', 'fishmonger', 'hoplite', 'berserker', 'knight', 'ninja', 'scarecrow',
   'archer', 'musketeer', 'monkey', 'jester', 'thrower', 'pirate', 'bomber', 'cupid', 'bard', 'healer', 'disco', 'wizard', 'witch', 'storm',
-  'robot', 'sumo', 'treant', 'lebron', 'giant'];
-const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, none: 2 };
+  'robot', 'sumo', 'treant', 'lebron', 'giant', 'fish', 'databrick', 'hogrider', 'miner', 'djkhaled', 'megaknight', 'dragon', 'ultraman'];
+const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, none: 2 };
 // What each ranged style throws or fires unless the unit names its own projectile.
 const DEFAULT_PROJ = { bow: 'arrow', gun: 'bullet', throw: 'boulder', hoops: 'ball', cast: 'fire' };
 const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06 };
@@ -102,6 +123,8 @@ class Unit {
     this.hitFlash = 0; this.kills = 0;
     this.home = team;               // the side it was placed on; `team` changes while charmed
     this.charm = 0; this.charmCool = 0; this.inspired = 0; this.dance = 0;
+    this.burrow = false; this.emerged = false; this.leaping = false; this.leapT = 0; this.leapCd = 0;
+    this.breath = 0; this.footUp = [false, false]; this.clones = 0; this.owner = null;
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -110,7 +133,7 @@ function nearestEnemy(u, units) {
   const p = u.P;
   let best = null, bd = Infinity;
   for (const e of units) {
-    if (!e.alive || e.team === u.team) continue;
+    if (!e.alive || e.team === u.team || e.burrow) continue;
     // Scarecrows are irresistible: they count as much closer than they are.
     const dx = e.P.x - p.x, dz = e.P.z - p.z, d = (dx * dx + dz * dz) * (e.t.taunt ? 0.2 : 1);
     if (d < bd) { bd = d; best = e; }
@@ -163,6 +186,7 @@ function updateUnit(u, W, active) {
   if (u.dance > 0) { u.dance -= DT; u.act = 'idle'; }
   if (u.inspired > 0) u.inspired -= DT;
   u.cdT -= DT * (u.inspired > 0 ? 1.7 : 1);
+  if (u.leapCd > 0) u.leapCd -= DT;
 
   let moving = false;
   const cheer = active && W.over;
@@ -173,6 +197,11 @@ function updateUnit(u, W, active) {
       u.retarget = 0.35 + R() * 0.2;
     }
   } else u.target = null;
+
+  if (active && u.t.burrow && !u.emerged && !cheer && u.stun <= 0 && burrowStep(u, W)) return;
+  if (u.breath > 0) { u.breath -= DT; if (u.stun <= 0) breathe(u, W); }
+  if (u.leaping) checkLanding(u, W);
+  if (u.t.stomp && active) stomp(u, W);
 
   const T = u.target, pel = u.P;
   if (T && u.stun <= 0 && !cheer && !(u.dance > 0)) {
@@ -189,8 +218,13 @@ function updateUnit(u, W, active) {
     } else {
       const ranged = !!u.t.range;
       const reach = ranged ? u.t.range : u.t.reach + T.r;
-      if (u.act !== 'attack') {
-        if (d > reach * (ranged ? 1 : 0.85)) moving = true;
+      if (u.t.colossal) {
+        // Keeps striding through the enemy while the Specium Ray recharges.
+        moving = d > 150 + T.r;
+        if (u.act !== 'attack' && u.cdT <= 0 && d < reach && u.recover > 0.6) startAttack(u);
+      } else if (u.act !== 'attack') {
+        if (u.t.leap && !u.leaping && u.leapCd <= 0 && d > 90 && d < 300 && u.recover > 0.6) leap(u, T, d);
+        else if (d > reach * (ranged ? 1 : 0.85)) moving = true;
         else if (u.cdT <= 0 && u.recover > 0.6) startAttack(u);
       }
     }
@@ -269,6 +303,7 @@ function armPose(u, moving, cheer, time) {
   const sw = moving ? dsin(u.phase) * 3 : 0;
   const swing = (a, s) => [a[0] + s, a[1], a[2], a[3], a[4], a[5]];
   if (u.dance > 0 || u.t.aura === 'disco') return dancePose(u, time);
+  if (u.leaping) return { r: [4, 16, 7, 0.2, 1, 0], l: [4, 16, -7, 0.2, 1, 0] };
   if (cheer) {
     const b = dsin(time * 9 + u.phase) * 2;
     return { r: [4, 16 + b, 7, 0.2, 1, 0], l: [4, 16 - b, -7, 0.2, 1, 0] };
@@ -312,10 +347,21 @@ function armPose(u, moving, cheer, time) {
       return { r, l: swing(HANG_L, -sw) };
     }
     case 'aura': {
+      if (u.t.aura === 'anotherone') {
+        // Mic to the mouth; the other hand goes up when the beat drops.
+        return { r: [7, 9, 3, 0.2, 1, 0], l: att ? [6, 17, -6, 0.2, 1, 0] : swing(HANG_L, -sw) };
+      }
       // Bard: left hand on the lute's neck, right hand strumming.
       const strum = att ? dsin(t * 40) * 2 : 0;
       return { r: [7, -6 + strum, 3, 0.1, -1, 0], l: [13, 2, -3, 1, 0.5, 0] };
     }
+    case 'summon': {
+      const flap = att ? dsin(t * 30) * 3 : dsin(time * 4 + u.phase);
+      return { r: [3, -4 + flap, 9, 0, -1, 0.3], l: [3, -4 + flap, -9, 0, -1, -0.3] };
+    }
+    case 'specium':
+      // The Specium pose: right forearm upright, left forearm across in front of it.
+      return att ? { r: [12, 2, 1, 0, 1, 0], l: [10, -2, -5, 0, 0, 1] } : { r: swing(HANG_R, sw), l: swing(HANG_L, -sw) };
     case 'laser':
       return { r: att ? [16, 4, 3, 1, u.aimY, 0] : [10, -2, 5, 1, 0.1, 0], l: swing(HANG_L, -sw) };
     case 'pounce': {
@@ -342,12 +388,13 @@ function musclePose(u, moving, m, cheer, W) {
   const vp = { x: pel.x - pel.px, y: pel.y - pel.py, z: pel.z - pel.pz };
   const hipH = (BONES.thigh + BONES.shin) * S * 0.92;
   const footY = Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y);
-  const grounded = footY < 6 * S || pel.y < 20 * S;
+  const mount = u.t.mount;      // riders' feet dangle beside the hog instead of walking
+  const grounded = !u.leaping && (mount ? pel.y < hipH * 1.4 : footY < 6 * S || pel.y < 20 * S);
 
   if (grounded && m > 0.3) {
     // Standing units hold their own weight; stunned or airborne ones get the full force of gravity.
     const gc = GRAV * DT * DT * m;
-    for (let i = 0; i < pts.length; i++) if (i !== J.LFOOT && i !== J.RFOOT) pts[i].py -= gc;
+    for (let i = 0; i < pts.length; i++) if (mount || (i !== J.LFOOT && i !== J.RFOOT)) pts[i].py -= gc;
     const sp = moving ? u.t.speed * DT * (u.inspired > 0 ? 1.35 : 1) : 0;
     const k = 0.18 * m * ENV.traction;
     vp.x += (fx * sp - vp.x) * k;
@@ -366,7 +413,12 @@ function musclePose(u, moving, m, cheer, W) {
 
   const stride = moving ? 7 * S : 0, lift = moving ? 5 * S : 0;
   const drop = Math.max(0, pel.y - hipH);
-  for (const side of [-1, 1]) {
+  if (mount) for (const side of [-1, 1]) {
+    const tx = pel.x + sx * side * 9 * S + fx * 2 * S, tz = pel.z + sz * side * 9 * S + fz * 2 * S;
+    drive(pts[side < 0 ? J.LFOOT : J.RFOOT], tx, pel.y - 15 * S, tz, 0.25 * m, 0.3 * m, vp, pel);
+    drive(pts[side < 0 ? J.LKNEE : J.RKNEE], pel.x + sx * side * 8 * S + fx * 5 * S, pel.y - 6 * S, pel.z + sz * side * 8 * S + fz * 5 * S, 0.15 * m, 0.25 * m, vp, pel);
+  }
+  else for (const side of [-1, 1]) {
     const ph = u.phase + (side < 0 ? 0 : PI);
     const fo = dsin(ph) * stride, ly = Math.max(0, dcos(ph)) * lift + drop;
     const tx = pel.x + fx * fo + sx * side * 4 * S, tz = pel.z + fz * fo + sz * side * 4 * S;
@@ -420,6 +472,9 @@ function lead(u, T, speed, g, high) {
 
 function strike(u, W) {
   const st = u.t.style, pts = u.body.pts;
+  if (st === 'summon') { summonFish(u, W); return; }
+  if (st === 'specium') { speciumRay(u, W); return; }
+  if (st === 'breath') { u.breath = 1.2; SFX.play('roar'); return; }
   if (st === 'heal') {
     const T = u.target;
     if (!T || !T.alive || T.team !== u.team) return;
@@ -438,17 +493,20 @@ function strike(u, W) {
   if (st === 'aura') {
     const pel = u.P, R0 = u.t.auraR;
     for (const e of W.units) {
-      if (!e.alive || e === u) continue;
+      if (!e.alive || e === u || e.burrow) continue;
       const dx = e.P.x - pel.x, dz = e.P.z - pel.z;
       if (dx * dx + dz * dz > R0 * R0) continue;
-      if (u.t.aura === 'inspire' && e.team === u.team) e.inspired = 4.5;
+      if (u.t.aura !== 'disco' && e.team === u.team) e.inspired = 4.5;
       else if (u.t.aura === 'disco' && e.team !== u.team && e.stun <= 0) {
         e.dance = 1.8; e.act = 'idle';
         addVel(e.body.pts[J.CHEST], 0, 110 / e.mass, 0);
       }
     }
     const c = pts[J.HEAD];
-    if (u.t.aura === 'disco') {
+    if (u.t.aura === 'anotherone') {
+      glowBits(W, c.x, c.y, c.z, 8, ['#ffd166', '#ffffff', '#ff5fd2'], 50, 2.5);
+      if (u.alt) anotherOne(u, W); else SFX.play('strum');
+    } else if (u.t.aura === 'disco') {
       glowBits(W, c.x, c.y + 20, c.z, 16, ['#ff5fd2', '#5fe3ff', '#ffe45f', '#8cff6b'], 140, 3);
       W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.4, max: 0.4, r: R0, disco: true });
       SFX.play('disco');
@@ -477,7 +535,7 @@ function strike(u, W) {
     if (st === 'hoops' && tx * tx + tz * tz < (50 * u.S + T.r) ** 2) {
       // Slam dunk: everyone close in front goes up in the air.
       for (const e of W.units) {
-        if (!e.alive || e.team === u.team) continue;
+        if (!e.alive || e.team === u.team || e.burrow) continue;
         const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
         if (d > 50 * u.S + e.r) continue;
         const k = u.t.knock * 1.2;
@@ -507,7 +565,7 @@ function strike(u, W) {
   }
   const pel = u.P, victims = [];
   for (const e of W.units) {
-    if (!e.alive || e.team === u.team) continue;
+    if (!e.alive || e.team === u.team || e.burrow) continue;
     const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz);
     if (d > u.t.reach * 1.15 + e.r) continue;
     if ((dx * u.fx + dz * u.fz) / (d || 1) < 0.25) continue;
@@ -543,7 +601,7 @@ function chainLightning(u, T, W) {
     from = { x: c.x, y: c.y, z: c.z };
     let next = null, bd = 140 * 140;
     for (const e of W.units) {
-      if (!e.alive || e.team === u.team || struck.includes(e.id)) continue;
+      if (!e.alive || e.team === u.team || e.burrow || struck.includes(e.id)) continue;
       const ex = e.P.x - c.x, ez = e.P.z - c.z, d2 = ex * ex + ez * ez;
       if (d2 < bd) { bd = d2; next = e; }
     }
@@ -643,7 +701,7 @@ function kill(e, W, src) {
 function lavaBurn(W) {
   if (!ENV.lava) return;
   for (const u of W.units) {
-    if (!u.alive) continue;
+    if (!u.alive || u.burrow) continue;
     const p = u.P, pts = u.body.pts;
     let rate = Math.abs(p.x) < FIELD_X + 60 && p.z > -60 && p.z < FIELD_Z + 60 ? 0 : 160;
     if (!rate && ENV.pools) for (const [x, z, r] of ENV.pools) if ((p.x - x) ** 2 + (p.z - z) ** 2 < r * r) { rate = 60; break; }
@@ -656,8 +714,179 @@ function lavaBurn(W) {
   }
 }
 
+// ---------- special abilities ----------
+function spawnUnit(W, key, x, z, src) {
+  const n = new Unit(key, src.team, Math.round(x), Math.round(z));
+  n.home = src.team; n.owner = src; n.fx = src.fx; n.fz = src.fz;
+  W.units.push(n);
+  if (W.total) W.total[n.home]++;
+  return n;
+}
+
+// Fish: three little fish at a time, up to a dozen alive per big fish.
+function summonFish(u, W) {
+  let mine = 0;
+  for (const e of W.units) if (e.alive && e.owner === u) mine++;
+  const p = u.P;
+  for (let i = 0; i < 3 && mine < 12; i++, mine++) {
+    const a = R() * TAU, d = 20 + R() * 25;
+    spawnUnit(W, u.t.summon, p.x + dcos(a) * d, p.z + dsin(a) * d, u);
+  }
+  glowBits(W, p.x, 10, p.z, 12, ['#7fd6ff', '#c9f1ff'], 50, 3);
+  SFX.play('bubble');
+}
+
+// DJ Khaled: "Another one." Copies the nearest ally worth 400 gold or less.
+function anotherOne(u, W) {
+  if (u.clones >= 8) return;
+  const p = u.P;
+  let best = null, bd = Infinity;
+  for (const a of W.units) {
+    if (!a.alive || a.team !== u.team || a === u || a.burrow || a.t.cost > 400 || a.key === 'djkhaled' || !ORDER.includes(a.key)) continue;
+    const dx = a.P.x - p.x, dz = a.P.z - p.z, d = dx * dx + dz * dz;
+    if (d < bd) { bd = d; best = a; }
+  }
+  if (!best) return;
+  const b = best.P;
+  spawnUnit(W, best.key, b.x - u.fx * 20, b.z + (R() < 0.5 ? -22 : 22), u);
+  u.clones++;
+  if (W.callouts) W.callouts.push({ x: p.x, y: u.body.pts[J.HEAD].y + 34, z: p.z, life: 1.4, max: 1.4 });
+  SFX.play('airhorn');
+}
+
+// Miner: travels underground (untargetable) toward the enemy unit furthest back, then pops up.
+function burrowStep(u, W) {
+  const p = u.P, sign = u.team === 0 ? 1 : -1;
+  let best = null, bv = -Infinity;
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const v = e.P.x * sign;
+    if (v > bv) { bv = v; best = e; }
+  }
+  if (!best) { emerge(u, W); return false; }
+  const dx = best.P.x - p.x, dz = best.P.z - p.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+  if (d < 28 + best.r) { emerge(u, W); return false; }
+  if (!u.burrow) { u.burrow = true; puff(W, p.x, 2, p.z, 10, '#8a6a45', 60, 6); SFX.play('dig'); }
+  const step = Math.min(d, 170 * DT), mx = dx / d * step, mz = dz / d * step;
+  for (const q of u.body.pts) { q.x += mx; q.z += mz; q.px += mx; q.pz += mz; }
+  u.fx = dx / d; u.fz = dz / d; u.target = best;
+  if (Math.random() < 0.25) puff(W, p.x, 1, p.z, 1, '#8a6a45', 25, 4);
+  musclePose(u, false, 1, false, W);
+  return true;
+}
+
+function emerge(u, W) {
+  u.burrow = false; u.emerged = true;
+  const p = u.P;
+  for (const q of u.body.pts) addVel(q, 0, 260, 0);
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const dx = e.P.x - p.x, dz = e.P.z - p.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+    if (d > 60 + e.r) continue;
+    hurt(e, 30, dx / d * 300, 250, dz / d * 300, null, W, u);
+  }
+  puff(W, p.x, 2, p.z, 14, '#8a6a45', 90, 7);
+  SFX.play('dig');
+}
+
+// Mega Knight: a high leap at the target, then a slam on landing.
+function leap(u, T, d) {
+  const pts = u.body.pts;
+  if (Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) > 6 * u.S) return;
+  const flight = 0.8, vy = GRAV * flight / 2, vh = d / flight;
+  const dx = (T.P.x - u.P.x) / d, dz = (T.P.z - u.P.z) / d;
+  for (const q of pts) addVel(q, dx * vh, vy, dz * vh);
+  u.leaping = true; u.leapT = 0; u.leapCd = 5;
+  SFX.play('whoosh');
+}
+
+function checkLanding(u, W) {
+  u.leapT += DT;
+  const pts = u.body.pts;
+  if (u.leapT < 0.25 || Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) > 3 * u.S) {
+    if (u.leapT > 3) u.leaping = false;
+    return;
+  }
+  u.leaping = false;
+  const p = u.P, R0 = 110;
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const dx = e.P.x - p.x, dz = e.P.z - p.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+    if (d > R0 + e.r) continue;
+    const f = 1 - d / (R0 + e.r) * 0.5, k = 700 * f;
+    hurt(e, 140 * f, dx / d * k, k, dz / d * k, null, W, u);
+  }
+  W.shake = Math.max(W.shake, 9);
+  W.flashes.push({ x: p.x, y: 4, z: p.z, life: 0.35, max: 0.35, r: R0 });
+  puff(W, p.x, 2, p.z, 14, '#cdbb98', 120, 8);
+  SFX.play('slam');
+}
+
+// Dragon: a cone of fire in front of the head for as long as `breath` lasts.
+function breathe(u, W) {
+  const h = u.body.pts[J.HEAD], reach = 115 * u.S;
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const c = e.body.pts[J.CHEST], dx = c.x - h.x, dz = c.z - h.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+    if (d > reach + e.r || (dx * u.fx + dz * u.fz) / d < 0.7) continue;
+    e.hp -= u.t.dmg * DT; e.hitFlash = 0.05;
+    addVel(c, u.fx * 40, 10, u.fz * 40);
+    if (e.hp <= 0) kill(e, W, u);
+  }
+  for (let i = 0; i < 2; i++) {
+    W.parts.push({ kind: 'fire', x: h.x + u.fx * 12 * u.S, y: h.y, z: h.z + u.fz * 12 * u.S, vx: u.fx * rand(200, 330) + rand(-60, 60), vy: rand(-30, 40), vz: u.fz * rand(200, 330) + rand(-60, 60), life: rand(0.4, 0.6), max: 0.6, size: rand(5, 9) });
+  }
+}
+
+// Ultraman: each foot that comes down flattens whatever is under it, friend or foe.
+function stomp(u, W) {
+  const S = u.S;
+  for (const side of [0, 1]) {
+    const f = u.body.pts[side ? J.RFOOT : J.LFOOT];
+    if (f.y > 1.5 * S) { u.footUp[side] = true; continue; }
+    if (!u.footUp[side] || f.y > 0.3 * S) continue;
+    u.footUp[side] = false;
+    const R0 = 4.5 * S;
+    for (const e of W.units) {
+      if (!e.alive || e === u || e.burrow || e.t.colossal) continue;
+      const dx = e.P.x - f.x, dz = e.P.z - f.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+      if (d > R0 + e.r) continue;
+      hurt(e, e.team === u.team ? 150 : 400, dx / d * 900, 700, dz / d * 900, null, W, u);
+    }
+    W.shake = Math.max(W.shake, 7);
+    W.flashes.push({ x: f.x, y: 4, z: f.z, life: 0.3, max: 0.3, r: R0 });
+    puff(W, f.x, 2, f.z, 12, '#cdbb98', 160, 14);
+    SFX.play('slam');
+  }
+}
+
+// The Specium Ray: a beam from the chest through the target, hitting every enemy along it.
+function speciumRay(u, W) {
+  const T = u.target && u.target.alive ? u.target : nearestEnemy(u, W.units);
+  if (!T) return;
+  const S = u.S, c = u.body.pts[J.CHEST], tc = T.body.pts[J.CHEST];
+  const from = { x: c.x + u.fx * 10 * S, y: c.y - 4 * S, z: c.z + u.fz * 10 * S };
+  let dx = tc.x - from.x, dy = tc.y - from.y, dz = tc.z - from.z;
+  const L = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+  dx /= L; dy /= L; dz /= L;
+  let len = L + 300;
+  if (dy < 0) len = Math.min(len, from.y / -dy);   // the beam stops at the ground
+  const end = { x: from.x + dx * len, y: from.y + dy * len, z: from.z + dz * len };
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const q = e.body.pts[J.CHEST];
+    if (segDist(from.x, from.y, from.z, end.x, end.y, end.z, q.x, q.y, q.z) > 45 + e.r) continue;
+    const k = u.t.knock;
+    hurt(e, u.t.dmg, dx * k, k * 0.5, dz * k, null, W, u);
+  }
+  W.beams.push({ a: u, from, end, life: 0.5, specium: true });
+  W.flashes.push({ x: end.x, y: Math.max(end.y, 6), z: end.z, life: 0.4, max: 0.4, r: 120, bolt: true });
+  W.shake = Math.max(W.shake, 6);
+  SFX.play('specium');
+}
+
 function separate(units) {
-  const a = units.filter(u => u.alive).sort((p, q) => p.P.x - q.P.x);
+  const a = units.filter(u => u.alive && !u.burrow && !u.t.colossal).sort((p, q) => p.P.x - q.P.x);
   for (let i = 0; i < a.length; i++) {
     const u = a[i], p = u.P;
     for (let j = i + 1; j < a.length; j++) {
