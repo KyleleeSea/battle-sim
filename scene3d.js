@@ -79,10 +79,10 @@ const View = (() => {
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
     return clamp((FIELD_X + 60) / Math.tan(hfov / 2), 700, 5200);
   }
-  // `tall`: height of the tallest unit on the field, so a 50 m Ultraman fits in the frame.
+  // `tall`: height of the tallest unit on the field, so anything far taller than a Giant still fits in the frame.
   function resetView(tall) {
     cam.tx = 0; cam.ty = 20; cam.tz = FIELD_Z / 2 + 30; cam.theta = 0; cam.phi = 1.08; cam.dist = fitDist() * 0.82;
-    if (tall > 300) { cam.ty = tall * 0.38; cam.phi = 1.25; cam.dist = Math.min(8000, Math.max(cam.dist, tall * 2.1)); }
+    if (tall > 600) { cam.ty = tall * 0.38; cam.phi = 1.25; cam.dist = Math.min(8000, Math.max(cam.dist, tall * 2.1)); }
   }
   function rotate(dx, dy) {
     cam.theta -= dx * 0.006;

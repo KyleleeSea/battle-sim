@@ -33,7 +33,7 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | DJ Khaled | Another one: pumps up allies and clones one every other song. |
 | Mega Knight | Leaps onto crowds and lands like a meteor. |
 | Dragon | A Chinese dragon in a rice hat. Breathes fire in a wide cone. |
-| Ultraman | Fifty metres tall, to scale. Crushes what's underfoot; fires the Specium Ray. |
+| Ultraman | A giant of light, twice a Giant's height. Stomps enemies underfoot; fires the Specium Ray. |
 
 ## Maps
 

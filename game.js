@@ -155,7 +155,7 @@ const PRESETS = {
   lunar:   { name: 'Year of the Dragon', build: (L, t) => { block(L, 'ninja', t, 1, 4, 110, 60); block(L, 'dragon', t, 1, 2, 220, 150); block(L, 'monkey', t, 1, 6, 320, 40); } },
   party:   { name: 'Another One', build: (L, t) => { block(L, 'databrick', t, 1, 6, 100, 40); block(L, 'squire', t, 1, 10, 150, 30); block(L, 'djkhaled', t, 1, 2, 230, 120); block(L, 'archer', t, 1, 6, 300, 40); } },
   school:  { name: 'School of fish', build: (L, t) => { block(L, 'fish', t, 1, 6, 180, 50); block(L, 'healer', t, 1, 3, 290, 70); block(L, 'archer', t, 1, 8, 340, 34); } },
-  kaiju:   { name: 'Kaiju attack', build: (L, t) => { block(L, 'ultraman', t, 1, 1, 380, 40); block(L, 'healer', t, 1, 2, 180, 120); } },
+  kaiju:   { name: 'Ultraman\u2019s squad', build: (L, t) => { block(L, 'squire', t, 1, 8, 110, 32); block(L, 'ultraman', t, 1, 1, 230, 40); block(L, 'healer', t, 1, 2, 300, 120); block(L, 'archer', t, 1, 6, 340, 40); } },
   storm:   { name: 'Storm front', build: (L, t) => { block(L, 'squire', t, 1, 10, 110, 30); block(L, 'musketeer', t, 1, 6, 200, 40); block(L, 'storm', t, 1, 4, 280, 60); block(L, 'healer', t, 1, 3, 340, 70); } },
 };
 const SCENARIOS = {

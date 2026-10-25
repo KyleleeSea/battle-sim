@@ -89,9 +89,8 @@ Object.assign(TYPES, {
                 blurb: 'A long, lucky dragon in a rice hat. Breathes fire in a wide cone.' },
   databrick:  { name: 'Databrick', cost: 200, hp: 700, S: 1, speed: 40, reach: 22, dmg: 40, cd: 1.6, knock: 700, style: 'pounce', anim: 0.6, weapon: 'none', hat: 'none', block: 0, body: 'brick', heavy: 3,
                 blurb: 'A brick. Hops over and lands on people. Very hard to break.' },
-  // Scale 29.5: a body is 67.6 units tall at scale 1 and people are 1.75 m, so this is 50 m.
-  ultraman:   { name: 'Ultraman', cost: 3500, hp: 9000, S: 29.5, speed: 230, range: 800, dmg: 260, cd: 4, knock: 1400, style: 'specium', anim: 1.2, weapon: 'none', hat: 'ultraman', block: 0, stomp: true, colossal: true,
-                blurb: '50 metres tall. Crushes whatever is underfoot and fires the Specium Ray.' },
+  ultraman:   { name: 'Ultraman', cost: 1800, hp: 2400, S: 4.5, speed: 75, range: 450, dmg: 120, cd: 5, knock: 700, style: 'specium', anim: 1.2, weapon: 'none', hat: 'ultraman', block: 0, stomp: true, colossal: true,
+                blurb: 'A giant of light, twice a Giant\u2019s height. Stomps enemies underfoot and fires the Specium Ray.' },
 });
 TYPES.giant.fat = 1.15;
 const ORDER = ['chicken', 'squirrel', 'peasant', 'grandma', 'squire', 'fishmonger', 'hoplite', 'berserker', 'knight', 'ninja', 'scarecrow',
@@ -125,6 +124,7 @@ class Unit {
     this.charm = 0; this.charmCool = 0; this.inspired = 0; this.dance = 0;
     this.burrow = false; this.emerged = false; this.leaping = false; this.leapT = 0; this.leapCd = 0;
     this.breath = 0; this.footUp = [false, false]; this.clones = 0; this.owner = null;
+    this.anchored = false; this.ax = 0; this.az = 0;   // where a standing unit holds its ground
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -391,14 +391,23 @@ function musclePose(u, moving, m, cheer, W) {
   const mount = u.t.mount;      // riders' feet dangle beside the hog instead of walking
   const grounded = !u.leaping && (mount ? pel.y < hipH * 1.4 : footY < 6 * S || pel.y < 20 * S);
 
+  if (!grounded) u.anchored = false;
   if (grounded && m > 0.3) {
     // Standing units hold their own weight; stunned or airborne ones get the full force of gravity.
     const gc = GRAV * DT * DT * m;
     for (let i = 0; i < pts.length; i++) if (mount || (i !== J.LFOOT && i !== J.RFOOT)) pts[i].py -= gc;
     const sp = moving ? u.t.speed * DT * (u.inspired > 0 ? 1.35 : 1) : 0;
     const k = 0.18 * m * ENV.traction;
-    vp.x += (fx * sp - vp.x) * k;
-    vp.z += (fz * sp - vp.z) * k;
+    // Standing still, hold the spot where the unit stopped. The knees' forward pull reacts back on the
+    // hips, and ground friction soaks up the forward half at the feet, so without this every idle unit
+    // creeps backwards. Walking, a real knock (over a few units), or a stagger picks a new spot.
+    const slip = Math.max(4 * S, 8);
+    if (moving || u.recover < 1 || !u.anchored || (pel.x - u.ax) ** 2 + (pel.z - u.az) ** 2 > slip * slip) {
+      u.ax = pel.x; u.az = pel.z; u.anchored = true;
+    }
+    const tvx = moving ? fx * sp : (u.ax - pel.x) * 0.2, tvz = moving ? fz * sp : (u.az - pel.z) * 0.2;
+    vp.x += (tvx - vp.x) * k;
+    vp.z += (tvz - vp.z) * k;
     const hop = cheer ? Math.max(0, dsin(W.time * 9 + u.phase)) * 6 * S : 0;
     vp.y += (0 - vp.y) * 0.25 * m + (hipH + hop - pel.y) * 0.12 * m;
     pel.px = pel.x - vp.x; pel.py = pel.y - vp.y; pel.pz = pel.z - vp.z;
@@ -769,7 +778,7 @@ function burrowStep(u, W) {
   if (!u.burrow) { u.burrow = true; puff(W, p.x, 2, p.z, 10, '#8a6a45', 60, 6); SFX.play('dig'); }
   const step = Math.min(d, 170 * DT), mx = dx / d * step, mz = dz / d * step;
   for (const q of u.body.pts) { q.x += mx; q.z += mz; q.px += mx; q.pz += mz; }
-  u.fx = dx / d; u.fz = dz / d; u.target = best;
+  u.fx = dx / d; u.fz = dz / d; u.target = best; u.anchored = false;
   if (Math.random() < 0.25) puff(W, p.x, 1, p.z, 1, '#8a6a45', 25, 4);
   musclePose(u, false, 1, false, W);
   return true;
@@ -838,7 +847,7 @@ function breathe(u, W) {
   }
 }
 
-// Ultraman: each foot that comes down flattens whatever is under it, friend or foe.
+// Ultraman: each foot that comes down flattens the enemies under it.
 function stomp(u, W) {
   const S = u.S;
   for (const side of [0, 1]) {
@@ -848,14 +857,14 @@ function stomp(u, W) {
     u.footUp[side] = false;
     const R0 = 4.5 * S;
     for (const e of W.units) {
-      if (!e.alive || e === u || e.burrow || e.t.colossal) continue;
+      if (!e.alive || e.team === u.team || e.burrow || e.t.colossal) continue;
       const dx = e.P.x - f.x, dz = e.P.z - f.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
       if (d > R0 + e.r) continue;
-      hurt(e, e.team === u.team ? 150 : 400, dx / d * 900, 700, dz / d * 900, null, W, u);
+      hurt(e, 90, dx / d * 450, 350, dz / d * 450, null, W, u);
     }
-    W.shake = Math.max(W.shake, 7);
+    W.shake = Math.max(W.shake, 3);
     W.flashes.push({ x: f.x, y: 4, z: f.z, life: 0.3, max: 0.3, r: R0 });
-    puff(W, f.x, 2, f.z, 12, '#cdbb98', 160, 14);
+    puff(W, f.x, 2, f.z, 8, '#cdbb98', 90, 6);
     SFX.play('slam');
   }
 }
