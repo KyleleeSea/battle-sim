@@ -11,6 +11,7 @@ const PAL = {
   straw: '#e8c766', bronze: '#c9963c', white: '#f6f2ea', pants: '#4a4256', boot: '#2f2a36', ninja: '#2a2733',
   robe: '#f3efe6', gold: '#f4c542', leather: '#6e4b30', stone: '#8d8a86', bomb: '#2b2b30', hair: '#3a2a22',
   purple: '#6b4a8a', storm: '#3b4256', glass: '#9fd8ef',
+  fur: '#a0663a', furLight: '#c08552', lebronSkin: '#7b4a2d', beard: '#241812', ball: '#e2711d', sneaker: '#f4f4f4', shadow: '#1d1b22',
 };
 // Per-unit clothing that differs from the default team shirt, team sleeves and grey trousers.
 const LOOK = {
@@ -19,6 +20,9 @@ const LOOK = {
   sumo: { torso: 'skin', limbs: 'skin', legs: 'skin', belt: 'main' },
   giant: { limbs: 'skin', legs: 'skin', belt: 'dark' },
   healer: { torso: 'robe', limbs: 'robe' },
+  squirrel: { limbs: 'skin', legs: 'skin', boot: PAL.fur },
+  lebron: { limbs: 'skin', thigh: 'team', shin: 'skin', boot: PAL.sneaker },
+  mystery: { all: PAL.shadow },
 };
 
 const _colors = new Map();
@@ -52,12 +56,33 @@ class Batch {
   }
 }
 
+// A gold "?" with a dark outline, for hidden units.
+function questionTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const tex = new THREE.CanvasTexture(c);
+  const draw = () => {
+    const x = c.getContext('2d');
+    x.clearRect(0, 0, 128, 128);
+    x.font = '110px "Lilita One", "Arial Rounded MT Bold", sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.lineWidth = 14; x.strokeStyle = PAL.ink; x.lineJoin = 'round';
+    x.strokeText('?', 64, 70);
+    x.fillStyle = '#f4b62e'; x.fillText('?', 64, 70);
+    tex.needsUpdate = true;
+  };
+  draw();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  return tex;
+}
+
 const _m = new THREE.Matrix4(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
 const _d = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0);
 const V3 = () => new THREE.Vector3();
 
 class Painter {
   constructor(scene, cap) {
+    this.scene = scene;
+    this.camQ = new THREE.Quaternion();
     const cyl = new THREE.CylinderGeometry(1, 1, 1, 10, 1);
     const sph = new THREE.SphereGeometry(1, 14, 10);
     const dome = new THREE.SphereGeometry(1, 14, 7, 0, TAU, 0, PI / 2);
@@ -79,7 +104,8 @@ class Painter {
     this.gcyl = new Batch(scene, cyl, glow, 2000, false);
     this.puff = new Batch(scene, sph, puff, 2500, false);
     this.flash = new Batch(scene, sph, flash, 80, false);
-    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.puff, this.flash];
+    this.qmark = new Batch(scene, new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: questionTexture(), transparent: true, depthWrite: false }), cap, false);
+    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.puff, this.flash, this.qmark];
     // Scratch vectors for one unit's frame and one weapon's frame.
     this.f = V3(); this.u = V3(); this.r = V3();
     this.wd = V3(); this.wx = V3(); this.wz = V3();
@@ -130,10 +156,11 @@ class Painter {
     f.normalize();
     r.crossVectors(f, up).normalize();
 
-    const skin = u.key === 'giant' ? PAL.giantSkin : PAL.skin;
-    const pick = (k, dflt) => (k === 'steel' ? PAL.steel : k === 'skin' ? skin : k === 'ninja' ? PAL.ninja : k === 'robe' ? PAL.robe : dflt);
+    const skin = u.key === 'giant' ? PAL.giantSkin : u.key === 'lebron' ? PAL.lebronSkin : u.key === 'squirrel' ? PAL.fur : PAL.skin;
+    const pick = (k, dflt) => look.all || (k === 'steel' ? PAL.steel : k === 'skin' ? skin : k === 'ninja' ? PAL.ninja : k === 'robe' ? PAL.robe : k === 'team' ? team.main : dflt);
     const shirt = col(pick(look.torso, team.main)), sleeve = col(pick(look.limbs, team.light));
-    const legs = col(pick(look.legs, PAL.pants)), hand = col(pick(look.hands, skin)), headCol = col(pick(look.head, skin));
+    const thigh = col(pick(look.thigh || look.legs, PAL.pants)), shin = col(pick(look.shin || look.legs, PAL.pants));
+    const hand = col(pick(look.hands, skin)), headCol = col(pick(look.head, skin)), boot = col(look.all || look.boot || PAL.boot);
 
     // Torso as a capsule, plus belt.
     this.seg(this.cyl, pe, ch, 7 * S * fat, shirt);
@@ -145,10 +172,10 @@ class Painter {
     for (const side of [-1, 1]) {
       const knee = B[side < 0 ? J.LKNEE : J.RKNEE], foot = B[side < 0 ? J.LFOOT : J.RFOOT];
       const hip = this.at(this.t3, pe, r, side * 3.6 * S * fat, up, -1.5 * S);
-      this.seg(this.cyl, hip, knee, 3.5 * S * limbR, legs);
-      this.ball(this.sph, knee, 3.5 * S * limbR, legs);
-      this.seg(this.cyl, knee, foot, 3.3 * S * limbR, legs);
-      this.ball(this.sph, foot, 3.9 * S * limbR, col(PAL.boot));
+      this.seg(this.cyl, hip, knee, 3.5 * S * limbR, thigh);
+      this.ball(this.sph, knee, 3.5 * S * limbR, thigh);
+      this.seg(this.cyl, knee, foot, 3.3 * S * limbR, shin);
+      this.ball(this.sph, foot, 3.9 * S * limbR, boot);
       const el = B[side < 0 ? J.LELB : J.RELB], hn = B[side < 0 ? J.LHAND : J.RHAND];
       const sh = this.at(this.t3, ch, r, side * 6.4 * S * fat, up, -2.2 * S);
       this.ball(this.sph, sh, 3.4 * S * limbR, sleeve);
@@ -161,8 +188,9 @@ class Painter {
     // Head, eyes, hat.
     this.ball(this.sph, hd, 8 * S, headCol);
     if (u.key === 'ninja') this.axes(this.box, this.at(this.t1, hd, f, 7.2 * S, up, -0.2 * S), r, up, f, 9.5 * S, 3 * S, 1.6 * S, col(skin));
-    const eyeR = u.alive ? 1.3 * S : 0.6 * S;
-    for (const side of [-1, 1]) this.ball(this.sph, this.at(this.t1, hd, f, 7.6 * S, up, -0.2 * S, r, side * 2.7 * S), eyeR, C(PAL.ink));
+    const eyeR = (u.alive ? 1.3 : 0.6) * S * (u.key === 'squirrel' ? 1.4 : 1);
+    if (!look.all) for (const side of [-1, 1]) this.ball(this.sph, this.at(this.t1, hd, f, 7.6 * S, up, -0.2 * S, r, side * 2.7 * S), eyeR, C(PAL.ink));
+    if (u.key === 'squirrel') this.tail(u, pe, f, up, r, S, col);
     this.hat(u, hd, f, up, r, S, team, col);
 
     // Weapons and shields.
@@ -232,7 +260,34 @@ class Painter {
       case 'giant':
         this.ball(this.sph, this.at(t1, H, up, 7 * S, f, -1 * S), 3 * S, C(PAL.hair));
         break;
+      case 'squirrel':
+        for (const s of [-1, 1]) this.spike(this.at(t1, H, up, 6 * S, r, s * 4 * S), this.at(t2, up, r, s * 0.25), 2.4 * S, 6 * S, col(PAL.fur));
+        this.ball(this.sph, this.at(t1, H, f, 8 * S, up, -1.6 * S), 1.5 * S, C(PAL.ink));
+        this.axes(this.box, this.at(t1, H, f, 7.4 * S, up, -4 * S), r, up, f, 2.6 * S, 2.6 * S, 0.9 * S, col(PAL.white));
+        break;
+      case 'lebron':
+        this.axes(this.dome, this.at(t1, H, up, 1 * S), r, up, f, 8.4 * S, 5.5 * S, 8.4 * S, col(PAL.beard));
+        this.seg(this.cyl, this.at(t1, H, up, 2.4 * S), this.at(t2, H, up, 4.4 * S), 8.3 * S, col(PAL.white));
+        this.axes(this.sph, this.at(t1, H, f, 3.6 * S, up, -4.4 * S), r, up, f, 6 * S, 4 * S, 5 * S, col(PAL.beard));
+        break;
+      case 'mystery':
+        this.billboard(this.at(t1, H, up, 0, _Y, 17 * S), 15 * S, C('#ffffff'));
+        break;
     }
+  }
+
+  // A big bushy tail curling up behind the pelvis, swaying as it runs.
+  tail(u, pe, f, up, r, S, col) {
+    const pts = [[5, 2, 3], [10, 8, 4.5], [13, 16, 5.5], [13, 25, 6], [10, 33, 6], [6, 38, 5]];
+    const sway = Math.sin(u.phase) * 2 * S, fur = col(PAL.furLight);
+    pts.forEach(([back, h, rad], i) => {
+      this.ball(this.sph, this.at(this.t1, pe, f, -back * S, up, h * S, r, sway * i / pts.length), rad * S, fur);
+    });
+  }
+
+  billboard(p, size, col) {
+    _p.set(p.x, p.y, p.z); _s.set(size, size, size);
+    _m.compose(_p, this.camQ, _s); this.qmark.add(_m, col);
   }
 
   // Sets this.wd (along the forearm), this.wx (sideways) and this.wz (the blade's broad axis).
@@ -318,6 +373,10 @@ class Painter {
         }
         break;
       case 'none':
+        if (u.key === 'lebron' && side === 'r' && !(u.act === 'attack' && u.fired)) {
+          const a = B[J.LHAND], b = B[J.RHAND];
+          this.ball(this.sph, t1.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2).addScaledVector(this.f, 3 * S), 6.5, C(PAL.ball));
+        }
         if (u.key === 'thrower' && side === 'r' && !(u.act === 'attack' && u.fired)) {
           const a = B[J.LHAND], b = B[J.RHAND];
           this.ball(this.sph, t1.set((a.x + b.x) / 2, (a.y + b.y) / 2 + 6 * S, (a.z + b.z) / 2), 9 * S, C(PAL.stone));
@@ -352,6 +411,8 @@ class Painter {
       this.seg(this.gcyl, t1.set(p.x - nx * 30, p.y - ny * 30, p.z - nz * 30), p, 0.5, C('#fff7d6'));
     } else if (p.kind === 'boulder') {
       this.ball(this.sph, p, p.r, C(PAL.stone));
+    } else if (p.kind === 'ball') {
+      this.ball(this.sph, p, p.r, C(PAL.ball));
     } else {
       this.ball(this.gsph, p, 6.5, C('#ffb347'));
     }

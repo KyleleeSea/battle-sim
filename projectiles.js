@@ -6,8 +6,8 @@ function spawnProj(W, kind, from, vel, u) {
     kind, x: from.x, y: from.y, z: from.z, vx: vel.x, vy: vel.y, vz: vel.z,
     team: u.team, owner: u, dmg: u.t.dmg, knock: u.t.knock,
     g: kind === 'fire' ? GRAV * 0.35 : kind === 'bullet' ? GRAV * 0.1 : GRAV,
-    r: kind === 'boulder' ? 9 : kind === 'fire' ? 7 : 1.5,
-    life: kind === 'bullet' ? 2 : kind === 'arrow' ? 9 : 10, stuck: null, hits: [], dead: false,
+    r: kind === 'boulder' ? 9 : kind === 'fire' ? 7 : kind === 'ball' ? 6.5 : 1.5,
+    life: kind === 'bullet' ? 2 : kind === 'arrow' ? 9 : kind === 'ball' ? 7 : 10, stuck: null, hits: [], dead: false,
   });
 }
 
@@ -72,6 +72,13 @@ function updateProjectiles(W) {
         hurt(e, p.dmg * f, nx * k, ny * k * 0.5 + k * 0.45, nz * k, { x: ox, z: oz }, W, p.owner);
         p.vx *= 0.6; p.vy *= 0.6; p.vz *= 0.6;
         SFX.play('thud');
+      } else if (p.kind === 'ball') {
+        // Basketballs bounce off whoever they hit and keep going.
+        if (speed < 100) continue;
+        const f = Math.min(1, speed / 500), k = p.knock * f;
+        hurt(e, p.dmg * f, nx * k, k * 0.5, nz * k, { x: ox, z: oz }, W, p.owner);
+        p.vx *= -0.45; p.vz *= -0.45; p.vy = Math.abs(p.vy) * 0.4 + 180;
+        SFX.play('boing');
       } else {
         explode(W, p.x, p.y, p.z, p.dmg, p.knock, 85, p.owner);
         p.dead = true;
@@ -90,6 +97,11 @@ function updateProjectiles(W) {
         if (p.vy < -160) { puff(W, p.x, 0, p.z, 5, '#cdbb98', 60, 6); SFX.play('thud'); }
         p.vy = p.vy < -60 ? -p.vy * 0.35 : 0;
         p.vx *= 0.97; p.vz *= 0.97;
+      } else if (p.kind === 'ball') {
+        p.y = p.r * 0.6;
+        if (p.vy < -120) SFX.play('boing');
+        p.vy = p.vy < -60 ? -p.vy * 0.72 : 0;
+        p.vx *= 0.985; p.vz *= 0.985;
       } else {
         explode(W, p.x, 0, p.z, p.dmg, p.knock, 85, p.owner);
         p.dead = true;

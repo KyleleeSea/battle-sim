@@ -40,6 +40,10 @@ const SFX = (() => {
     boom: () => { noise(0.7, 'lowpass', 380, 0.9); tone(90, 40, 0.5, 'sine', 0.4); },
     horn: () => { tone(196, 200, 0.9, 'sawtooth', 0.07); tone(294, 300, 0.9, 'sawtooth', 0.04); },
     click: () => tone(900, 600, 0.04, 'square', 0.03),
+    boing: () => tone(170, 430, 0.16, 'sine', 0.12),
+    bang: () => { noise(0.3, 'lowpass', 1400, 0.8); tone(140, 60, 0.2, 'square', 0.08); },
+    zap: () => { tone(1400, 180, 0.25, 'sawtooth', 0.06); noise(0.2, 'highpass', 2500, 0.25); },
+    chime: () => { tone(880, 1320, 0.25, 'sine', 0.07); tone(1320, 1760, 0.3, 'sine', 0.04); },
     tick: () => tone(660, 660, 0.12, 'square', 0.05),
   };
   return {
@@ -63,6 +67,7 @@ const G = {
   budgets: [2000, 5000, 10000, Infinity], budgetIdx: 1,
   tool: 'peasant', slow: false, clock: 0,
   editable: [true, true],
+  hidden: [false, false],     // online: show this side as black "?" stand-ins until the battle
   countdown: null, bannerShown: false, fastForward: false,
 };
 
@@ -74,6 +79,21 @@ const inField = (x, z) => Math.abs(x) <= FIELD_X - 12 && z >= 12 && z <= FIELD_Z
 // ---------- armies ----------
 function encodeArmy(list) {
   return list.map(a => String.fromCharCode(97 + ORDER.indexOf(a.key)) + (a.x + 800).toString(36).padStart(3, '0') + a.z.toString(36).padStart(2, '0')).join('');
+}
+
+// Positions only, so an online opponent can see where units stand but not what they are.
+function encodeShadow(list) {
+  return list.map(a => (a.x + 800).toString(36).padStart(3, '0') + a.z.toString(36).padStart(2, '0')).join('');
+}
+
+function decodeShadow(str, team) {
+  const out = [];
+  if (typeof str !== 'string') return out;
+  for (let i = 0; i + 5 <= str.length && out.length < 300; i += 5) {
+    const x = parseInt(str.slice(i, i + 3), 36) - 800, z = parseInt(str.slice(i + 3, i + 5), 36);
+    if (Number.isFinite(x) && Number.isFinite(z) && teamAt(x) === team && inField(x, z)) out.push({ key: 'mystery', x, z });
+  }
+  return out;
 }
 
 // Turns any string into a legal army for `team`. Both players run this on both armies, so it must be deterministic.
@@ -111,6 +131,8 @@ const PRESETS = {
   knights: { name: 'Knights and muskets', build: (L, t) => { block(L, 'knight', t, 1, 6, 120, 40); block(L, 'musketeer', t, 1, 10, 230, 34); } },
   clan:    { name: 'Ninja clan', build: (L, t) => { block(L, 'ninja', t, 1, 8, 110, 36); block(L, 'bomber', t, 1, 6, 220, 44); block(L, 'healer', t, 1, 2, 300, 80); } },
   stable:  { name: 'Sumo stable', build: (L, t) => { block(L, 'sumo', t, 1, 4, 130, 70); block(L, 'healer', t, 1, 4, 230, 50); block(L, 'archer', t, 1, 8, 300, 36); } },
+  nuts:    { name: 'Squirrel swarm', build: (L, t) => { block(L, 'squirrel', t, 8, 16, 100, 16); block(L, 'musketeer', t, 1, 4, 260, 60); } },
+  king:    { name: 'The King\u2019s court', build: (L, t) => { block(L, 'squire', t, 1, 10, 110, 30); block(L, 'lebron', t, 1, 1, 200, 40); block(L, 'healer', t, 1, 2, 260, 80); block(L, 'archer', t, 1, 8, 300, 36); } },
   storm:   { name: 'Storm front', build: (L, t) => { block(L, 'squire', t, 1, 10, 110, 30); block(L, 'musketeer', t, 1, 6, 200, 40); block(L, 'storm', t, 1, 4, 280, 60); block(L, 'healer', t, 1, 3, 340, 70); } },
 };
 const SCENARIOS = {
@@ -118,6 +140,7 @@ const SCENARIOS = {
   wall:     { name: 'Shield wall vs Berserkers', sides: ['wall', 'rush'] },
   archers:  { name: 'Archer duel', sides: ['archers', 'archers'] },
   magic:    { name: 'Wizard chaos', sides: ['magic', 'mob'] },
+  nuts:     { name: 'Squirrels vs LeBron', sides: ['nuts', 'king'] },
   ninjas:   { name: 'Ninjas vs Knights', sides: ['clan', 'knights'] },
   sumo:     { name: 'Sumo vs Storm', sides: ['stable', 'storm'] },
 };
@@ -249,7 +272,7 @@ function hud() {
     let alive = 0;
     for (const u of W.units) if (u.team === team && u.alive) alive++;
     $(`count${team}`).textContent = W.state === 'place' ? `${n} unit${n === 1 ? '' : 's'}` : `${alive} of ${W.total[team]} standing`;
-    $(`gold${team}`).textContent = W.state === 'place' ? `${fmt(spent(team))} / ${budget === Infinity ? 'no limit' : fmt(budget)}` : `${W.lost[team]} down`;
+    $(`gold${team}`).textContent = W.state !== 'place' ? `${W.lost[team]} down` : G.hidden[team] ? 'army hidden' : `${fmt(spent(team))} / ${budget === Infinity ? 'no limit' : fmt(budget)}`;
   }
   const c = G.mode === 'online' ? Net.controls() : W.state === 'place'
     ? { label: 'Fight!', sub: 'or press Space', disabled: false, ready: false }

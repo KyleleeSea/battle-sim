@@ -5,7 +5,7 @@
 // from the same armies and seed, so nothing else has to travel between players.
 
 const Net = (() => {
-  const PROTO = 3;               // Bump whenever the simulation changes: mismatched builds would disagree.
+  const PROTO = 4;               // Bump whenever the simulation changes: mismatched builds would disagree.
   const PREFIX = 'mabs-p' + PROTO + '-';
   const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
@@ -19,13 +19,18 @@ const Net = (() => {
   try { myName = localStorage.getItem('mabs-name') || ''; } catch (e) { /* storage is optional */ }
 
   const cleanName = s => (typeof s === 'string' ? s.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 20) : '');
-  const mine = () => ({ army: seat !== null ? encodeArmy(G.armies[seat]) : '', ready, round, battle, name: myName });
+  // The full army only travels once you press Ready; before that the opponent gets positions alone.
+  const mine = () => ({
+    army: seat !== null && ready ? encodeArmy(G.armies[seat]) : '',
+    shadow: seat !== null ? encodeShadow(G.armies[seat]) : '',
+    ready, round, battle, name: myName,
+  });
   function cleanState(s) {
     if (!s || typeof s !== 'object') return null;
     const sb = s.battle;
     const b = sb && typeof sb === 'object' && typeof sb.key === 'string' && Array.isArray(sb.armies)
       ? { key: sb.key.slice(0, 60), at: num(sb.at), budget: Math.floor(num(sb.budget)), armies: [0, 1].map(i => (typeof sb.armies[i] === 'string' ? sb.armies[i].slice(0, 2400) : '')) } : null;
-    return { army: typeof s.army === 'string' ? s.army.slice(0, 2400) : '', ready: num(s.ready), round: Math.floor(num(s.round)), battle: b, name: cleanName(s.name) };
+    return { army: typeof s.army === 'string' ? s.army.slice(0, 2400) : '', shadow: typeof s.shadow === 'string' ? s.shadow.slice(0, 2000) : '', ready: num(s.ready), round: Math.floor(num(s.round)), battle: b, name: cleanName(s.name) };
   }
   // A seat's state as this screen knows it: our own seat is always the local, freshest copy.
   function seatState(s) {
@@ -50,10 +55,11 @@ const Net = (() => {
   function recompute() {
     if (!match) { renderBar(); hud(); return; }
     const occ = [seatState(0), seatState(1)];
+    // The other side shows as black "?" stand-ins until the battle reveals it.
     for (const s of [0, 1]) {
       if (s === seat) continue;
-      const str = occ[s] ? occ[s].army : '';
-      if (str !== applied[s]) { applied[s] = str; setArmy(s, decodeArmy(str, s, budgetNow())); }
+      const str = occ[s] ? occ[s].shadow : '';
+      if (str !== applied[s]) { applied[s] = str; setArmy(s, decodeShadow(str, s)); }
     }
     // Someone already began a battle this screen belongs in (a paused tab, a late watcher):
     // replay it from the armies they sent, fast-forwarded to the present moment.
@@ -109,7 +115,7 @@ const Net = (() => {
   function enter(code, asRole, mySeat) {
     match = code; role = asRole; seat = mySeat; ready = 0; round = 1; battle = null;
     guest = null; seats = [null, null]; watchers = 0; score = [0, 0]; lastKey = ''; applied = [null, null];
-    G.mode = 'online'; G.editable = [seat === 0, seat === 1]; G.countdown = null;
+    G.mode = 'online'; G.editable = [seat === 0, seat === 1]; G.hidden = [seat !== 0, seat !== 1]; G.countdown = null;
     if (G.budgetIdx === G.budgets.length - 1) G.budgetIdx = 1;
     W.state = 'place'; G.armies = [[], []];
     backToDeploy(); fillPresetSelect(); closePanel();
@@ -224,7 +230,7 @@ const Net = (() => {
     match = null; role = null; seat = null; ready = 0; battle = null; guest = null;
     G.countdown = null; $('countdown').hidden = true;
     if (was) {
-      G.mode = 'sandbox'; G.editable = [true, true];
+      G.mode = 'sandbox'; G.editable = [true, true]; G.hidden = [false, false];
       W.state = 'place'; fillPresetSelect(); loadPreset('s:uprising'); backToDeploy();
     }
     renderBar(); if (!quiet) hud();
@@ -254,7 +260,7 @@ const Net = (() => {
     pushMe(); recompute();
   }
 
-  function nextRound() { backToDeploy(); recompute(); }
+  function nextRound() { applied = [null, null]; backToDeploy(); recompute(); }
 
   function battleEnded(winner) {
     if (winner >= 0) score[winner]++;

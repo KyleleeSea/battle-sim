@@ -6,7 +6,7 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber, Wizard, Storm Caller, Healer, Sumo and Giant.
+Squirrel, Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber, Wizard, Storm Caller, Healer, Sumo, LeBron James and Giant.
 
 ## Controls
 
@@ -18,6 +18,9 @@ Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thr
 
 Press **Play online**, then **Host a match** and send your friend the invite link (or the 4-letter code).
 The two browsers connect directly over WebRTC; [PeerJS](https://peerjs.com)'s free public server only introduces them.
+
+While you deploy, your opponent sees your units only as black "?" stand-ins: just their positions are sent. The full
+army is sent when you press Ready, and both armies are revealed when the battle starts.
 
 Only armies and a "ready" number travel between players. The simulation is deterministic (seeded random numbers and
 hand-written trig, so every browser computes the same floating-point results), so both screens play out the exact same

@@ -36,9 +36,17 @@ Object.assign(TYPES, {
   sumo:      { name: 'Sumo', cost: 600, hp: 700, S: 1.5, speed: 40, reach: 40, dmg: 35, cd: 1.5, knock: 950, style: 'shove', anim: 0.7, weapon: 'none', hat: 'sumo', block: 0, aoe: true, fat: 1.6, heavy: 2,
                blurb: 'Belly-shoves everything in front of it.' },
 });
+Object.assign(TYPES, {
+  squirrel:  { name: 'Squirrel', cost: 25, hp: 28, S: 0.6, speed: 120, reach: 18, dmg: 8, cd: 0.7, knock: 160, style: 'pounce', anim: 0.5, weapon: 'none', hat: 'squirrel', block: 0, dodge: 0.25,
+               blurb: 'Tiny, fast and furious. Pounces in swarms.' },
+  lebron:    { name: 'LeBron James', cost: 1000, hp: 850, S: 1.35, speed: 70, range: 380, dmg: 55, cd: 1.3, knock: 750, style: 'hoops', anim: 0.8, weapon: 'none', hat: 'lebron', block: 0, heavy: 1.3,
+               blurb: 'The King. Bouncing basketballs from range, slam dunks up close.' },
+  // Stand-in shown for an online opponent's units until the battle starts. Never placed or fought with.
+  mystery:   { name: 'Hidden unit', cost: 0, hp: 1, S: 1, speed: 0, reach: 1, dmg: 0, cd: 99, knock: 0, style: 'none', anim: 1, weapon: 'none', hat: 'mystery', block: 0, blurb: '' },
+});
 TYPES.giant.fat = 1.15;
-const ORDER = ['peasant', 'squire', 'hoplite', 'berserker', 'knight', 'ninja', 'archer', 'musketeer', 'thrower', 'bomber', 'wizard', 'storm', 'healer', 'sumo', 'giant'];
-const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, bow: 0.8, gun: 0.5, throw: 0.62, cast: 0.62, heal: 0.45, bomb: 0.3 };
+const ORDER = ['squirrel', 'peasant', 'squire', 'hoplite', 'berserker', 'knight', 'ninja', 'archer', 'musketeer', 'thrower', 'bomber', 'wizard', 'storm', 'healer', 'sumo', 'lebron', 'giant'];
+const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, cast: 0.62, heal: 0.45, bomb: 0.3, none: 2 };
 
 let NEXT_ID = 1;
 
@@ -164,6 +172,10 @@ function updateUnit(u, W, active) {
 
 function startAttack(u) {
   u.act = 'attack'; u.actT = 0; u.fired = false; u.alt = !u.alt;
+  if (u.t.style === 'pounce') {
+    // A short leap at the target.
+    for (const j of [J.PELVIS, J.CHEST, J.HEAD]) addVel(u.body.pts[j], u.fx * 150, 170, u.fz * 150);
+  }
   u.cdT = u.t.cd * (0.85 + R() * 0.3);
 }
 
@@ -241,6 +253,16 @@ function armPose(u, moving, cheer, time) {
       const up = [12, 10, 5, 0.5, 1, 0];
       return att ? { r: keyf([[0, STAFF_R], [0.4, up], [0.7, up], [1, STAFF_R]], t), l: keyf([[0, HANG_L], [0.4, [8, 8, -5, 0.4, 1, 0]], [0.7, [8, 8, -5, 0.4, 1, 0]], [1, HANG_L]], t) }
         : { r: STAFF_R, l: swing(HANG_L, -sw) };
+    }
+    case 'pounce': {
+      const rest = [6, -4, 5, 1, 0.2, 0];
+      const frames = [[0, rest], [0.3, [2, 4, 6, 1, 0.5, 0]], [0.5, [16, 0, 4, 1, -0.2, 0]], [1, rest]];
+      return att ? { r: keyf(frames, t), l: mirror(keyf(frames, t)) } : { r: rest, l: mirror(rest) };
+    }
+    case 'hoops': {
+      const hold = [10, 0, 4, 1, 0, 0];
+      const frames = [[0, hold], [0.35, [2, 16, 4, 0, 1, 0]], [0.55, [16, 12, 3, 1, 0.6, 0]], [0.7, [18, 4, 3, 1, -0.3, 0]], [1, hold]];
+      return att ? { r: keyf(frames, t), l: mirror(keyf(frames, t)) } : { r: swing(hold, sw * 0.5), l: swing(mirror(hold), sw * 0.5) };
     }
     case 'shove': {
       const rest = [8, -2, 9, 1, 0, 0], frames = [[0, rest], [0.45, [0, 2, 10, 1, 0.1, 0]], [0.6, [24, 2, 8, 1, 0, 0]], [1, rest]];
@@ -345,10 +367,23 @@ function strike(u, W) {
     explode(W, c.x, c.y, c.z, u.t.dmg, u.t.knock, 100, u);
     return;
   }
-  if (st === 'bow' || st === 'throw' || st === 'cast' || st === 'gun') {
+  if (st === 'bow' || st === 'throw' || st === 'cast' || st === 'gun' || st === 'hoops') {
     const T = u.target && u.target.alive ? u.target : nearestEnemy(u, W.units);
     if (!T) return;
-    if (st === 'bow') {
+    const pel = u.P, tx = T.P.x - pel.x, tz = T.P.z - pel.z;
+    if (st === 'hoops' && tx * tx + tz * tz < (50 * u.S + T.r) ** 2) {
+      // Slam dunk: everyone close in front goes up in the air.
+      for (const e of W.units) {
+        if (!e.alive || e.team === u.team) continue;
+        const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+        if (d > 50 * u.S + e.r) continue;
+        const k = u.t.knock * 1.2;
+        hurt(e, u.t.dmg * 1.3, dx / d * k * 0.6, k, dz / d * k * 0.6, pel, W, u);
+      }
+      W.shake = Math.max(W.shake, 6);
+      puff(W, pel.x + u.fx * 20, 0, pel.z + u.fz * 20, 8, '#cdbb98', 90, 7);
+      SFX.play('thud');
+    } else if (st === 'bow') {
       const v = lead(u, T, 680, GRAV, false), h = pts[J.LHAND];
       spawnProj(W, 'arrow', h, jitter(v, 0.05), u);
       SFX.play('twang');
@@ -357,6 +392,10 @@ function strike(u, W) {
       spawnProj(W, 'bullet', h, jitter(v, 0.015), u);
       puff(W, h.x, h.y, h.z, 7, '#e9e4dc', 70, 5);
       SFX.play('bang');
+    } else if (st === 'hoops') {
+      const v = lead(u, T, 600, GRAV, false), a = pts[J.LHAND], b = pts[J.RHAND];
+      spawnProj(W, 'ball', { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + 4 * u.S, z: (a.z + b.z) / 2 }, jitter(v, 0.05), u);
+      SFX.play('whoosh');
     } else if (st === 'throw') {
       const v = lead(u, T, 560, GRAV, false), a = pts[J.LHAND], b = pts[J.RHAND];
       spawnProj(W, 'boulder', { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + 6 * u.S, z: (a.z + b.z) / 2 }, jitter(v, 0.07), u);
@@ -384,7 +423,7 @@ function strike(u, W) {
     const t = victims.find(v => v.e === u.target);
     hit = [t || victims.reduce((a, b) => (b.d < a.d ? b : a))];
   }
-  const up = st === 'punch' ? 0.75 : st === 'shove' ? 0.5 : st === 'thrust' ? 0.25 : 0.4;
+  const up = st === 'punch' ? 0.75 : st === 'shove' ? 0.5 : st === 'thrust' || st === 'pounce' ? 0.25 : 0.4;
   for (const { e } of hit) {
     const k = u.t.knock * (0.8 + R() * 0.4);
     hurt(e, u.t.dmg * (0.8 + R() * 0.4), u.fx * k, up * k, u.fz * k, pel, W, u);

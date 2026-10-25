@@ -24,6 +24,7 @@ const View = (() => {
     camera = new THREE.PerspectiveCamera(40, 1, 5, 14000);
     buildLights(); buildSky(); buildGround(); buildScenery(); buildZones(); buildGhost();
     painter = new Painter(scene, 700);
+    painter.camQ = camera.quaternion;
     return true;
   }
 
@@ -196,6 +197,7 @@ const View = (() => {
 
   // ---------- frame ----------
   function render(W, ui) {
+    placeCamera(W.shake > 0 && !ui.reducedMotion ? W.shake * 1.5 : 0);
     zones.forEach((z, team) => {
       z.g.visible = ui.placing;
       const on = ui.editable[team];
@@ -226,8 +228,6 @@ const View = (() => {
       }
     });
     clouds.instanceMatrix.needsUpdate = true;
-
-    placeCamera(W.shake > 0 && !ui.reducedMotion ? W.shake * 1.5 : 0);
     renderer.render(scene, camera);
   }
 
@@ -240,6 +240,7 @@ const View = (() => {
       const l = new THREE.DirectionalLight('#ffffff', 0.55); l.position.set(1, 2, 2); pScene.add(l);
       pPainter = new Painter(pScene, 2);
       pCam = new THREE.PerspectiveCamera(30, 1, 1, 3000);
+      pPainter.camQ = pCam.quaternion;
     }
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const w = Math.round((canvas.clientWidth || 66) * dpr), h = Math.round((canvas.clientHeight || 54) * dpr);
