@@ -396,7 +396,10 @@ function musclePose(u, moving, m, cheer, W) {
     // Standing units hold their own weight; stunned or airborne ones get the full force of gravity.
     const gc = GRAV * DT * DT * m;
     for (let i = 0; i < pts.length; i++) if (mount || (i !== J.LFOOT && i !== J.RFOOT)) pts[i].py -= gc;
-    const sp = moving ? u.t.speed * DT * (u.inspired > 0 ? 1.35 : 1) : 0;
+    // Light units (under a person's mass) get a boost that grows as mass drops, up to 2.5 times.
+    // Short legs lose more to ground drag, so it climbs steeply for the smallest ones.
+    const light = u.mass < 1 ? Math.min(2.5, Math.pow(u.mass, -0.75)) : 1;
+    const sp = moving ? u.t.speed * DT * light * (u.inspired > 0 ? 1.35 : 1) : 0;
     const k = 0.18 * m * ENV.traction;
     // Standing still, hold the spot where the unit stopped. The knees' forward pull reacts back on the
     // hips, and ground friction soaks up the forward half at the feet, so without this every idle unit

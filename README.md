@@ -35,6 +35,9 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | Dragon | A Chinese dragon in a rice hat. Breathes fire in a wide cone. |
 | Ultraman | A giant of light, twice a Giant's height. Stomps enemies underfoot; fires the Specium Ray. |
 
+Units lighter than a person (Chickens, Little Fish, Squirrels, Monkeys, Cupids, Grandmas) get a speed boost that grows
+as their mass drops, so the smallest ones scurry at more than twice a person's pace.
+
 ## Maps
 
 | Map | Twist |
