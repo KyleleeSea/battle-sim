@@ -241,7 +241,7 @@ const Net = (() => {
   // ---------- what game.js asks ----------
   function controls() {
     if (seat === null) return { label: 'Watching', sub: match ? `match ${match}` : '', disabled: true };
-    if (W.state === 'battle') return { label: 'Battle on', sub: 'slow-mo is yours alone', disabled: true };
+    if (W.state === 'battle') return { label: 'Battle on', sub: 'speed is yours alone', disabled: true };
     if (W.state === 'over') return { label: 'Next round', sub: 'back to deployment', disabled: false };
     if (G.countdown) return { label: 'Get ready', sub: 'battle starting', disabled: true, ready: true };
     const opp = seatState(1 - seat), oppName = (opp && opp.name) || TEAM[1 - seat].name;

@@ -68,6 +68,11 @@
   .btn[aria-pressed="true"] { background: var(--gold); }
   .btn:disabled, .tools select:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-online { background: var(--ink); color: var(--paper); }
+  .speed { display: inline-flex; }
+  .speed .spd { border-radius: 0; padding: 5px 8px; font-variant-numeric: tabular-nums; }
+  .speed .spd + .spd { margin-left: -2px; }
+  .speed .spd:first-child { border-radius: 9px 0 0 9px; }
+  .speed .spd:last-child { border-radius: 0 9px 9px 0; }
 
   .matchbar {
     flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
@@ -175,7 +180,13 @@
       <select id="presetSel" aria-label="Load a preset"></select>
       <select id="mapSel" aria-label="Battlefield"></select>
       <button id="budgetBtn" class="btn" type="button" title="Gold each side can spend">Budget 5,000</button>
-      <button id="slowBtn" class="btn" type="button" aria-pressed="false">Slow-mo</button>
+      <div class="speed" role="group" aria-label="Game speed" title="Game speed ([ and ] keys)">
+        <button class="btn spd" type="button" data-speed="0.3" aria-pressed="false" aria-label="Slow motion">0.3&#xd7;</button>
+        <button class="btn spd" type="button" data-speed="1" aria-pressed="true" aria-label="Normal speed">1&#xd7;</button>
+        <button class="btn spd" type="button" data-speed="2" aria-pressed="false" aria-label="Double speed">2&#xd7;</button>
+        <button class="btn spd" type="button" data-speed="4" aria-pressed="false" aria-label="Four times speed">4&#xd7;</button>
+        <button class="btn spd" type="button" data-speed="8" aria-pressed="false" aria-label="Eight times speed">8&#xd7;</button>
+      </div>
       <button id="soundBtn" class="btn" type="button" aria-pressed="true">Sound on</button>
       <button id="clearBtn" class="btn" type="button">Clear</button>
       <button id="onlineBtn" class="btn btn-online" type="button">Play online</button>
@@ -202,7 +213,7 @@
 
   <footer id="dock">
     <div class="dock-top">
-      <p id="hint" class="hint"><span id="hintUnit"></span> <span class="hint-how">Click your side to place, drag to paint a crowd, right-click to remove. Right-drag turns the camera, scroll zooms.</span></p>
+      <p id="hint" class="hint"><span id="hintUnit"></span> <span class="hint-how">Click your side to place, drag to paint a crowd, right-click to remove. Right-drag turns the camera, scroll zooms, [ and ] change speed.</span></p>
       <div class="zoom">
         <button id="orbitBtn" class="btn" type="button" aria-pressed="false" title="Slowly circle the battlefield (C)">Cinematic</button>
         <button id="viewBtn" class="btn" type="button" title="Back to the starting camera (R)">Reset view</button>
@@ -241,14 +252,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="physics.js?v=7"></script>
-<script src="maps.js?v=7"></script>
-<script src="units.js?v=7"></script>
-<script src="projectiles.js?v=7"></script>
-<script src="painter3d.js?v=7"></script>
-<script src="world3d.js?v=7"></script>
-<script src="scene3d.js?v=7"></script>
-<script src="game.js?v=7"></script>
-<script src="net.js?v=7"></script>
+<script src="physics.js?v=8"></script>
+<script src="maps.js?v=8"></script>
+<script src="units.js?v=8"></script>
+<script src="projectiles.js?v=8"></script>
+<script src="painter3d.js?v=8"></script>
+<script src="world3d.js?v=8"></script>
+<script src="scene3d.js?v=8"></script>
+<script src="game.js?v=8"></script>
+<script src="net.js?v=8"></script>
 </body>
 </html>

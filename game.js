@@ -78,7 +78,7 @@ const G = {
   mode: 'sandbox',            // 'sandbox' or 'online'
   armies: [[], []],           // per team: [{key, x, z}] with whole-number positions
   budgets: [2000, 5000, 10000, Infinity], budgetIdx: 1,
-  tool: 'peasant', slow: false, clock: 0, map: 'meadow',
+  tool: 'peasant', speed: 1, clock: 0, map: 'meadow',
   editable: [true, true],
   hidden: [false, false],     // online: show this side as black "?" stand-ins until the battle
   countdown: null, bannerShown: false, fastForward: false,
@@ -213,6 +213,13 @@ function eraseAt(x, z, r) {
 }
 
 // ---------- battle flow ----------
+const SPEEDS = [0.3, 1, 2, 4, 8];
+const speedLabel = v => `${v}\u00d7`;
+function setSpeed(v) {
+  G.speed = v;
+  for (const b of document.querySelectorAll('.spd')) b.setAttribute('aria-pressed', String(+b.dataset.speed === v));
+}
+
 // Height of the tallest giant-sized unit on the field (Ultraman), for framing the camera.
 const tallest = () => W.units.reduce((m, u) => (u.t.colossal ? Math.max(m, 68 * u.S) : m), 0);
 
@@ -489,10 +496,12 @@ function frame(now) {
   const dt = Math.min(0.1, (now - lastT) / 1000);
   lastT = now; G.clock += dt;
   if (G.countdown) tickCountdown(dt);
-  acc += dt * (G.slow ? 0.3 : 1);
+  // Game speed only changes how many fixed steps run per frame, so every speed plays out the same battle.
+  acc += dt * G.speed;
+  const maxSteps = Math.ceil(G.speed * 2) + 3;
   let n = 0;
-  while (acc >= DT && n < 5) { step(); acc -= DT; n++; }
-  if (n === 5) acc = 0;
+  while (acc >= DT && n < maxSteps) { step(); acc -= DT; n++; }
+  if (n === maxSteps) acc = 0;
   if (W.state === 'over' && !G.bannerShown && W.time - W.endT > 1.2) showBanner();
   View.render(W, { clock: G.clock, placing: W.state === 'place', editable: G.editable, ghost: W.state === 'place' && canEdit() ? hover : null, reducedMotion });
   if (++frameN % 12 === 0) hud();
@@ -517,7 +526,7 @@ function wireControls() {
     if (G.mode === 'online') Net.settingsChanged();
     hud();
   });
-  $('slowBtn').addEventListener('click', () => { G.slow = !G.slow; $('slowBtn').setAttribute('aria-pressed', String(G.slow)); });
+  for (const b of document.querySelectorAll('.spd')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));
   $('soundBtn').addEventListener('click', () => { SFX.unlock(); const m = SFX.toggle(); $('soundBtn').setAttribute('aria-pressed', String(!m)); $('soundBtn').textContent = m ? 'Sound off' : 'Sound on'; });
   $('zoomIn').addEventListener('click', () => View.zoom(0.8));
   $('zoomOut').addEventListener('click', () => View.zoom(1.25));
@@ -531,6 +540,10 @@ function wireControls() {
     else if (e.key === 'e' || e.key === 'E') selectTool('erase');
     else if (e.key === 'r' || e.key === 'R') View.resetView(tallest());
     else if (e.key === 'c' || e.key === 'C') orbit(!View.isAuto());
+    else if (e.key === '[' || e.key === ']') {
+      const i = SPEEDS.indexOf(G.speed) + (e.key === ']' ? 1 : -1);
+      if (SPEEDS[i]) { setSpeed(SPEEDS[i]); toast(`Speed ${speedLabel(G.speed)}`); }
+    }
     else if (e.key === 'ArrowLeft') View.rotate(-30, 0);
     else if (e.key === 'ArrowRight') View.rotate(30, 0);
     else if (e.key === 'ArrowUp') View.rotate(0, -20);

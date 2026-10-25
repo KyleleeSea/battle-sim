@@ -53,6 +53,7 @@ Online, the host picks the map.
 
 - Click your half of the field to place the selected unit; drag to paint a crowd; right-click to remove.
 - Right-drag turns the camera, scroll zooms, Shift-drag pans. During a battle, left-drag also turns the camera.
+- Game speed: 0.3×, 1×, 2×, 4× or 8× from the top bar, or step it with [ and ]. Speed is local, so online opponents can watch at different speeds.
 - Keys: Space to fight, 1–9 to pick units, E for the eraser, R to reset the view, C for the cinematic camera.
 
 ## Online duels
