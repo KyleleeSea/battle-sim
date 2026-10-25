@@ -2,7 +2,10 @@
 // Verlet ragdoll physics. World units are roughly pixels at default zoom; y is up, the ground is y = 0.
 
 const DT = 1 / 60;
-const GRAV = 900;
+let GRAV = 900;               // set per map by setEnv()
+// Ground behaviour for the current map; maps.js swaps these in before each battle.
+const ENV_DEFAULT = { grav: 900, friction: 0.7, bounce: 0.15, traction: 1, lava: false, pools: null };
+const ENV = Object.assign({}, ENV_DEFAULT);
 const ITER = 4;
 const FIELD_X = 720;   // half-width of the battlefield
 const FIELD_Z = 560;   // depth of the battlefield along z
@@ -88,11 +91,11 @@ function stepBody(b) {
     p.px = p.x; p.py = p.y; p.pz = p.z;
     p.x += vx; p.y += vy - g; p.z += vz;
     if (p.y < 0) {
-      // Ground contact: a small bounce and a lot of scrubbing friction.
+      // Ground contact: a small bounce and a lot of scrubbing friction (less on ice, more bounce on jelly).
       p.y = 0;
-      p.py = vy < 0 ? vy * 0.15 : 0;
-      p.px = p.x - vx * 0.7;
-      p.pz = p.z - vz * 0.7;
+      p.py = vy < 0 ? vy * ENV.bounce : 0;
+      p.px = p.x - vx * ENV.friction;
+      p.pz = p.z - vz * ENV.friction;
     }
   }
   const sticks = b.sticks;

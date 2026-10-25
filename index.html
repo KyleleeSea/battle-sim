@@ -173,6 +173,7 @@
     </div>
     <nav class="tools" aria-label="Battle controls">
       <select id="presetSel" aria-label="Load a preset"></select>
+      <select id="mapSel" aria-label="Battlefield"></select>
       <button id="budgetBtn" class="btn" type="button" title="Gold each side can spend">Budget 5,000</button>
       <button id="slowBtn" class="btn" type="button" aria-pressed="false">Slow-mo</button>
       <button id="soundBtn" class="btn" type="button" aria-pressed="true">Sound on</button>
@@ -240,12 +241,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="physics.js"></script>
-<script src="units.js"></script>
-<script src="projectiles.js"></script>
-<script src="painter3d.js"></script>
-<script src="scene3d.js"></script>
-<script src="game.js"></script>
-<script src="net.js"></script>
+<script src="physics.js?v=6"></script>
+<script src="maps.js?v=6"></script>
+<script src="units.js?v=6"></script>
+<script src="projectiles.js?v=6"></script>
+<script src="painter3d.js?v=6"></script>
+<script src="world3d.js?v=6"></script>
+<script src="scene3d.js?v=6"></script>
+<script src="game.js?v=6"></script>
+<script src="net.js?v=6"></script>
 </body>
 </html>

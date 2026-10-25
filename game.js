@@ -72,7 +72,7 @@ const G = {
   mode: 'sandbox',            // 'sandbox' or 'online'
   armies: [[], []],           // per team: [{key, x, z}] with whole-number positions
   budgets: [2000, 5000, 10000, Infinity], budgetIdx: 1,
-  tool: 'peasant', slow: false, clock: 0,
+  tool: 'peasant', slow: false, clock: 0, map: 'meadow',
   editable: [true, true],
   hidden: [false, false],     // online: show this side as black "?" stand-ins until the battle
   countdown: null, bannerShown: false, fastForward: false,
@@ -199,7 +199,17 @@ function eraseAt(x, z, r) {
 }
 
 // ---------- battle flow ----------
+// Switches the battlefield: its physics (gravity, ice, lava) and its scenery.
+function applyMap(id) {
+  if (!MAPS[id]) return;
+  G.map = id;
+  setEnv(id);
+  View.setMap(id);
+  $('mapSel').value = id;
+}
+
 function startBattle(seed) {
+  setEnv(G.map);
   NEXT_ID = 1; seedRng(seed);
   W.units = [];
   for (const team of [0, 1]) for (const a of G.armies[team]) W.units.push(new Unit(a.key, team, a.x, a.z));
@@ -298,6 +308,7 @@ function hud() {
   $('dock').classList.toggle('locked', !edit);
   $('clearBtn').disabled = !edit; $('presetSel').disabled = !edit;
   $('budgetBtn').disabled = !edit || (G.mode === 'online' && !Net.isHost());
+  $('mapSel').disabled = !edit || (G.mode === 'online' && !Net.isHost());
   $('budgetBtn').textContent = `Budget ${budget === Infinity ? '\u221e' : fmt(budget)}`;
   $('hint').hidden = !edit;
 }
@@ -475,11 +486,17 @@ function wireControls() {
   $('againBtn').addEventListener('click', () => { if (G.mode === 'online') Net.nextRound(); else backToDeploy(); });
   $('clearBtn').addEventListener('click', () => { for (const t of [0, 1]) if (G.editable[t]) { setArmy(t, []); armyChanged(t); } });
   $('presetSel').addEventListener('change', e => { loadPreset(e.target.value); e.target.value = ''; });
+  $('mapSel').addEventListener('change', e => {
+    applyMap(e.target.value);
+    toast(`${MAPS[G.map].name}: ${MAPS[G.map].blurb}`);
+    if (G.mode === 'online') Net.settingsChanged();
+    hud();
+  });
   $('budgetBtn').addEventListener('click', () => {
     G.budgetIdx = (G.budgetIdx + 1) % G.budgets.length;
     if (G.mode === 'online' && G.budgetIdx === G.budgets.length - 1) G.budgetIdx = 0; // online matches keep a limit
     for (const t of [0, 1]) if (G.editable[t]) { setArmy(t, decodeArmy(encodeArmy(G.armies[t]), t, budgetNow())); armyChanged(t); }
-    if (G.mode === 'online') Net.budgetChanged();
+    if (G.mode === 'online') Net.settingsChanged();
     hud();
   });
   $('slowBtn').addEventListener('click', () => { G.slow = !G.slow; $('slowBtn').setAttribute('aria-pressed', String(G.slow)); });
@@ -510,11 +527,13 @@ function start(data) {
   if (!View.init(cv)) { $('noGl').hidden = false; return; }
   resize();
   initTray(); selectTool('peasant'); fillPresetSelect(); wireControls();
+  for (const id of MAP_ORDER) { const o = document.createElement('option'); o.value = id; o.textContent = `Map: ${MAPS[id].name}`; $('mapSel').appendChild(o); }
+  applyMap(MAPS[data.map] ? data.map : 'meadow');
   if (Number.isInteger(data.budgetIdx) && G.budgets[data.budgetIdx] !== undefined) G.budgetIdx = data.budgetIdx;
   if (data.armies && Array.isArray(data.armies)) {
     for (const t of [0, 1]) setArmy(t, decodeArmy(data.armies[t], t, budgetNow()));
   } else loadPreset('s:uprising');
-  window.claude?.hot?.snapshot?.(() => ({ armies: G.armies.map(encodeArmy), budgetIdx: G.budgetIdx }));
+  window.claude?.hot?.snapshot?.(() => ({ armies: G.armies.map(encodeArmy), budgetIdx: G.budgetIdx, map: G.map }));
   hud();
   requestAnimationFrame(t => { lastT = t; frame(t); });
   Net.init();

@@ -5,7 +5,7 @@
 // from the same armies and seed, so nothing else has to travel between players.
 
 const Net = (() => {
-  const PROTO = 5;               // Bump whenever the simulation changes: mismatched builds would disagree.
+  const PROTO = 6;               // Bump whenever the simulation changes (and the ?v= on index.html's scripts).
   const PREFIX = 'mabs-p' + PROTO + '-';
   const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
@@ -29,7 +29,7 @@ const Net = (() => {
     if (!s || typeof s !== 'object') return null;
     const sb = s.battle;
     const b = sb && typeof sb === 'object' && typeof sb.key === 'string' && Array.isArray(sb.armies)
-      ? { key: sb.key.slice(0, 60), at: num(sb.at), budget: Math.floor(num(sb.budget)), armies: [0, 1].map(i => (typeof sb.armies[i] === 'string' ? sb.armies[i].slice(0, 2400) : '')) } : null;
+      ? { key: sb.key.slice(0, 60), at: num(sb.at), budget: Math.floor(num(sb.budget)), map: MAPS[sb.map] ? sb.map : 'meadow', armies: [0, 1].map(i => (typeof sb.armies[i] === 'string' ? sb.armies[i].slice(0, 2400) : '')) } : null;
     return { army: typeof s.army === 'string' ? s.army.slice(0, 2400) : '', shadow: typeof s.shadow === 'string' ? s.shadow.slice(0, 2000) : '', ready: num(s.ready), round: Math.floor(num(s.round)), battle: b, name: cleanName(s.name) };
   }
   // A seat's state as this screen knows it: our own seat is always the local, freshest copy.
@@ -43,7 +43,7 @@ const Net = (() => {
   function send(c, msg) { try { if (c.open) c.send(msg); } catch (e) { /* a closed channel just drops it */ } }
   function broadcast() {
     if (role !== 'host') return;
-    const msg = { t: 'room', seats: [mine(), guest], budget: G.budgetIdx, watchers: conns.filter(c => c.seat === null && c.ok).length };
+    const msg = { t: 'room', seats: [mine(), guest], budget: G.budgetIdx, map: G.map, watchers: conns.filter(c => c.seat === null && c.ok).length };
     for (const c of conns) if (c.ok) send(c, msg);
   }
   function pushMe() {
@@ -70,7 +70,7 @@ const Net = (() => {
       const waiting = G.countdown && info && G.countdown.key === info.key && Date.now() - info.at < 1500;
       if (info && !waiting) {
         G.countdown = null; $('countdown').hidden = true;
-        lastKey = info.key; begin(info.key, info.armies, info.budget);
+        lastKey = info.key; begin(info.key, info.armies, info.budget, info.map);
         fastForward(Math.min(240 * 60, Math.round((Date.now() - info.at) / 1000 * 60)));
       }
     }
@@ -95,12 +95,13 @@ const Net = (() => {
     return Number(parts[0]) === round && Number(parts[1 + seat]) === ready && ready !== 0;
   }
 
-  function begin(key, armies, budget) {
+  function begin(key, armies, budget, map) {
+    if (map && MAPS[map] && map !== G.map) applyMap(map);
     const strs = armies || [0, 1].map(s => { const o = seatState(s); return o ? o.army : ''; });
     if (Number.isInteger(budget) && budget >= 0 && budget < G.budgets.length - 1) G.budgetIdx = budget;
     for (const s of [0, 1]) G.armies[s] = decodeArmy(strs[s], s, budgetNow());
-    startBattle(hashStr(`${strs[0]}|${strs[1]}|${key}|${G.budgetIdx}`));
-    battle = { key, at: Date.now(), armies: strs, budget: G.budgetIdx };
+    startBattle(hashStr(`${strs[0]}|${strs[1]}|${key}|${G.budgetIdx}|${G.map}`));
+    battle = { key, at: Date.now(), armies: strs, budget: G.budgetIdx, map: G.map };
     pushMe();
   }
 
@@ -207,6 +208,7 @@ const Net = (() => {
     } else if (msg.t === 'room' && Array.isArray(msg.seats)) {
       seats = [cleanState(msg.seats[0]), cleanState(msg.seats[1])];
       watchers = num(msg.watchers);
+      if (typeof msg.map === 'string' && MAPS[msg.map] && msg.map !== G.map) { applyMap(msg.map); toast(`The host picked ${MAPS[msg.map].name}.`); }
       const b = msg.budget;
       if (Number.isInteger(b) && b >= 0 && b < G.budgets.length - 1 && b !== G.budgetIdx) {
         G.budgetIdx = b;
@@ -333,7 +335,7 @@ const Net = (() => {
   return {
     init, controls, fightPressed, nextRound, battleEnded, openPanel,
     armyChanged: team => { if (team === seat) { pushMe(); recompute(); } },
-    budgetChanged: () => { pushMe(); recompute(); },
+    settingsChanged: () => { pushMe(); recompute(); },
     canEdit: () => seat !== null && !ready,
     isHost: () => role === 'host' && seat === 0,
     seat: () => seat,

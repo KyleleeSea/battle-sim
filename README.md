@@ -27,6 +27,19 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | Treant | A grumpy old oak that swats whole rows aside. |
 | LeBron James | Bouncing basketballs from range, slam dunks up close. |
 
+## Maps
+
+| Map | Twist |
+|---|---|
+| Meadow | None. Rolling green hills. |
+| Desert | Soft sand: everyone trudges slower and stops sliding sooner. |
+| Frozen Lake | Ice: feet skid and knocked-over units slide a long way. |
+| The Moon | Low gravity: hits send units much higher and further. |
+| Volcano | A rock island in a lava lake, with lava pools down the middle. Lava burns. |
+| Candy Land | Jelly ground: everything that falls bounces. |
+
+Online, the host picks the map.
+
 ## Controls
 
 - Click your half of the field to place the selected unit; drag to paint a crowd; right-click to remove.
@@ -43,7 +56,7 @@ army is sent when you press Ready, and both armies are revealed when the battle 
 
 Only armies and a "ready" number travel between players. The simulation is deterministic (seeded random numbers and
 hand-written trig, so every browser computes the same floating-point results), so both screens play out the exact same
-battle. If you change the simulation, bump `PROTO` in `net.js` so players on old and new builds refuse to match.
+battle. If you change the simulation, bump `PROTO` in `net.js` (and the `?v=` on the script tags in `index.html`) so players on old and new builds refuse to match and browsers fetch fresh files.
 
 ## Running locally
 

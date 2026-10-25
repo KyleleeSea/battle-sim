@@ -147,6 +147,7 @@ function updateProjectiles(W) {
     W.projs = W.projs.filter(p => !(extra > 0 && p.stuck && extra-- > 0));
   }
   updateHazards(W);
+  lavaBurn(W);
 }
 
 // Banana peels: the first enemy to step on one slips over backwards.

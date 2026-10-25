@@ -349,7 +349,7 @@ function musclePose(u, moving, m, cheer, W) {
     const gc = GRAV * DT * DT * m;
     for (let i = 0; i < pts.length; i++) if (i !== J.LFOOT && i !== J.RFOOT) pts[i].py -= gc;
     const sp = moving ? u.t.speed * DT * (u.inspired > 0 ? 1.35 : 1) : 0;
-    const k = 0.18 * m;
+    const k = 0.18 * m * ENV.traction;
     vp.x += (fx * sp - vp.x) * k;
     vp.z += (fz * sp - vp.z) * k;
     const hop = cheer ? Math.max(0, dsin(W.time * 9 + u.phase)) * 6 * S : 0;
@@ -625,13 +625,35 @@ function hurt(e, dmg, ix, iy, iz, from, W, src) {
   if (mag > 320) { e.stun = Math.max(e.stun, Math.min(2.2, mag / 700)); e.act = 'idle'; }
   const c = pts[J.CHEST];
   if (res === HIT && dmg > 0) puff(W, c.x, c.y, c.z, 3, '#f4efe4', 40, 3 * e.S);
-  if (e.hp <= 0) {
-    e.alive = false; e.hp = 0; e.act = 'dead';
-    W.lost[e.home]++;
-    if (src) src.kills++;
-    if (e.t.style === 'bomb' && !e.fired) { e.fired = true; explode(W, c.x, c.y, c.z, e.t.dmg, e.t.knock, 100, e); }
-  }
+  if (e.hp <= 0) kill(e, W, src);
   return res;
+}
+
+function kill(e, W, src) {
+  e.alive = false; e.hp = 0; e.act = 'dead';
+  W.lost[e.home]++;
+  if (src) src.kills++;
+  if (e.t.style === 'bomb' && !e.fired) {
+    const c = e.body.pts[J.CHEST];
+    e.fired = true; explode(W, c.x, c.y, c.z, e.t.dmg, e.t.knock, 100, e);
+  }
+}
+
+// Volcano map: anyone standing in the lava around the field hops about and burns.
+function lavaBurn(W) {
+  if (!ENV.lava) return;
+  for (const u of W.units) {
+    if (!u.alive) continue;
+    const p = u.P, pts = u.body.pts;
+    let rate = Math.abs(p.x) < FIELD_X + 60 && p.z > -60 && p.z < FIELD_Z + 60 ? 0 : 160;
+    if (!rate && ENV.pools) for (const [x, z, r] of ENV.pools) if ((p.x - x) ** 2 + (p.z - z) ** 2 < r * r) { rate = 60; break; }
+    if (!rate) continue;
+    if (Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) > 4 && p.y > 12 * u.S) continue;
+    u.hp -= rate * DT; u.hitFlash = 0.05;
+    for (const j of [J.LFOOT, J.RFOOT]) addVel(pts[j], 0, 70, 0);
+    if (Math.random() < 0.3) W.parts.push({ kind: 'fire', x: p.x + rand(-6, 6), y: 2, z: p.z + rand(-6, 6), vx: 0, vy: rand(30, 90), vz: 0, life: 0.4, max: 0.4, size: rand(3, 6) });
+    if (u.hp <= 0) { kill(u, W, null); SFX.play('sizzle'); }
+  }
 }
 
 function separate(units) {

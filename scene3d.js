@@ -2,14 +2,13 @@
 // The 3D stage: renderer, lights, scenery, the orbiting camera, ground picking and unit portraits.
 
 const View = (() => {
-  let renderer, scene, camera, painter, ghost, clouds, sized = false;
-  const zones = [], cloudData = [];
+  let renderer, scene, camera, painter, ghost, world = null, mapId = null, sized = false;
+  const zones = [];
   const cam = { tx: 0, ty: 20, tz: FIELD_Z / 2, theta: 0, phi: 1, dist: 1300, auto: false };
   let W0 = 1, H0 = 1, insetTop = 0, insetBottom = 0;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
   const tmpM = new THREE.Matrix4(), tmpP = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3();
-  const HORIZON = '#cfe9f3';
 
   function init(canvas) {
     try {
@@ -19,95 +18,12 @@ const View = (() => {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(HORIZON);
-    scene.fog = new THREE.Fog(HORIZON, 2800, 8000);
     camera = new THREE.PerspectiveCamera(40, 1, 5, 14000);
-    buildLights(); buildSky(); buildGround(); buildScenery(); buildZones(); buildGhost();
+    buildZones(); buildGhost();
+    setMap('meadow');
     painter = new Painter(scene, 700);
     painter.camQ = camera.quaternion;
     return true;
-  }
-
-  function buildLights() {
-    scene.add(new THREE.HemisphereLight('#e4f3ff', '#6f8f45', 0.78));
-    const sun = new THREE.DirectionalLight('#fff4e0', 0.78);
-    sun.position.set(-700, 1500, FIELD_Z / 2 + 900);
-    sun.target.position.set(0, 0, FIELD_Z / 2);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    const sc = sun.shadow.camera;
-    sc.left = -1050; sc.right = 1050; sc.top = 850; sc.bottom = -850; sc.near = 300; sc.far = 4200;
-    sun.shadow.bias = -0.0006;
-    scene.add(sun, sun.target);
-  }
-
-  function buildSky() {
-    const g = new THREE.SphereGeometry(9000, 24, 14), pos = g.attributes.position, cols = [];
-    const top = new THREE.Color('#5aa6df'), low = new THREE.Color(HORIZON);
-    for (let i = 0; i < pos.count; i++) {
-      const c = low.clone().lerp(top, clamp(pos.getY(i) / 9000 * 1.8, 0, 1));
-      cols.push(c.r, c.g, c.b);
-    }
-    g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
-    scene.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false })));
-  }
-
-  function buildGround() {
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(18000, 18000), new THREE.MeshLambertMaterial({ color: '#7db250' }));
-    ground.rotation.x = -PI / 2; ground.receiveShadow = true;
-    scene.add(ground);
-    const c = document.createElement('canvas'); c.width = 512; c.height = 8;
-    const x = c.getContext('2d');
-    for (let i = 0; i < 16; i++) { x.fillStyle = i % 2 ? '#97cb66' : '#88bf59'; x.fillRect(i * 32, 0, 32, 8); }
-    const field = new THREE.Mesh(new THREE.PlaneGeometry(FIELD_X * 2 + 180, FIELD_Z + 180), new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c) }));
-    field.rotation.x = -PI / 2; field.position.set(0, 0.4, FIELD_Z / 2); field.receiveShadow = true;
-    scene.add(field);
-  }
-
-  function buildScenery() {
-    let seed = 7;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const spots = [];
-    while (spots.length < 110) {
-      const a = rnd() * TAU, d = 1100 + rnd() * 2200;
-      const x = Math.cos(a) * d * 1.3, z = FIELD_Z / 2 + Math.sin(a) * d;
-      if (Math.abs(x) < FIELD_X + 260 && z > -300 && z < FIELD_Z + 300) continue;
-      spots.push([x, z, 0.7 + rnd() * 0.9]);
-    }
-    const n = spots.length;
-    const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1.3, 1, 6), new THREE.MeshLambertMaterial({ color: '#7a5534' }), n);
-    const coneGeo = new THREE.ConeGeometry(1, 1, 7); coneGeo.translate(0, 0.5, 0);
-    const low = new THREE.InstancedMesh(coneGeo, new THREE.MeshLambertMaterial({ color: '#4c8a39' }), n);
-    const high = new THREE.InstancedMesh(coneGeo, new THREE.MeshLambertMaterial({ color: '#5e9f46' }), n);
-    spots.forEach(([x, z, s], i) => {
-      tmpQ.identity();
-      trunk.setMatrixAt(i, tmpM.compose(tmpP.set(x, 18 * s, z), tmpQ, tmpS.set(6 * s, 36 * s, 6 * s)));
-      low.setMatrixAt(i, tmpM.compose(tmpP.set(x, 28 * s, z), tmpQ, tmpS.set(36 * s, 80 * s, 36 * s)));
-      high.setMatrixAt(i, tmpM.compose(tmpP.set(x, 70 * s, z), tmpQ, tmpS.set(26 * s, 64 * s, 26 * s)));
-    });
-    for (const m of [trunk, low, high]) { m.castShadow = true; scene.add(m); }
-
-    const rocks = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ color: '#a19c92' }), 36);
-    for (let i = 0; i < 36; i++) {
-      const side = i % 2 ? 1 : -1, x = side * (FIELD_X + 140 + rnd() * 500), z = -200 + rnd() * (FIELD_Z + 400), s = 8 + rnd() * 16;
-      tmpQ.setFromAxisAngle(_Y, rnd() * TAU);
-      rocks.setMatrixAt(i, tmpM.compose(tmpP.set(x, s * 0.3, z), tmpQ, tmpS.set(s, s * 0.7, s * 1.2)));
-    }
-    rocks.castShadow = true; scene.add(rocks);
-
-    const hillGeo = new THREE.SphereGeometry(1, 24, 12);
-    const hillMats = [new THREE.MeshLambertMaterial({ color: '#8fbf7a' }), new THREE.MeshLambertMaterial({ color: '#a7cba0' })];
-    for (let i = 0; i < 9; i++) {
-      const a = (i / 9) * TAU + 0.3, d = 5600 + rnd() * 1400;
-      const hill = new THREE.Mesh(hillGeo, hillMats[i % 2]);
-      hill.position.set(Math.cos(a) * d, -150, FIELD_Z / 2 + Math.sin(a) * d);
-      hill.scale.set(1500 + rnd() * 900, 450 + rnd() * 450, 1300 + rnd() * 700);
-      scene.add(hill);
-    }
-
-    clouds = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', fog: false }), 60);
-    for (let i = 0; i < 12; i++) cloudData.push({ x: -5000 + rnd() * 10000, y: 1600 + rnd() * 900, z: -4000 + rnd() * 6000, s: 120 + rnd() * 140, v: 6 + rnd() * 8 });
-    scene.add(clouds);
   }
 
   function labelTexture(text) {
@@ -124,6 +40,14 @@ const View = (() => {
     draw();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
     return tex;
+  }
+
+  // Swaps the scenery, sky and lighting for another map.
+  function setMap(id) {
+    if (id === mapId) return;
+    if (world) world.dispose();
+    world = World.build(scene, id);
+    mapId = id;
   }
 
   function buildZones() {
@@ -220,14 +144,7 @@ const View = (() => {
       ghost.material.opacity = g.ok || g.erase ? 0.9 : 0.4;
     }
 
-    cloudData.forEach((c, i) => {
-      const x = ((c.x + ui.clock * c.v + 6000) % 12000) - 6000;
-      for (let k = 0; k < 5; k++) {
-        const s = c.s * (k === 2 ? 1.25 : 0.8 + (k % 2) * 0.15);
-        clouds.setMatrixAt(i * 5 + k, tmpM.compose(tmpP.set(x + (k - 2) * c.s * 0.9, c.y + (k === 2 ? c.s * 0.3 : 0), c.z + (k % 2 ? 40 : -30)), tmpQ.identity(), tmpS.set(s, s * 0.6, s * 0.8)));
-      }
-    });
-    clouds.instanceMatrix.needsUpdate = true;
+    world.update(ui.clock);
     renderer.render(scene, camera);
   }
 
@@ -266,5 +183,5 @@ const View = (() => {
     ctx.putImageData(img, 0, 0);
   }
 
-  return { init, resize, render, pick, rotate, pan, zoom, resetView, setAuto, portrait, isAuto: () => cam.auto };
+  return { init, resize, render, pick, rotate, pan, zoom, resetView, setAuto, setMap, portrait, isAuto: () => cam.auto };
 })();
