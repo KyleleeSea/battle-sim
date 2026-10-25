@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mostly Accurate Battle Sim</title>
+<meta name="description" content="A wobbly 3D ragdoll battle sandbox with 15 unit types. Place your army, hit Fight, or duel a friend online.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M10 8l30 30M54 8L24 38' stroke='%232a2433' stroke-width='9' stroke-linecap='round'/%3E%3Cpath d='M10 8l30 30M54 8L24 38' stroke='%23dfe4ec' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M16 48l12-12M48 48L36 36' stroke='%23d9483b' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Lilita+One&display=swap">
+<style>
+  /* Layout: full-bleed battlefield canvas; a command bar across the top, the unit tray docked at the bottom.
+     One sunny toy-box look on purpose, so the page keeps its own colours in both host themes. */
+  :root {
+    --ink: #2a2433; --ink-soft: #5b5368; --paper: #fbf3e2; --paper-2: #e9dec6;
+    --red: #d9483b; --blue: #3a6fd9; --gold: #f4b62e; --go: #9fd47a; --sky: #7cc0ea;
+    --scrim: rgba(42, 36, 51, 0.45); --ink-glass: rgba(42, 36, 51, 0.86);
+    --f-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+    --f-ui: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+    --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+    --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+    color-scheme: light;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  body { background: var(--sky); color: var(--ink); font-family: var(--f-ui); font-size: 15px; overflow: hidden; }
+  #app { position: relative; height: 100%; overflow: hidden; }
+  #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+  button, select, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .outlined { color: var(--paper); text-shadow: 0 3px 0 var(--ink), 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 -2px 0 var(--ink), 2px 2px 0 var(--ink), -2px 2px 0 var(--ink), 2px -2px 0 var(--ink), -2px -2px 0 var(--ink); }
+
+  #topbar {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 2; pointer-events: none;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+    padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: 10px; padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+  }
+  #topbar > * { pointer-events: auto; }
+  .brand { display: grid; line-height: 0.9; font-family: var(--f-display); margin-right: auto; }
+  .brand-top { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .brand-main { font-size: 30px; }
+
+  .armies { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .vs { font-family: var(--f-display); font-size: 18px; }
+  .pill {
+    display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px;
+    background: var(--paper); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink);
+    font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .pill-name { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 8px; color: var(--paper); font-family: var(--f-display); font-size: 16px; letter-spacing: 0.02em; max-width: 9em; overflow: hidden; text-overflow: ellipsis; }
+  .pill.red .pill-name { background: var(--red); }
+  .pill.blue .pill-name { background: var(--blue); }
+  .pill-name b { font-family: var(--f-ui); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; background: var(--go); color: var(--ink); padding: 0 5px; border-radius: 5px; }
+  .gold { color: var(--ink-soft); font-weight: 500; }
+
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .btn, .tools select {
+    background: var(--paper); border: 2px solid var(--ink); border-radius: 9px; box-shadow: 0 3px 0 var(--ink);
+    padding: 5px 11px; font-weight: 600; cursor: pointer; transition: transform 0.06s, box-shadow 0.06s;
+  }
+  .tools select { appearance: none; padding-right: 30px; max-width: 13em; text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232a2433' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; }
+  .btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+  .btn[aria-pressed="true"] { background: var(--gold); }
+  .btn:disabled, .tools select:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-online { background: var(--ink); color: var(--paper); }
+
+  .matchbar {
+    flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+    background: var(--ink-glass); color: var(--paper); border-radius: 10px; padding: 6px 8px 6px 12px; font-weight: 600;
+  }
+  .matchbar b { font-variant-numeric: tabular-nums; }
+  #matchCode { font-family: var(--f-display); font-weight: 400; font-size: 20px; letter-spacing: 0.12em; color: var(--gold); user-select: all; }
+  .matchbar .spacer { margin-left: auto; }
+  .chip { background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-radius: 8px; padding: 2px 10px; font-weight: 700; cursor: pointer; }
+  .chip:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #dock {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; pointer-events: none;
+    display: grid; gap: 8px; padding-top: 8px; padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+  }
+  #dock > * { pointer-events: auto; }
+  .dock-top { display: flex; align-items: flex-end; gap: 10px; pointer-events: none; }
+  .dock-top > * { pointer-events: auto; }
+  .hint { margin: 0 auto 0 0; background: var(--ink-glass); color: var(--paper); padding: 6px 12px; border-radius: 10px; font-size: 14px; line-height: 1.3; max-width: 62ch; }
+  .hint-how { color: var(--paper-2); font-weight: 500; }
+  #hintUnit { font-weight: 700; }
+  .zoom { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
+  .sq { width: 36px; height: 36px; padding: 0; font-size: 20px; line-height: 1; }
+
+  .dock-row { display: flex; align-items: flex-end; gap: 12px; min-width: 0; }
+  .tray { flex: 1; min-width: 0; display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px 8px; scrollbar-width: thin; }
+  .locked .tray { opacity: 0.55; pointer-events: none; }
+  .card {
+    flex: 0 0 auto; width: 80px; display: grid; justify-items: center; gap: 1px; padding: 4px 4px 6px;
+    background: var(--paper); border: 2px solid var(--ink); border-radius: 10px; box-shadow: 0 3px 0 var(--ink);
+    cursor: pointer; transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
+  }
+  .card[aria-pressed="true"] { background: var(--gold); transform: translateY(-3px); box-shadow: 0 6px 0 var(--ink); }
+  .portrait { width: 66px; height: 54px; }
+  .card-name { font-weight: 700; font-size: 13px; line-height: 1.05; text-align: center; min-height: 2.1em; display: grid; place-items: center; }
+  .card-cost { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 4px; }
+  .card-cost::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--gold); border: 1.5px solid var(--ink); }
+
+  .fight {
+    flex: 0 0 auto; min-width: 150px; height: 86px; display: grid; place-content: center; gap: 2px; text-align: center;
+    background: var(--gold); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 5px 0 var(--ink);
+    cursor: pointer; transition: transform 0.06s, box-shadow 0.06s; margin-bottom: 8px;
+  }
+  .fight:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+  .fight.is-ready { background: var(--go); }
+  .fight:disabled { background: var(--paper-2); cursor: default; }
+  #fightLabel { font-family: var(--f-display); font-size: 34px; line-height: 1; }
+  #fightSub { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+
+  .banner {
+    position: absolute; z-index: 3; left: 50%; top: 44%; transform: translate(-50%, -50%);
+    width: min(420px, calc(100% - 32px)); text-align: center; display: grid; gap: 10px; justify-items: center;
+    background: var(--paper); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 8px 0 var(--ink); padding: 20px 22px 24px;
+  }
+  .banner h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 52px; line-height: 1; text-wrap: balance; }
+  .banner h2.red { color: var(--red); }
+  .banner h2.blue { color: var(--blue); }
+  .banner p { margin: 0; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; text-wrap: balance; }
+  .btn-big { font-size: 18px; padding: 8px 18px; background: var(--gold); }
+
+  .nogl { position: absolute; z-index: 6; left: 50%; top: 45%; transform: translate(-50%, -50%); width: min(420px, calc(100% - 32px)); margin: 0; background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; padding: 16px 18px; font-weight: 600; line-height: 1.4; }
+  .countdown { position: absolute; z-index: 3; left: 50%; top: 40%; transform: translate(-50%, -50%); font-family: var(--f-display); font-size: 150px; line-height: 1; pointer-events: none; }
+  .toast { position: absolute; z-index: 4; left: 50%; top: 22%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 10px; font-weight: 600; max-width: calc(100% - 32px); text-align: center; pointer-events: none; }
+
+  .modal { position: absolute; inset: 0; z-index: 5; background: var(--scrim); display: grid; place-items: center; padding-block: 16px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+  .sheet { width: min(460px, 100%); max-height: 100%; overflow: auto; background: var(--paper); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 8px 0 var(--ink); padding: 18px 20px 20px; display: grid; gap: 14px; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .sheet h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 30px; }
+  .sheet h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); }
+  .sheet p { margin: 0; line-height: 1.4; }
+  #netStatus { font-weight: 600; }
+  .note { font-size: 14px; color: var(--ink-soft); }
+  .field { display: grid; gap: 4px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); }
+  .field input { text-transform: none; letter-spacing: 0; font-size: 16px; font-weight: 600; color: var(--ink); padding: 6px 10px; border: 2px solid var(--ink); border-radius: 9px; background: #fffaf0; }
+  .join-form { display: flex; gap: 8px; }
+  .join-form input { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 9px; background: #fffaf0; }
+  .host { width: 100%; font-size: 18px; padding: 9px; background: var(--gold); }
+
+  @media (max-width: 720px) {
+    .brand-main { font-size: 23px; }
+    .tools { justify-content: flex-start; }
+    .gold { display: none; }
+    .fight { min-width: 112px; height: 76px; }
+    #fightLabel { font-size: 27px; }
+    .hint-how { display: none; }
+    .card { width: 72px; }
+    .portrait { width: 60px; height: 48px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <canvas id="cv" aria-label="Battlefield. Red deploys on the left half, Blue on the right."></canvas>
+
+  <header id="topbar">
+    <div class="brand outlined"><span class="brand-top">Mostly Accurate</span><span class="brand-main">Battle Sim</span></div>
+    <div class="armies">
+      <div class="pill red"><span class="pill-name"><span id="name0">Red</span><b id="ready0" hidden>Ready</b></span><span id="count0"></span><span id="gold0" class="gold"></span></div>
+      <span class="vs outlined">vs</span>
+      <div class="pill blue"><span class="pill-name"><span id="name1">Blue</span><b id="ready1" hidden>Ready</b></span><span id="count1"></span><span id="gold1" class="gold"></span></div>
+    </div>
+    <nav class="tools" aria-label="Battle controls">
+      <select id="presetSel" aria-label="Load a preset"></select>
+      <button id="budgetBtn" class="btn" type="button" title="Gold each side can spend">Budget 5,000</button>
+      <button id="slowBtn" class="btn" type="button" aria-pressed="false">Slow-mo</button>
+      <button id="soundBtn" class="btn" type="button" aria-pressed="true">Sound on</button>
+      <button id="clearBtn" class="btn" type="button">Clear</button>
+      <button id="onlineBtn" class="btn btn-online" type="button">Play online</button>
+    </nav>
+    <div id="matchBar" class="matchbar" hidden>
+      <span>Match <span id="matchCode"></span></span>
+      <button id="copyBtn" class="chip" type="button">Copy invite link</button>
+      <span id="seatInfo"></span>
+      <span>Score <b id="scoreInfo">0 &#x2013; 0</b></span>
+      <span id="connInfo" hidden></span>
+      <button id="leaveBtn" class="chip spacer" type="button">Leave match</button>
+    </div>
+  </header>
+
+  <div id="countdown" class="countdown outlined" hidden aria-live="assertive"></div>
+  <p id="noGl" class="nogl" hidden>This battlefield needs WebGL, which this browser has turned off or doesn't support. Try another browser or turn on hardware acceleration.</p>
+  <div id="toast" class="toast" hidden role="status"></div>
+
+  <section id="banner" class="banner" hidden aria-live="polite">
+    <h2 id="bannerTitle"></h2>
+    <p id="bannerStats"></p>
+    <button id="againBtn" class="btn btn-big" type="button">Rewind battle</button>
+  </section>
+
+  <footer id="dock">
+    <div class="dock-top">
+      <p id="hint" class="hint"><span id="hintUnit"></span> <span class="hint-how">Click your side to place, drag to paint a crowd, right-click to remove. Right-drag turns the camera, scroll zooms.</span></p>
+      <div class="zoom">
+        <button id="orbitBtn" class="btn" type="button" aria-pressed="false" title="Slowly circle the battlefield (C)">Cinematic</button>
+        <button id="viewBtn" class="btn" type="button" title="Back to the starting camera (R)">Reset view</button>
+        <button id="zoomOut" class="btn sq" type="button" aria-label="Zoom out">&#x2212;</button>
+        <button id="zoomIn" class="btn sq" type="button" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+    <div class="dock-row">
+      <div id="tray" class="tray" role="toolbar" aria-label="Units"></div>
+      <button id="fightBtn" class="fight" type="button"><span id="fightLabel">Fight!</span><span id="fightSub">or press Space</span></button>
+    </div>
+  </footer>
+
+  <div id="netPanel" class="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="netTitle">
+      <div class="sheet-head">
+        <h2 id="netTitle">Play online</h2>
+        <button id="closeNet" class="chip" type="button">Close</button>
+      </div>
+      <p id="netStatus" aria-live="polite">Play a friend directly, browser to browser.</p>
+      <label class="field" for="nameInput"><span>Your name</span>
+        <input id="nameInput" maxlength="20" placeholder="Shown to your opponent" autocomplete="nickname">
+      </label>
+      <button id="hostBtn" class="btn host" type="button">Host a match as Red</button>
+      <div>
+        <h3>Join a friend&#x2019;s match</h3>
+        <form id="joinForm" class="join-form" autocomplete="off">
+          <input id="codeInput" maxlength="4" placeholder="4-letter code" aria-label="Match code">
+          <button id="joinBtn" class="btn" type="submit">Join</button>
+        </form>
+      </div>
+      <p class="note">Hosting gives you a code and an invite link. Your friend opens the link, or types the code, and plays Blue. You each place units on your own half and press Ready, and the battle plays out the same way on both screens. Anyone who joins a full match watches.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="physics.js"></script>
+<script src="units.js"></script>
+<script src="projectiles.js"></script>
+<script src="painter3d.js"></script>
+<script src="scene3d.js"></script>
+<script src="game.js"></script>
+<script src="net.js"></script>
+</body>
+</html>
