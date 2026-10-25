@@ -1,4 +1,4 @@
-# Mostly Accurate Battle Sim
+# Battle Game
 
 A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fight!**, and watch physics sort it out.
 

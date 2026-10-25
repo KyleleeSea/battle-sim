@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mostly Accurate Battle Sim</title>
+<title>Battle Game</title>
 <meta name="description" content="A wobbly 3D ragdoll battle sandbox with 15 unit types. Place your army, hit Fight, or duel a friend online.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M10 8l30 30M54 8L24 38' stroke='%232a2433' stroke-width='9' stroke-linecap='round'/%3E%3Cpath d='M10 8l30 30M54 8L24 38' stroke='%23dfe4ec' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M16 48l12-12M48 48L36 36' stroke='%23d9483b' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,7 +40,6 @@
   }
   #topbar > * { pointer-events: auto; }
   .brand { display: grid; line-height: 0.9; font-family: var(--f-display); margin-right: auto; }
-  .brand-top { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
   .brand-main { font-size: 30px; }
 
   .armies { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -170,7 +169,7 @@
   <canvas id="cv" aria-label="Battlefield. Red deploys on the left half, Blue on the right."></canvas>
 
   <header id="topbar">
-    <div class="brand outlined"><span class="brand-top">Mostly Accurate</span><span class="brand-main">Battle Sim</span></div>
+    <div class="brand outlined"><span class="brand-main">Battle Game</span></div>
     <div class="armies">
       <div class="pill red"><span class="pill-name"><span id="name0">Red</span><b id="ready0" hidden>Ready</b></span><span id="count0"></span><span id="gold0" class="gold"></span></div>
       <span class="vs outlined">vs</span>
