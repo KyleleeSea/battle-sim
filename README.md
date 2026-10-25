@@ -6,7 +6,7 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-38 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
+48 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
 Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 
 | Unit | Trick |
@@ -34,6 +34,16 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | Mega Knight | Leaps onto crowds and lands like a meteor. |
 | Dragon | A Chinese dragon in a rice hat. Breathes fire in a wide cone. |
 | Ultraman | A giant of light, twice a Giant's height. Stomps enemies underfoot; fires the Specium Ray. |
+| Kendrick Lamar | Sound waves that pierce a whole line. Hits Drake twice as hard. |
+| Drake | Makes it rain: enemies hit by cash stop to pick it up. |
+| Anderson .Paak | Drums so hard the shockwaves knock everyone nearby over. |
+| Nicki Minaj | Super Bass: a blast that sends everyone in front of her flying. |
+| St. Augustine | Heals every ally around him at once. |
+| Martin Luther | Here I stand: can't be knocked off his feet. Fights with a hammer. |
+| Dietrich Bonhoeffer | Allies standing near him take a third less damage. |
+| Martin Luther King Jr. | Never strikes a blow. Inspires allies and makes nearby enemies lay down their arms. |
+| Pastor Hans | Prays over fallen allies and brings back up to five. |
+| Tung Tung Tung Sahur | A wooden log with a bat. Hits home runs with people. |
 
 Units lighter than a person (Chickens, Little Fish, Squirrels, Monkeys, Cupids, Grandmas) get a speed boost that grows
 as their mass drops, so the smallest ones scurry at more than twice a person's pace.

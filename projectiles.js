@@ -13,6 +13,8 @@ const PROJ = {
   hex:     { speed: 330, g: 0.3, r: 5, life: 8 },
   pie:     { speed: 520, g: 1, r: 4, life: 6 },
   peel:    { speed: 450, g: 1, r: 3, life: 6 },
+  wave:    { speed: 520, g: 0, r: 9, life: 0.9 },
+  cash:    { speed: 480, g: 1, r: 4, life: 6 },
 };
 
 function spawnProj(W, kind, from, vel, u) {
@@ -95,6 +97,17 @@ function updateProjectiles(W) {
           p.vx *= -0.45; p.vz *= -0.45; p.vy = Math.abs(p.vy) * 0.4 + 180;
           SFX.play('boing');
         } else { p.vx *= 0.6; p.vy *= 0.6; p.vz *= 0.6; SFX.play('thud'); }
+      } else if (p.kind === 'wave') {
+        // Sound waves keep going through everyone in the line.
+        const bonus = p.owner && p.owner.t.bonusVs === e.key ? 2 : 1;
+        hurt(e, p.dmg * bonus, nx * p.knock, 60, nz * p.knock, from, W, p.owner);
+      } else if (p.kind === 'cash') {
+        const res = hurt(e, 0, 0, 0, 0, from, W, p.owner);
+        if (res === DODGED) continue;
+        if (res === HIT && e.alive) { e.daze = Math.max(e.daze, 1.6); e.act = 'idle'; }
+        glowBits(W, p.x, p.y, p.z, 6, ['#5fbf5a', '#c9f5c0'], 50, 2.5);
+        p.dead = true;
+        break;
       } else if (p.kind === 'pie') {
         const res = hurt(e, p.dmg, nx * p.knock, 60, nz * p.knock, from, W, p.owner);
         if (res === DODGED) continue;
@@ -129,6 +142,9 @@ function updateProjectiles(W) {
         p.dead = true; puff(W, p.x, 0, p.z, 3, '#cdbb98', 40, 3);
       } else if (p.kind === 'pie') {
         p.dead = true; splat(W, p.x, 1, p.z);
+      } else if (p.kind === 'wave' || p.kind === 'cash') {
+        p.dead = true;
+        if (p.kind === 'cash') glowBits(W, p.x, 2, p.z, 4, ['#5fbf5a'], 30, 2);
       } else if (p.kind === 'hex') {
         p.dead = true; glowBits(W, p.x, 2, p.z, 10, ['#b56cff', '#e3c2ff'], 60, 3);
       } else if (p.kind === 'peel') {

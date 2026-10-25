@@ -92,14 +92,37 @@ Object.assign(TYPES, {
   ultraman:   { name: 'Ultraman', cost: 1800, hp: 2400, S: 4.5, speed: 75, range: 450, dmg: 120, cd: 5, knock: 700, style: 'specium', anim: 1.2, weapon: 'none', hat: 'ultraman', block: 0, stomp: true, colossal: true,
                 blurb: 'A giant of light, twice a Giant\u2019s height. Stomps enemies underfoot and fires the Specium Ray.' },
 });
+Object.assign(TYPES, {
+  kendrick:   { name: 'Kendrick Lamar', cost: 450, hp: 160, S: 1, speed: 52, range: 400, dmg: 32, cd: 1.8, knock: 260, style: 'rap', proj: 'wave', anim: 0.7, weapon: 'mic', hat: 'kendrick', block: 0, bonusVs: 'drake',
+                blurb: 'Sound waves that cut through a whole line. Hits Drake twice as hard.' },
+  drake:      { name: 'Drake', cost: 400, hp: 160, S: 1.05, speed: 50, range: 300, dmg: 0, cd: 2.2, knock: 0, style: 'lob', proj: 'cash', anim: 0.8, weapon: 'cash', hat: 'drake', block: 0, fat: 1.15,
+                blurb: 'Makes it rain. Enemies hit by cash stop to pick it up.' },
+  paak:       { name: 'Anderson .Paak', cost: 380, hp: 170, S: 1, speed: 55, reach: 60, auraR: 110, dmg: 25, cd: 2.5, knock: 450, style: 'aura', aura: 'drum', anim: 0.6, weapon: 'sticks', hat: 'paak', block: 0,
+                blurb: 'Drums so hard the shockwaves knock everyone nearby over.' },
+  nicki:      { name: 'Nicki Minaj', cost: 500, hp: 150, S: 1, speed: 52, reach: 120, dmg: 40, cd: 3, knock: 900, style: 'aura', aura: 'bass', anim: 0.7, weapon: 'mic', hat: 'nicki', block: 0,
+                blurb: 'Super Bass: a blast that sends everyone in front of her flying.' },
+  augustine:  { name: 'St. Augustine', cost: 450, hp: 150, S: 1, speed: 44, auraR: 160, healAura: 15, dmg: 0, cd: 3.5, knock: 0, style: 'aura', aura: 'heal', support: true, anim: 0.9, weapon: 'crozier', hat: 'mitre', block: 0,
+                blurb: 'City of God: heals every ally around him at once.' },
+  luther:     { name: 'Martin Luther', cost: 300, hp: 380, S: 1.05, speed: 42, reach: 34, dmg: 30, cd: 1.2, knock: 380, style: 'chop', anim: 0.55, weapon: 'hammer', hat: 'luther', block: 0, heavy: 5, steadfast: true,
+                blurb: 'Here I stand: he cannot be knocked off his feet. Nails his point home with a hammer.' },
+  bonhoeffer: { name: 'Dietrich Bonhoeffer', cost: 350, hp: 170, S: 1, speed: 46, auraR: 150, dmg: 0, cd: 1, knock: 0, style: 'aura', aura: 'ward', support: true, anim: 0.5, weapon: 'none', hat: 'bonhoeffer', block: 0,
+                blurb: 'Stands firm beside his friends: allies near him take a third less damage.' },
+  mlk:        { name: 'Martin Luther King Jr.', cost: 600, hp: 220, S: 1, speed: 46, auraR: 200, dmg: 0, cd: 3, knock: 0, style: 'aura', aura: 'dream', support: true, anim: 1, weapon: 'none', hat: 'mlk', block: 0,
+                blurb: 'Never strikes a blow. His speech inspires allies and makes nearby enemies lay down their arms.' },
+  pastorhans: { name: 'Pastor Hans', cost: 500, hp: 160, S: 1, speed: 46, auraR: 150, dmg: 0, cd: 4, knock: 0, style: 'aura', aura: 'revive', support: true, revives: 5, anim: 1, weapon: 'none', hat: 'pastor', block: 0,
+                blurb: 'Prays over fallen allies and gets them back on their feet, up to five times.' },
+  tung:       { name: 'Tung Tung Tung Sahur', cost: 220, hp: 260, S: 1.1, speed: 55, reach: 34, dmg: 34, cd: 1.0, knock: 650, style: 'chop', anim: 0.5, weapon: 'bat', hat: 'none', block: 0, body: 'log',
+                blurb: 'Tung tung tung tung tung tung tung tung tung sahur. Hits home runs with people.' },
+});
 TYPES.giant.fat = 1.15;
 const ORDER = ['chicken', 'squirrel', 'peasant', 'grandma', 'squire', 'fishmonger', 'hoplite', 'berserker', 'knight', 'ninja', 'scarecrow',
   'archer', 'musketeer', 'monkey', 'jester', 'thrower', 'pirate', 'bomber', 'cupid', 'bard', 'healer', 'disco', 'wizard', 'witch', 'storm',
-  'robot', 'sumo', 'treant', 'lebron', 'giant', 'fish', 'databrick', 'hogrider', 'miner', 'djkhaled', 'megaknight', 'dragon', 'ultraman'];
-const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, none: 2 };
+  'robot', 'sumo', 'treant', 'lebron', 'giant', 'fish', 'databrick', 'hogrider', 'miner', 'djkhaled', 'megaknight', 'dragon', 'ultraman',
+  'kendrick', 'drake', 'paak', 'nicki', 'augustine', 'luther', 'bonhoeffer', 'mlk', 'pastorhans', 'tung'];
+const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, rap: 0.5, none: 2 };
 // What each ranged style throws or fires unless the unit names its own projectile.
-const DEFAULT_PROJ = { bow: 'arrow', gun: 'bullet', throw: 'boulder', hoops: 'ball', cast: 'fire' };
-const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06 };
+const DEFAULT_PROJ = { bow: 'arrow', gun: 'bullet', throw: 'boulder', hoops: 'ball', cast: 'fire', rap: 'wave' };
+const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06, wave: 0.02, cash: 0.08 };
 
 let NEXT_ID = 1;
 
@@ -125,6 +148,7 @@ class Unit {
     this.burrow = false; this.emerged = false; this.leaping = false; this.leapT = 0; this.leapCd = 0;
     this.breath = 0; this.footUp = [false, false]; this.clones = 0; this.owner = null;
     this.anchored = false; this.ax = 0; this.az = 0;   // where a standing unit holds its ground
+    this.daze = 0; this.peace = 0; this.ward = 0;       // picking up cash; laid down arms; shielded by a friend
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -184,6 +208,10 @@ function updateUnit(u, W, active) {
     if (u.charm <= 0 && u.team !== u.home) { u.team = u.home; u.target = null; u.retarget = 0; u.charmCool = 5; }
   } else if (u.charmCool > 0) u.charmCool -= DT;
   if (u.dance > 0) { u.dance -= DT; u.act = 'idle'; }
+  if (u.daze > 0) { u.daze -= DT; u.act = 'idle'; }
+  if (u.peace > 0) u.peace -= DT;
+  if (u.ward > 0) u.ward -= DT;
+  const calm = u.peace > 0;
   if (u.inspired > 0) u.inspired -= DT;
   u.cdT -= DT * (u.inspired > 0 ? 1.7 : 1);
   if (u.leapCd > 0) u.leapCd -= DT;
@@ -204,7 +232,7 @@ function updateUnit(u, W, active) {
   if (u.t.stomp && active) stomp(u, W);
 
   const T = u.target, pel = u.P;
-  if (T && u.stun <= 0 && !cheer && !(u.dance > 0)) {
+  if (T && u.stun <= 0 && !cheer && !(u.dance > 0) && !(u.daze > 0)) {
     const tp = T.P, dx = tp.x - pel.x, dz = tp.z - pel.z;
     const d = Math.sqrt(dx * dx + dz * dz) || 1;
     turnToward(u, dx / d, dz / d, 0.12);
@@ -221,11 +249,11 @@ function updateUnit(u, W, active) {
       if (u.t.colossal) {
         // Keeps striding through the enemy while the Specium Ray recharges.
         moving = d > 150 + T.r;
-        if (u.act !== 'attack' && u.cdT <= 0 && d < reach && u.recover > 0.6) startAttack(u);
+        if (u.act !== 'attack' && u.cdT <= 0 && d < reach && u.recover > 0.6 && !calm) startAttack(u);
       } else if (u.act !== 'attack') {
-        if (u.t.leap && !u.leaping && u.leapCd <= 0 && d > 90 && d < 300 && u.recover > 0.6) leap(u, T, d);
+        if (u.t.leap && !u.leaping && u.leapCd <= 0 && d > 90 && d < 300 && u.recover > 0.6 && !calm) leap(u, T, d);
         else if (d > reach * (ranged ? 1 : 0.85)) moving = true;
-        else if (u.cdT <= 0 && u.recover > 0.6) startAttack(u);
+        else if (u.cdT <= 0 && u.recover > 0.6 && !calm) startAttack(u);
       }
     }
     const st = u.t.style;
@@ -304,6 +332,7 @@ function armPose(u, moving, cheer, time) {
   const swing = (a, s) => [a[0] + s, a[1], a[2], a[3], a[4], a[5]];
   if (u.dance > 0 || u.t.aura === 'disco') return dancePose(u, time);
   if (u.leaping) return { r: [4, 16, 7, 0.2, 1, 0], l: [4, 16, -7, 0.2, 1, 0] };
+  if (u.daze > 0) return { r: [10, -16, 4, 0.3, -1, 0], l: [10, -16, -4, 0.3, -1, 0] };   // stooping for the cash
   if (cheer) {
     const b = dsin(time * 9 + u.phase) * 2;
     return { r: [4, 16 + b, 7, 0.2, 1, 0], l: [4, 16 - b, -7, 0.2, 1, 0] };
@@ -341,7 +370,11 @@ function armPose(u, moving, cheer, time) {
       return att ? { r: keyf([[0, STAFF_R], [0.4, up], [0.7, up], [1, STAFF_R]], t), l: keyf([[0, HANG_L], [0.4, [8, 8, -5, 0.4, 1, 0]], [0.7, [8, 8, -5, 0.4, 1, 0]], [1, HANG_L]], t) }
         : { r: STAFF_R, l: swing(HANG_L, -sw) };
     }
+    case 'rap':
+      return { r: [6, 9, 3, 0.2, 1, 0], l: att ? [16, 4, -5, 1, 0.2, 0] : swing(HANG_L, -sw) };
     case 'lob': {
+      // Drake waits with a little dance.
+      if (u.key === 'drake' && !att) return { r: [6, 4 + dsin(time * 6 + u.phase) * 4, 6, 0.4, 0.9, 0], l: [8, -2, -4, 0.6, 0.2, 0] };
       const rest = [8, -2, 6, 0.6, 0.6, 0];
       const r = att ? keyf([[0, rest], [0.4, [-6, 12, 6, -0.4, 1, 0]], [0.55, [16, 10, 5, 1, 0.5, 0]], [0.7, [18, 2, 5, 1, -0.4, 0]], [1, rest]], t) : rest;
       return { r, l: swing(HANG_L, -sw) };
@@ -351,6 +384,14 @@ function armPose(u, moving, cheer, time) {
         // Mic to the mouth; the other hand goes up when the beat drops.
         return { r: [7, 9, 3, 0.2, 1, 0], l: att ? [6, 17, -6, 0.2, 1, 0] : swing(HANG_L, -sw) };
       }
+      if (u.t.aura === 'drum') {
+        const hit = dsin((att ? t * 30 : time * 8) + u.phase);
+        return { r: [9, -7 + hit * 2, 3, 0.6, -0.7, 0], l: [9, -7 - hit * 2, -3, 0.6, -0.7, 0] };
+      }
+      if (u.t.aura === 'bass') return att ? { r: [16, 6, 5, 1, 0.3, 0], l: [16, 6, -5, 1, 0.3, 0] } : { r: [7, 9, 3, 0.2, 1, 0], l: swing(HANG_L, -sw) };
+      if (u.t.aura === 'heal' || u.t.aura === 'revive') return att ? { r: [6, 14, 6, 0.2, 1, 0], l: [6, 14, -6, 0.2, 1, 0] } : { r: STAFF_R, l: [8, -4, -4, 0.8, 0.3, 0] };
+      if (u.t.aura === 'dream') return { r: att ? [8, 15, 5, 0.3, 1, 0] : [6, 2, 5, 0.6, 0.6, 0], l: [8, -2, -4, 0.8, 0.3, 0] };
+      if (u.t.aura === 'ward') return { r: [8, -6, 5, 0.6, -0.2, 0], l: [8, -6, -5, 0.6, -0.2, 0] };
       // Bard: left hand on the lute's neck, right hand strumming.
       const strum = att ? dsin(t * 40) * 2 : 0;
       return { r: [7, -6 + strum, 3, 0.1, -1, 0], l: [13, 2, -3, 1, 0.5, 0] };
@@ -502,32 +543,7 @@ function strike(u, W) {
     explode(W, c.x, c.y, c.z, u.t.dmg, u.t.knock, 100, u);
     return;
   }
-  if (st === 'aura') {
-    const pel = u.P, R0 = u.t.auraR;
-    for (const e of W.units) {
-      if (!e.alive || e === u || e.burrow) continue;
-      const dx = e.P.x - pel.x, dz = e.P.z - pel.z;
-      if (dx * dx + dz * dz > R0 * R0) continue;
-      if (u.t.aura !== 'disco' && e.team === u.team) e.inspired = 4.5;
-      else if (u.t.aura === 'disco' && e.team !== u.team && e.stun <= 0) {
-        e.dance = 1.8; e.act = 'idle';
-        addVel(e.body.pts[J.CHEST], 0, 110 / e.mass, 0);
-      }
-    }
-    const c = pts[J.HEAD];
-    if (u.t.aura === 'anotherone') {
-      glowBits(W, c.x, c.y, c.z, 8, ['#ffd166', '#ffffff', '#ff5fd2'], 50, 2.5);
-      if (u.alt) anotherOne(u, W); else SFX.play('strum');
-    } else if (u.t.aura === 'disco') {
-      glowBits(W, c.x, c.y + 20, c.z, 16, ['#ff5fd2', '#5fe3ff', '#ffe45f', '#8cff6b'], 140, 3);
-      W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.4, max: 0.4, r: R0, disco: true });
-      SFX.play('disco');
-    } else {
-      glowBits(W, c.x, c.y, c.z, 8, ['#ffd166', '#fff3c4'], 40, 2.5);
-      SFX.play('strum');
-    }
-    return;
-  }
+  if (st === 'aura') { auraPulse(u, W); return; }
   if (st === 'laser') {
     const T = u.target;
     if (!T || !T.alive) return;
@@ -572,7 +588,7 @@ function strike(u, W) {
     if (st === 'gun') {
       puff(W, a.x, a.y, a.z, kind === 'cannon' ? 12 : 7, '#e9e4dc', 70, kind === 'cannon' ? 7 : 5);
       SFX.play(kind === 'cannon' ? 'boom' : 'bang');
-    } else SFX.play(st === 'bow' ? 'twang' : 'whoosh');
+    } else SFX.play(st === 'bow' ? 'twang' : st === 'rap' ? 'rap' : kind === 'cash' ? 'cash' : 'whoosh');
     return;
   }
   const pel = u.P, victims = [];
@@ -594,7 +610,7 @@ function strike(u, W) {
     const k = u.t.knock * (0.8 + R() * 0.4);
     hurt(e, u.t.dmg * (0.8 + R() * 0.4), u.fx * k, up * k, u.fz * k, pel, W, u);
   }
-  if (st === 'punch' || st === 'shove') { W.shake = Math.max(W.shake, 5); SFX.play('thud'); } else SFX.play('hit');
+  if (st === 'punch' || st === 'shove') { W.shake = Math.max(W.shake, 5); SFX.play('thud'); } else SFX.play(u.key === 'tung' ? 'tung' : 'hit');
 }
 
 // Strikes the target, then jumps to the nearest enemy not yet struck, up to t.chain times.
@@ -684,6 +700,7 @@ function hurt(e, dmg, ix, iy, iz, from, W, src) {
       }
     }
   }
+  if (e.ward > 0) { dmg *= 0.65; ix *= 0.75; iy *= 0.75; iz *= 0.75; }
   const inv = 1 / e.mass, pts = e.body.pts;
   for (let i = 0; i < pts.length; i++) {
     const w = i === J.CHEST || i === J.HEAD ? 1 : i === J.PELVIS ? 0.75 : 0.5;
@@ -692,7 +709,7 @@ function hurt(e, dmg, ix, iy, iz, from, W, src) {
   if (!e.alive) return res;
   const mag = Math.sqrt(ix * ix + iy * iy + iz * iz) * inv;
   e.hp -= dmg; e.hitFlash = 0.12;
-  if (mag > 320) { e.stun = Math.max(e.stun, Math.min(2.2, mag / 700)); e.act = 'idle'; }
+  if (mag > 320 && !e.t.steadfast) { e.stun = Math.max(e.stun, Math.min(2.2, mag / 700)); e.act = 'idle'; }
   const c = pts[J.CHEST];
   if (res === HIT && dmg > 0) puff(W, c.x, c.y, c.z, 3, '#f4efe4', 40, 3 * e.S);
   if (e.hp <= 0) kill(e, W, src);
@@ -727,6 +744,94 @@ function lavaBurn(W) {
 }
 
 // ---------- special abilities ----------
+// Pulses from aura units: songs, drums, prayers, speeches.
+function auraPulse(u, W) {
+  const kind = u.t.aura, pel = u.P, R0 = u.t.auraR, c = u.body.pts[J.HEAD];
+  if (kind === 'bass') { superBass(u, W); return; }
+  if (kind === 'revive') { reviveAlly(u, W); return; }
+  for (const e of W.units) {
+    if (!e.alive || e === u || e.burrow) continue;
+    const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d2 = dx * dx + dz * dz;
+    if (d2 > R0 * R0) continue;
+    const ally = e.team === u.team;
+    if (kind === 'inspire' || kind === 'anotherone') { if (ally) e.inspired = 4.5; }
+    else if (kind === 'disco') {
+      if (!ally && e.stun <= 0) { e.dance = 1.8; e.act = 'idle'; addVel(e.body.pts[J.CHEST], 0, 110 / e.mass, 0); }
+    } else if (kind === 'heal') {
+      if (ally && e.hp < e.t.hp) {
+        e.hp = Math.min(e.t.hp, e.hp + u.t.healAura);
+        const q = e.body.pts[J.CHEST];
+        glowBits(W, q.x, q.y, q.z, 3, ['#9be8a0', '#e8fff0'], 30, 2.5);
+      }
+    } else if (kind === 'ward') { if (ally) e.ward = 1.6; }
+    else if (kind === 'dream') { if (ally) e.inspired = 5; else { e.peace = 3; e.act = 'idle'; } }
+    else if (kind === 'drum' && !ally) {
+      const d = Math.sqrt(d2) || 1, k = u.t.knock;
+      hurt(e, u.t.dmg, dx / d * k, k * 0.6, dz / d * k, null, W, u);
+    }
+  }
+  if (kind === 'anotherone') {
+    glowBits(W, c.x, c.y, c.z, 8, ['#ffd166', '#ffffff', '#ff5fd2'], 50, 2.5);
+    if (u.alt) anotherOne(u, W); else SFX.play('strum');
+  } else if (kind === 'disco') {
+    glowBits(W, c.x, c.y + 20, c.z, 16, ['#ff5fd2', '#5fe3ff', '#ffe45f', '#8cff6b'], 140, 3);
+    W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.4, max: 0.4, r: R0, disco: true });
+    SFX.play('disco');
+  } else if (kind === 'drum') {
+    W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.3, max: 0.3, r: R0 });
+    W.shake = Math.max(W.shake, 3);
+    SFX.play('drum');
+  } else if (kind === 'heal') {
+    glowBits(W, c.x, c.y + 6, c.z, 10, ['#9be8a0', '#fff3c4'], 50, 3);
+    W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.45, max: 0.45, r: R0, heal: true });
+    SFX.play('chime');
+  } else if (kind === 'dream') {
+    glowBits(W, c.x, c.y + 6, c.z, 14, ['#ffd166', '#ffffff'], 60, 3);
+    SFX.play('dream');
+  } else if (kind === 'ward') {
+    if (u.alt) glowBits(W, c.x, c.y, c.z, 3, ['#9fd8ff', '#e6f6ff'], 20, 2);
+  } else {
+    glowBits(W, c.x, c.y, c.z, 8, ['#ffd166', '#fff3c4'], 40, 2.5);
+    SFX.play('strum');
+  }
+}
+
+// Nicki Minaj: a cone of bass in front of her that throws everyone in it.
+function superBass(u, W) {
+  const pel = u.P, R0 = 220;
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+    if (d > R0 + e.r || (dx * u.fx + dz * u.fz) / d < 0.55) continue;
+    const f = 1 - d / (R0 + e.r) * 0.5, k = u.t.knock * f;
+    hurt(e, u.t.dmg * f, (u.fx * 0.7 + dx / d * 0.3) * k, k * 0.55, (u.fz * 0.7 + dz / d * 0.3) * k, null, W, u);
+  }
+  const h = u.body.pts[J.HEAD];
+  W.flashes.push({ x: pel.x + u.fx * 70, y: 20, z: pel.z + u.fz * 70, life: 0.35, max: 0.35, r: 90, bass: true });
+  glowBits(W, h.x + u.fx * 20, h.y, h.z + u.fz * 20, 12, ['#ff6fbf', '#ffc2e6'], 120, 3);
+  W.shake = Math.max(W.shake, 5);
+  SFX.play('bass');
+}
+
+// Pastor Hans: brings the nearest fallen ally back at half health.
+function reviveAlly(u, W) {
+  if (u.clones >= u.t.revives) return;
+  const p = u.P, R0 = u.t.auraR;
+  let best = null, bd = R0 * R0;
+  for (const e of W.units) {
+    if (e.alive || e.home !== u.home || e.key === 'mystery') continue;
+    const dx = e.P.x - p.x, dz = e.P.z - p.z, d2 = dx * dx + dz * dz;
+    if (d2 < bd) { bd = d2; best = e; }
+  }
+  if (!best) return;
+  Object.assign(best, { alive: true, hp: best.t.hp * 0.5, act: 'idle', stun: 0.4, recover: 0, team: best.home, charm: 0, dance: 0, daze: 0, peace: 0, target: null, retarget: 0, anchored: false });
+  W.lost[best.home]--;
+  u.clones++;
+  const c = best.body.pts[J.CHEST];
+  glowBits(W, c.x, c.y, c.z, 16, ['#ffd166', '#ffffff'], 70, 3);
+  W.flashes.push({ x: c.x, y: c.y, z: c.z, life: 0.4, max: 0.4, r: 40, bolt: true });
+  SFX.play('chime');
+}
 function spawnUnit(W, key, x, z, src) {
   const n = new Unit(key, src.team, Math.round(x), Math.round(z));
   n.home = src.team; n.owner = src; n.fx = src.fx; n.fz = src.fz;

@@ -19,7 +19,8 @@ const PAL = {
 };
 // Skin, fur, bark or plating, for units that aren't plain people.
 const SKIN_OF = { giant: PAL.giantSkin, lebron: PAL.lebronSkin, squirrel: PAL.fur, witch: PAL.witch, monkey: PAL.monkey, treant: PAL.bark, robot: PAL.robot, chicken: PAL.feather,
-  djkhaled: '#6b4229', miner: '#9ab07a', hogrider: '#c98a5e', ultraman: '#c9ced6', megaknight: '#3d4350' };
+  djkhaled: '#6b4229', miner: '#9ab07a', hogrider: '#c98a5e', ultraman: '#c9ced6', megaknight: '#3d4350',
+  kendrick: '#7a4a2e', drake: '#b0805a', paak: '#9a6a45', nicki: '#9a6a45', augustine: '#a8714a', mlk: '#6b4229' };
 // Per-unit clothing that differs from the default team shirt, team sleeves and grey trousers.
 const LOOK = {
   knight: { limbs: 'steel', legs: 'steel', hands: 'steel' },
@@ -47,6 +48,15 @@ const LOOK = {
   miner: { limbs: 'skin', legs: '#4a5a6a', boot: '#3a2a22' },
   megaknight: { torso: 'skin', limbs: 'skin', legs: 'skin', hands: '#2b3038', boot: '#2b3038', belt: 'main', noEyes: true },
   hogrider: { limbs: 'skin', legs: '#5a4632', boot: '#3a2a22' },
+  kendrick: { limbs: 'skin', legs: '#1f1b22', boot: '#f4f4f4' },
+  drake: { legs: '#2b2b30', boot: '#f4f4f4' },
+  paak: { limbs: 'skin', legs: '#3a4a6a', boot: '#f4f4f4' },
+  nicki: { limbs: 'skin', legs: '#ff5fb0', boot: '#ff5fb0' },
+  augustine: { torso: '#f4efe4', limbs: '#f4efe4', legs: '#f4efe4', boot: '#8a6d3b', belt: 'main' },
+  luther: { torso: '#1f1b22', limbs: '#1f1b22', legs: '#1f1b22', boot: '#1f1b22', belt: 'main' },
+  bonhoeffer: { torso: '#3a3f4c', limbs: '#3a3f4c', legs: '#3a3f4c', boot: '#1f1b22' },
+  mlk: { torso: '#2b2b30', limbs: '#2b2b30', legs: '#2b2b30', boot: '#1f1b22' },
+  pastorhans: { torso: '#1f1b22', limbs: '#1f1b22', legs: '#2b2b30', boot: '#1f1b22' },
   ultraman: { torso: 'skin', limbs: '#d8262c', thigh: 'skin', shin: '#d8262c', hands: 'skin', boot: 'skin', belt: 'main', noEyes: true },
 };
 
@@ -164,6 +174,7 @@ class Painter {
     this.torus = new Batch(scene, torus, solid, Math.max(16, cap >> 2), false);
     this.gsph = new Batch(scene, sph, glow, cap * 2 + 2500, false);
     this.gcyl = new Batch(scene, cyl, glow, 2000, false);
+    this.gtorus = new Batch(scene, torus, glow, 400, false);
     this.puff = new Batch(scene, sph, puff, 2500, false);
     this.flash = new Batch(scene, sph, flash, 80, false);
     const plane = new THREE.PlaneGeometry(1, 1);
@@ -172,7 +183,7 @@ class Painter {
     const words = (text, fill, size) => new THREE.MeshBasicMaterial({ map: wordTexture(text, fill, size), transparent: true, depthWrite: false, side: THREE.DoubleSide });
     this.callout = new Batch(scene, plane, words('ANOTHER ONE!', '#ffd166', 84), 32, false);
     this.label = new Batch(scene, plane, words('databrick', '#ffffff', 96), Math.max(16, cap >> 2), false);
-    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.puff, this.flash, this.qmark, this.hearts, this.callout, this.label];
+    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.gtorus, this.puff, this.flash, this.qmark, this.hearts, this.callout, this.label];
     // Scratch vectors for one unit's frame and one weapon's frame.
     this.f = V3(); this.u = V3(); this.r = V3();
     this.wd = V3(); this.wx = V3(); this.wz = V3();
@@ -228,6 +239,7 @@ class Painter {
     if (t.body === 'fish') { this.fishBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'dragon') { this.dragonBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'brick') { this.brickBody(u, f, up, r, S, team0, col0); return; }
+    if (t.body === 'log') { this.logBody(u, f, up, r, S, team0, col0); return; }
 
     const skin = SKIN_OF[u.key] || PAL.skin;
     const pick = (k, dflt) => look.all || (k && k[0] === '#' ? k : k === 'steel' ? PAL.steel : k === 'skin' ? skin : k === 'ninja' ? PAL.ninja
@@ -275,6 +287,9 @@ class Painter {
     if (u.key === 'squirrel') this.tail(u, pe, f, up, r, S, col);
     if (u.key === 'monkey') this.tail(u, pe, f, up, r, S, col, true);
     if (u.alive && u.charm > 0) this.billboard(this.hearts, this.at(this.t1, hd, _Y, 16 * S), 12 * S, C('#ffffff'));
+    if (u.alive && u.peace > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, 15 * S), 2 * S, C('#ffffff'));
+    if (u.alive && u.ward > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, 13 * S, r, 3.5 * S), 1.8 * S, C('#9fd8ff'));
+    if (u.alive && u.daze > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, 13 * S, r, -3.5 * S), 1.8 * S, C('#5fbf5a'));
     if (u.alive && u.inspired > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, (13 + Math.sin(u.phase * 2)) * S), 2 * S, C('#ffd166'));
     this.hat(u, hd, f, up, r, S, team, col);
 
@@ -449,6 +464,63 @@ class Painter {
         this.ball(this.gsph, this.at(t1, ch, f, 7.2 * S, up, -3 * S), 2.2 * S, C(timer));
         break;
       }
+      case 'kendrick':
+        this.axes(this.dome, this.at(t1, H, up, 1 * S), r, up, f, 8.4 * S, 5.2 * S, 8.4 * S, col('#1d1512'));
+        this.ball(this.sph, this.at(t1, H, f, 6.6 * S, up, -5.6 * S), 1.7 * S, col('#1d1512'));
+        break;
+      case 'drake':
+        this.axes(this.dome, this.at(t1, H, up, 1 * S), r, up, f, 8.4 * S, 4.6 * S, 8.4 * S, col('#1d1512'));
+        this.axes(this.sph, this.at(t1, H, f, 3.4 * S, up, -4 * S), r, up, f, 6 * S, 4 * S, 5 * S, col('#1d1512'));
+        break;
+      case 'paak': {
+        this.seg(this.cyl, this.at(t1, H, up, 2.4 * S), this.at(t2, H, up, 4.4 * S), 8.35 * S, col(team.main));
+        for (const sd of [-1, 1]) this.axes(this.cyl, this.at(t1, H, f, 7.9 * S, up, 0.2 * S, r, sd * 2.8 * S), r, f, up, 2.3 * S, 0.5 * S, 2.3 * S, C(PAL.ink));
+        // A snare drum at the waist.
+        const drum = this.at(this.t3, u.body.pts[J.PELVIS], f, 9 * S, up, 1 * S);
+        this.seg(this.cyl, this.at(t1, drum, up, -2.5 * S), this.at(t2, drum, up, 2.5 * S), 6.5 * S, col('#f4f6fb'));
+        for (const o of [-2.6, 2.6]) this.seg(this.cyl, this.at(t1, drum, up, (o - 0.4) * S), this.at(t2, drum, up, (o + 0.4) * S), 6.8 * S, col('#9aa3ad'));
+        break;
+      }
+      case 'nicki':
+        this.axes(this.dome, this.at(t1, H, up, 0.8 * S), r, up, f, 9.2 * S, 9.2 * S, 9.2 * S, col('#ff6fbf'));
+        this.axes(this.box, this.at(t1, H, f, -4 * S, up, -6 * S), r, up, f, 16 * S, 15 * S, 4 * S, col('#ff6fbf'));
+        this.axes(this.box, this.at(t1, H, f, 6.6 * S, up, 4.6 * S), r, up, f, 13 * S, 2.6 * S, 2.4 * S, col('#ff6fbf'));
+        break;
+      case 'mitre':
+        this.spike(this.at(t1, H, up, 5 * S), up, 7 * S, 16 * S, col('#f6f2ea'));
+        this.seg(this.cyl, this.at(t1, H, up, 5 * S), this.at(t2, H, up, 6.6 * S), 7.2 * S, col(PAL.gold));
+        this.axes(this.sph, this.at(t1, H, f, 3.6 * S, up, -4.4 * S), r, up, f, 6 * S, 4.2 * S, 5 * S, col('#cfcfd4'));
+        break;
+      case 'pastor': {
+        this.axes(this.dome, this.at(t1, H, up, 1.2 * S), r, up, f, 8.5 * S, 5 * S, 8.5 * S, col('#8a6a45'));
+        const ch = u.body.pts[J.CHEST];
+        this.axes(this.box, this.at(t1, ch, f, 6.6 * S, up, 3 * S), r, up, f, 3 * S, 1.6 * S, 0.8 * S, C(PAL.white));
+        for (const sd of [-1, 1]) this.axes(this.box, this.at(t1, ch, f, 6.9 * S, up, -6 * S, r, sd * 3 * S), r, up, f, 2 * S, 14 * S, 0.6 * S, col(team.main));
+        this.axes(this.box, this.at(t1, u.body.pts[J.LHAND], f, 1.5 * S), r, up, f, 2.4 * S, 8 * S, 6 * S, col('#4a2a1a'));
+        break;
+      }
+      case 'bonhoeffer': {
+        this.axes(this.dome, this.at(t1, H, up, 1.2 * S), r, up, f, 8.5 * S, 5 * S, 8.5 * S, col('#a07a50'));
+        for (const sd of [-1, 1]) this.axes(this.torus, this.at(t1, H, f, 8.2 * S, up, -0.2 * S, r, sd * 2.8 * S), r, f, up, 2.4 * S, 2.4 * S, 2.4 * S, C(PAL.ink));
+        const ch = u.body.pts[J.CHEST];
+        this.axes(this.box, this.at(t1, ch, f, 6.8 * S, up, -3 * S), r, up, f, 2.2 * S, 9 * S, 0.7 * S, col(team.main));
+        this.axes(this.box, this.at(t1, ch, f, 6.4 * S, up, 2.4 * S), r, up, f, 5 * S, 2 * S, 0.8 * S, C(PAL.white));
+        break;
+      }
+      case 'luther': {
+        this.axes(this.dome, this.at(t1, H, up, 2.5 * S), r, up, f, 9.6 * S, 4 * S, 9.6 * S, col('#1f1b22'));
+        this.axes(this.box, this.at(t1, u.body.pts[J.CHEST], f, 6.4 * S, up, 2.4 * S), r, up, f, 5 * S, 2 * S, 0.8 * S, C(PAL.white));
+        this.axes(this.box, this.at(t1, u.body.pts[J.LHAND], f, 1.5 * S, up, 2 * S), r, up, f, 6 * S, 8 * S, 0.5 * S, C('#f4ecd8'));
+        break;
+      }
+      case 'mlk': {
+        this.axes(this.dome, this.at(t1, H, up, 1.4 * S), r, up, f, 8.3 * S, 4.4 * S, 8.3 * S, col('#1d1512'));
+        this.axes(this.box, this.at(t1, H, f, 7.6 * S, up, -2.6 * S), r, up, f, 4.6 * S, 1 * S, 0.9 * S, col('#1d1512'));
+        const ch = u.body.pts[J.CHEST];
+        this.axes(this.box, this.at(t1, ch, f, 6.8 * S, up, -3 * S), r, up, f, 2.2 * S, 9 * S, 0.7 * S, col(team.main));
+        this.axes(this.box, this.at(t1, ch, f, 6.4 * S, up, 2.4 * S), r, up, f, 5 * S, 2 * S, 0.8 * S, C(PAL.white));
+        break;
+      }
       case 'treant':
         for (const o of [[0, 9, 0, 11], [7, 5, -2, 8], [-7, 5, -2, 8], [0, 6, -7, 8], [4, 12, 4, 7], [-4, 12, 3, 7]]) {
           this.ball(this.sph, this.at(t1, H, r, o[0] * S, up, o[1] * S, f, o[2] * S), o[3] * S, col(o[3] > 8 ? PAL.leaf : PAL.leafLight));
@@ -562,6 +634,33 @@ class Painter {
     this.axes(this.label, this.at(this.t3, c, f, 5.7 * S, up, h * 0.3), this.nr, up, f, 22 * S, 5.5 * S, 1, C('#ffffff'));
   }
 
+  // Tung Tung Tung Sahur: a wooden log with a face, stick limbs and a bat.
+  logBody(u, f, up, r, S, team, col) {
+    const B = u.body.pts, hd = B[J.HEAD], pe = B[J.PELVIS], ch = B[J.CHEST];
+    const wood = col('#b07a45'), dark = col('#7a5230');
+    const bottom = this.at(this.t1, pe, up, -6 * S), top = this.at(this.t2, hd, up, 6 * S);
+    this.seg(this.cyl, bottom, top, 8.5 * S, wood);
+    this.seg(this.cyl, top, this.at(this.t3, top, up, 0.6 * S), 8.6 * S, col('#e0b27a'));
+    for (const k of [0.3, 0.62]) {
+      const ring = this.t3.set(lerp(bottom.x, top.x, k), lerp(bottom.y, top.y, k), lerp(bottom.z, top.z, k));
+      this.seg(this.cyl, this.at(this.t4, ring, up, -0.4 * S), this.at(this.t5, ring, up, 0.4 * S), 8.7 * S, dark);
+    }
+    this.seg(this.cyl, this.at(this.t3, pe, up, 8 * S), this.at(this.t4, pe, up, 10.5 * S), 8.75 * S, col(team.main));
+    for (const sd of [-1, 1]) {
+      const e = this.at(this.t3, hd, f, 7.8 * S, up, 1 * S, r, sd * 3 * S);
+      this.ball(this.sph, e, 2.4 * S, C(PAL.white));
+      if (u.alive) this.ball(this.sph, this.at(this.t4, e, f, 1.3 * S), 1.2 * S, C(PAL.ink));
+    }
+    this.axes(this.box, this.at(this.t3, hd, f, 8.3 * S, up, -4 * S), r, up, f, 5 * S, 1.3 * S, 0.6 * S, C(PAL.ink));
+    for (const sd of [-1, 1]) {
+      const sh = this.at(this.t3, ch, r, sd * 8.6 * S), el = B[sd < 0 ? J.LELB : J.RELB], hn = B[sd < 0 ? J.LHAND : J.RHAND];
+      this.seg(this.cyl, sh, el, 1.4 * S, dark); this.seg(this.cyl, el, hn, 1.3 * S, dark); this.ball(this.sph, hn, 1.7 * S, dark);
+      const hip = this.at(this.t3, pe, r, sd * 4 * S, up, -5 * S), kn = B[sd < 0 ? J.LKNEE : J.RKNEE], ft = B[sd < 0 ? J.LFOOT : J.RFOOT];
+      this.seg(this.cyl, hip, kn, 1.5 * S, dark); this.seg(this.cyl, kn, ft, 1.4 * S, dark); this.ball(this.sph, ft, 2 * S, dark);
+    }
+    this.weapon(u, 'r', col);
+  }
+
   // The Hog Rider's hog, under the rider's pelvis, trotting with the rider's stride.
   hog(u, pe, f, up, r, S, col) {
     const hide = col('#c98f7a'), dark = col('#a8705c'), pink = col('#f0a8a0');
@@ -606,7 +705,7 @@ class Painter {
   weapon(u, side, col) {
     const B = u.body.pts, S = u.S, w = u.t.weapon;
     const h = B[side === 'r' ? J.RHAND : J.LHAND], e = B[side === 'r' ? J.RELB : J.LELB];
-    const dual = w === 'axe' || w === 'katana' || w === 'mace';
+    const dual = w === 'axe' || w === 'katana' || w === 'mace' || w === 'sticks';
     if (side === 'l' && !dual && w !== 'bow') return;
     if (side === 'r' && w === 'bow') return;
     this.weaponFrame(h, e);
@@ -673,6 +772,23 @@ class Painter {
           this.ball(this.sph, m, 6 * S, C(PAL.bomb));
           this.ball(this.gsph, this.at(t2, m, this.u, 6.5 * S), (1 + Math.random() * 0.6) * S, C(Math.random() < 0.5 ? '#ffd166' : '#ff7a3d'));
         }
+        break;
+      case 'sticks':
+        this.seg(this.cyl, along(t1, -2), along(t2, 16), 0.6 * S, col('#d9b380'));
+        this.ball(this.sph, along(t1, 16), 0.9 * S, col('#d9b380'));
+        break;
+      case 'cash':
+        if (side === 'r' && !(u.act === 'attack' && u.fired)) this.axes(this.box, along(t1, 3), X, d, Z, 2 * S, 7 * S, 4 * S, col('#5fbf5a'));
+        break;
+      case 'crozier':
+        this.seg(this.cyl, along(t1, -14), along(t2, 24), 1.1 * S, col(PAL.gold));
+        this.nr.copy(d).negate();
+        this.axes(this.torus, along(t1, 27), X, Z, this.nr, 3 * S, 3 * S, 3 * S, col(PAL.gold));
+        break;
+      case 'bat':
+        this.seg(this.cyl, along(t1, -4), along(t2, 8), 1.1 * S, col('#d9b380'));
+        this.seg(this.cyl, along(t1, 8), along(t2, 26), 2.4 * S, col('#d9b380'));
+        this.ball(this.sph, along(t1, 26), 2.4 * S, col('#d9b380'));
         break;
       case 'mic':
         this.seg(this.cyl, along(t1, -1), along(t2, 5), 1.1 * S, C('#1f1b22'));
@@ -778,6 +894,15 @@ class Painter {
       this.ball(this.sph, p, p.r, C(PAL.stone));
     } else if (p.kind === 'ball') {
       this.ball(this.sph, p, p.r, C(PAL.ball));
+    } else if (p.kind === 'wave') {
+      // A ring of sound flying flat toward its target, widening as it goes.
+      const n = this.t3.set(nx, ny, nz), X = this.t4.crossVectors(n, _Y);
+      if (X.lengthSq() < 1e-4) X.set(1, 0, 0);
+      X.normalize();
+      const Z = this.t5.crossVectors(X, n).normalize(), grow = 1 + (0.9 - p.life) * 1.2;
+      this.axes(this.gtorus, p, X, n, Z, 9 * grow, 9 * grow, 9 * grow, C('#c9a0ff'));
+    } else if (p.kind === 'cash') {
+      this.axes(this.box, p, _X, _Y, _Z, 6, 1, 3, C('#5fbf5a'));
     } else if (p.kind === 'cannon') {
       this.ball(this.sph, p, p.r, C(PAL.iron));
     } else if (p.kind === 'hex') {
@@ -802,7 +927,7 @@ class Painter {
     }
     for (const fl of W.flashes) {
       const t = fl.life / fl.max;
-      const hex = fl.disco ? ['#ff5fd2', '#5fe3ff', '#ffe45f'][Math.floor(t * 9) % 3] : fl.bolt ? '#cfefff' : '#fff3c4';
+      const hex = fl.disco ? ['#ff5fd2', '#5fe3ff', '#ffe45f'][Math.floor(t * 9) % 3] : fl.bolt ? '#cfefff' : fl.heal ? '#b8ffc4' : fl.bass ? '#ff8ad0' : '#fff3c4';
       this.ball(this.flash, fl, (1 - t) * fl.r * 0.9 + 8, C(hex));
     }
     for (const b of W.bolts) {
