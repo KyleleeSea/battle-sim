@@ -249,7 +249,7 @@ const View = (() => {
     const savedRng = rngState, savedId = NEXT_ID;
     const u = new Unit(key, 0, 0, 0);
     rngState = savedRng; NEXT_ID = savedId;
-    const fake = { units: [u], projs: [], parts: [], flashes: [], bolts: [], beams: [], time: 0, over: false, lost: [0, 0], shake: 0 };
+    const fake = { units: [u], projs: [], parts: [], flashes: [], bolts: [], beams: [], hazards: [], time: 0, over: false, lost: [0, 0], shake: 0 };
     for (let i = 0; i < 60; i++) { updateUnit(u, fake, false); stepBody(u.body); }
     pPainter.unit(u); pPainter.end();
     const S = u.S, c = u.body.pts[J.CHEST];

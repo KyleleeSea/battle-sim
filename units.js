@@ -44,9 +44,42 @@ Object.assign(TYPES, {
   // Stand-in shown for an online opponent's units until the battle starts. Never placed or fought with.
   mystery:   { name: 'Hidden unit', cost: 0, hp: 1, S: 1, speed: 0, reach: 1, dmg: 0, cd: 99, knock: 0, style: 'none', anim: 1, weapon: 'none', hat: 'mystery', block: 0, blurb: '' },
 });
+Object.assign(TYPES, {
+  chicken:    { name: 'Chicken', cost: 10, hp: 14, S: 0.45, speed: 110, reach: 12, dmg: 4, cd: 0.6, knock: 80, style: 'pounce', anim: 0.45, weapon: 'none', hat: 'chicken', block: 0, dodge: 0.2,
+                blurb: 'Pecks ankles. Witches turn people into these.' },
+  grandma:    { name: 'Grandma', cost: 120, hp: 160, S: 0.85, speed: 45, reach: 28, dmg: 20, cd: 0.9, knock: 380, style: 'chop', anim: 0.5, weapon: 'pin', hat: 'granny', block: 0,
+                blurb: 'Rolling pin. Has never once lost an argument.' },
+  fishmonger: { name: 'Fishmonger', cost: 150, hp: 130, S: 1.05, speed: 50, reach: 34, dmg: 18, cd: 1.1, knock: 700, style: 'chop', anim: 0.55, weapon: 'fish', hat: 'cap', block: 0,
+                blurb: 'Slaps people with a fish. They fly a surprising distance.' },
+  jester:     { name: 'Jester', cost: 160, hp: 70, S: 0.95, speed: 60, range: 300, dmg: 6, cd: 2.4, knock: 120, style: 'lob', proj: 'pie', anim: 0.8, weapon: 'pie', hat: 'jester', block: 0,
+                blurb: 'Cream pies to the face. Targets stagger about, blinded.' },
+  bard:       { name: 'Bard', cost: 180, hp: 80, S: 1, speed: 48, auraR: 170, dmg: 0, cd: 3, knock: 0, style: 'aura', aura: 'inspire', support: true, anim: 0.9, weapon: 'lute', hat: 'feather', block: 0,
+                blurb: 'Plays a jaunty tune. Nearby allies fight and run faster.' },
+  disco:      { name: 'Disco Dancer', cost: 280, hp: 120, S: 1, speed: 55, reach: 70, auraR: 120, dmg: 0, cd: 3.5, knock: 0, style: 'aura', aura: 'disco', anim: 0.9, weapon: 'none', hat: 'afro', block: 0,
+                blurb: 'Every enemy nearby has to stop and dance.' },
+  scarecrow:  { name: 'Scarecrow', cost: 140, hp: 320, S: 1.1, speed: 32, reach: 30, dmg: 6, cd: 1.2, knock: 150, style: 'punch', anim: 0.8, weapon: 'none', hat: 'scarecrow', block: 0, taunt: true,
+                blurb: 'Enemies cannot resist attacking it. Mostly straw.' },
+  cupid:      { name: 'Cupid', cost: 260, hp: 50, S: 0.8, speed: 60, range: 380, dmg: 4, cd: 3, knock: 60, style: 'bow', proj: 'heart', anim: 1.0, weapon: 'bow', hat: 'cupid', block: 0,
+                blurb: 'Love arrows make enemies switch sides for six seconds.' },
+  witch:      { name: 'Witch', cost: 400, hp: 70, S: 0.95, speed: 46, range: 320, dmg: 0, cd: 4.5, knock: 0, style: 'cast', proj: 'hex', anim: 1.0, weapon: 'broom', hat: 'witch', block: 0,
+                blurb: 'Turns enemies into chickens. Yes, even giants.' },
+  monkey:     { name: 'Monkey', cost: 120, hp: 60, S: 0.75, speed: 85, range: 260, dmg: 0, cd: 2.0, knock: 0, style: 'lob', proj: 'peel', anim: 0.7, weapon: 'banana', hat: 'monkey', block: 0, dodge: 0.2,
+                blurb: 'Throws banana peels. Whoever steps on one goes flying.' },
+  pirate:     { name: 'Pirate', cost: 280, hp: 110, S: 1.05, speed: 50, range: 360, dmg: 50, cd: 3.5, knock: 800, style: 'gun', proj: 'cannon', anim: 1.0, weapon: 'blunderbuss', hat: 'pirate', block: 0,
+                blurb: 'A hand cannon loaded with actual cannonballs.' },
+  robot:      { name: 'Robot', cost: 350, hp: 200, S: 1.1, speed: 42, range: 340, dmg: 22, cd: 1.0, knock: 200, style: 'laser', anim: 0.5, weapon: 'none', hat: 'robot', block: 0, heavy: 1.4,
+                blurb: 'Beep. Fires a laser that never misses. Boop.' },
+  treant:     { name: 'Treant', cost: 900, hp: 1100, S: 1.9, speed: 28, reach: 50, dmg: 70, cd: 2.2, knock: 900, style: 'punch', anim: 1.0, weapon: 'none', hat: 'treant', block: 0, aoe: true, fat: 1.2, heavy: 1.5,
+                blurb: 'A grumpy old oak. Swats whole rows aside.' },
+});
 TYPES.giant.fat = 1.15;
-const ORDER = ['squirrel', 'peasant', 'squire', 'hoplite', 'berserker', 'knight', 'ninja', 'archer', 'musketeer', 'thrower', 'bomber', 'wizard', 'storm', 'healer', 'sumo', 'lebron', 'giant'];
-const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, cast: 0.62, heal: 0.45, bomb: 0.3, none: 2 };
+const ORDER = ['chicken', 'squirrel', 'peasant', 'grandma', 'squire', 'fishmonger', 'hoplite', 'berserker', 'knight', 'ninja', 'scarecrow',
+  'archer', 'musketeer', 'monkey', 'jester', 'thrower', 'pirate', 'bomber', 'cupid', 'bard', 'healer', 'disco', 'wizard', 'witch', 'storm',
+  'robot', 'sumo', 'treant', 'lebron', 'giant'];
+const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, none: 2 };
+// What each ranged style throws or fires unless the unit names its own projectile.
+const DEFAULT_PROJ = { bow: 'arrow', gun: 'bullet', throw: 'boulder', hoops: 'ball', cast: 'fire' };
+const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06 };
 
 let NEXT_ID = 1;
 
@@ -67,6 +100,8 @@ class Unit {
     this.target = null; this.retarget = R() * 0.4;
     this.stun = 0; this.recover = 1;
     this.hitFlash = 0; this.kills = 0;
+    this.home = team;               // the side it was placed on; `team` changes while charmed
+    this.charm = 0; this.charmCool = 0; this.inspired = 0; this.dance = 0;
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -76,7 +111,8 @@ function nearestEnemy(u, units) {
   let best = null, bd = Infinity;
   for (const e of units) {
     if (!e.alive || e.team === u.team) continue;
-    const dx = e.P.x - p.x, dz = e.P.z - p.z, d = dx * dx + dz * dz;
+    // Scarecrows are irresistible: they count as much closer than they are.
+    const dx = e.P.x - p.x, dz = e.P.z - p.z, d = (dx * dx + dz * dz) * (e.t.taunt ? 0.2 : 1);
     if (d < bd) { bd = d; best = e; }
   }
   return best;
@@ -120,28 +156,34 @@ function updateUnit(u, W, active) {
     if (u.stun <= 0) u.recover = 0;
   } else if (u.recover < 1) u.recover = Math.min(1, u.recover + DT / 0.7);
   const m = u.stun > 0 ? 0.04 : 0.15 + 0.85 * u.recover;
-  u.cdT -= DT;
+  if (u.charm > 0) {
+    u.charm -= DT;
+    if (u.charm <= 0 && u.team !== u.home) { u.team = u.home; u.target = null; u.retarget = 0; u.charmCool = 5; }
+  } else if (u.charmCool > 0) u.charmCool -= DT;
+  if (u.dance > 0) { u.dance -= DT; u.act = 'idle'; }
+  if (u.inspired > 0) u.inspired -= DT;
+  u.cdT -= DT * (u.inspired > 0 ? 1.7 : 1);
 
   let moving = false;
   const cheer = active && W.over;
   if (active) {
     u.retarget -= DT;
     if (!u.target || !u.target.alive || u.retarget <= 0) {
-      u.target = u.t.heal ? healTarget(u, W.units) || nearestAlly(u, W.units) : nearestEnemy(u, W.units);
+      u.target = u.t.heal ? healTarget(u, W.units) || nearestAlly(u, W.units) : u.t.support ? nearestAlly(u, W.units) : nearestEnemy(u, W.units);
       u.retarget = 0.35 + R() * 0.2;
     }
   } else u.target = null;
 
   const T = u.target, pel = u.P;
-  if (T && u.stun <= 0 && !cheer) {
+  if (T && u.stun <= 0 && !cheer && !(u.dance > 0)) {
     const tp = T.P, dx = tp.x - pel.x, dz = tp.z - pel.z;
     const d = Math.sqrt(dx * dx + dz * dz) || 1;
     turnToward(u, dx / d, dz / d, 0.12);
-    if (u.t.heal) {
-      // Stay close to the army; walk up to whoever is hurt.
-      const needs = T.hp < T.t.hp;
+    if (u.t.heal || u.t.support) {
+      // Stay close to the army; walk up to whoever is hurt (healers) or just play (bards).
+      const needs = u.t.heal ? T.hp < T.t.hp : true;
       if (u.act !== 'attack') {
-        if (d > (needs ? u.t.range * 0.9 : 90)) moving = true;
+        if (d > (needs && u.t.heal ? u.t.range * 0.9 : 90)) moving = true;
         else if (needs && u.cdT <= 0 && u.recover > 0.6) startAttack(u);
       }
     } else {
@@ -152,9 +194,11 @@ function updateUnit(u, W, active) {
         else if (u.cdT <= 0 && u.recover > 0.6) startAttack(u);
       }
     }
-    if (u.act === 'attack' && (u.t.style === 'bow' || u.t.style === 'gun')) {
+    const st = u.t.style;
+    if (u.act === 'attack' && (st === 'bow' || st === 'gun' || st === 'laser')) {
       const ch = u.body.pts[J.CHEST], tc = T.body.pts[J.CHEST];
-      const v = u.t.style === 'bow' ? aim(ch, tc, 680, GRAV, false) : aim(ch, tc, 1700, GRAV * 0.1, false);
+      const P0 = st === 'laser' ? null : PROJ[u.t.proj || DEFAULT_PROJ[st]];
+      const v = P0 ? aim(ch, tc, P0.speed, GRAV * P0.g, false) : { x: tc.x - ch.x, y: tc.y - ch.y, z: tc.z - ch.z };
       const h = Math.sqrt(v.x * v.x + v.z * v.z) || 1;
       u.aimY = clamp(v.y / h, -0.3, 1.4);
     }
@@ -213,10 +257,18 @@ function keyf(frames, t) {
   return frames[frames.length - 1][1];
 }
 
+// Arms up, arms down, swapping sides on the beat.
+function dancePose(u, time) {
+  return dsin(time * 5 + u.phase) > 0
+    ? { r: [4, 16, 7, 0.3, 1, 0], l: [10, -10, -6, 0.6, -1, 0] }
+    : { r: [10, -10, 6, 0.6, -1, 0], l: [4, 16, -7, 0.3, 1, 0] };
+}
+
 function armPose(u, moving, cheer, time) {
   const st = u.t.style, att = u.act === 'attack', t = u.actT;
   const sw = moving ? dsin(u.phase) * 3 : 0;
   const swing = (a, s) => [a[0] + s, a[1], a[2], a[3], a[4], a[5]];
+  if (u.dance > 0 || u.t.aura === 'disco') return dancePose(u, time);
   if (cheer) {
     const b = dsin(time * 9 + u.phase) * 2;
     return { r: [4, 16 + b, 7, 0.2, 1, 0], l: [4, 16 - b, -7, 0.2, 1, 0] };
@@ -254,6 +306,18 @@ function armPose(u, moving, cheer, time) {
       return att ? { r: keyf([[0, STAFF_R], [0.4, up], [0.7, up], [1, STAFF_R]], t), l: keyf([[0, HANG_L], [0.4, [8, 8, -5, 0.4, 1, 0]], [0.7, [8, 8, -5, 0.4, 1, 0]], [1, HANG_L]], t) }
         : { r: STAFF_R, l: swing(HANG_L, -sw) };
     }
+    case 'lob': {
+      const rest = [8, -2, 6, 0.6, 0.6, 0];
+      const r = att ? keyf([[0, rest], [0.4, [-6, 12, 6, -0.4, 1, 0]], [0.55, [16, 10, 5, 1, 0.5, 0]], [0.7, [18, 2, 5, 1, -0.4, 0]], [1, rest]], t) : rest;
+      return { r, l: swing(HANG_L, -sw) };
+    }
+    case 'aura': {
+      // Bard: left hand on the lute's neck, right hand strumming.
+      const strum = att ? dsin(t * 40) * 2 : 0;
+      return { r: [7, -6 + strum, 3, 0.1, -1, 0], l: [13, 2, -3, 1, 0.5, 0] };
+    }
+    case 'laser':
+      return { r: att ? [16, 4, 3, 1, u.aimY, 0] : [10, -2, 5, 1, 0.1, 0], l: swing(HANG_L, -sw) };
     case 'pounce': {
       const rest = [6, -4, 5, 1, 0.2, 0];
       const frames = [[0, rest], [0.3, [2, 4, 6, 1, 0.5, 0]], [0.5, [16, 0, 4, 1, -0.2, 0]], [1, rest]];
@@ -284,7 +348,7 @@ function musclePose(u, moving, m, cheer, W) {
     // Standing units hold their own weight; stunned or airborne ones get the full force of gravity.
     const gc = GRAV * DT * DT * m;
     for (let i = 0; i < pts.length; i++) if (i !== J.LFOOT && i !== J.RFOOT) pts[i].py -= gc;
-    const sp = moving ? u.t.speed * DT : 0;
+    const sp = moving ? u.t.speed * DT * (u.inspired > 0 ? 1.35 : 1) : 0;
     const k = 0.18 * m;
     vp.x += (fx * sp - vp.x) * k;
     vp.z += (fz * sp - vp.z) * k;
@@ -335,6 +399,10 @@ function musclePose(u, moving, m, cheer, W) {
 // ---------- combat ----------
 function aim(from, to, speed, g, high) {
   const dx = to.x - from.x, dz = to.z - from.z, dy = to.y - from.y;
+  if (g <= 0) {
+    const L = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+    return { x: dx / L * speed, y: dy / L * speed, z: dz / L * speed, t: L / speed };
+  }
   const d = Math.sqrt(dx * dx + dz * dz) || 1;
   const v2 = speed * speed, disc = v2 * v2 - g * (g * d * d + 2 * dy * v2);
   const tan = disc < 0 ? 1 : (v2 + (high ? 1 : -1) * Math.sqrt(disc)) / (g * d);
@@ -367,7 +435,42 @@ function strike(u, W) {
     explode(W, c.x, c.y, c.z, u.t.dmg, u.t.knock, 100, u);
     return;
   }
-  if (st === 'bow' || st === 'throw' || st === 'cast' || st === 'gun' || st === 'hoops') {
+  if (st === 'aura') {
+    const pel = u.P, R0 = u.t.auraR;
+    for (const e of W.units) {
+      if (!e.alive || e === u) continue;
+      const dx = e.P.x - pel.x, dz = e.P.z - pel.z;
+      if (dx * dx + dz * dz > R0 * R0) continue;
+      if (u.t.aura === 'inspire' && e.team === u.team) e.inspired = 4.5;
+      else if (u.t.aura === 'disco' && e.team !== u.team && e.stun <= 0) {
+        e.dance = 1.8; e.act = 'idle';
+        addVel(e.body.pts[J.CHEST], 0, 110 / e.mass, 0);
+      }
+    }
+    const c = pts[J.HEAD];
+    if (u.t.aura === 'disco') {
+      glowBits(W, c.x, c.y + 20, c.z, 16, ['#ff5fd2', '#5fe3ff', '#ffe45f', '#8cff6b'], 140, 3);
+      W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.4, max: 0.4, r: R0, disco: true });
+      SFX.play('disco');
+    } else {
+      glowBits(W, c.x, c.y, c.z, 8, ['#ffd166', '#fff3c4'], 40, 2.5);
+      SFX.play('strum');
+    }
+    return;
+  }
+  if (st === 'laser') {
+    const T = u.target;
+    if (!T || !T.alive) return;
+    const pel = u.P, c = T.body.pts[J.CHEST], dx = c.x - pel.x, dz = c.z - pel.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+    if (d > u.t.range * 1.1) return;
+    const k = u.t.knock;
+    hurt(T, u.t.dmg * (0.9 + R() * 0.2), dx / d * k, k * 0.3, dz / d * k, pel, W, u);
+    W.beams.push({ a: u, b: T, life: 0.15, laser: true });
+    sparks(W, c.x, c.y, c.z, 5);
+    SFX.play('pew');
+    return;
+  }
+  if (DEFAULT_PROJ[st] || st === 'lob') {
     const T = u.target && u.target.alive ? u.target : nearestEnemy(u, W.units);
     if (!T) return;
     const pel = u.P, tx = T.P.x - pel.x, tz = T.P.z - pel.z;
@@ -383,30 +486,23 @@ function strike(u, W) {
       W.shake = Math.max(W.shake, 6);
       puff(W, pel.x + u.fx * 20, 0, pel.z + u.fz * 20, 8, '#cdbb98', 90, 7);
       SFX.play('thud');
-    } else if (st === 'bow') {
-      const v = lead(u, T, 680, GRAV, false), h = pts[J.LHAND];
-      spawnProj(W, 'arrow', h, jitter(v, 0.05), u);
-      SFX.play('twang');
-    } else if (st === 'gun') {
-      const v = lead(u, T, 1700, GRAV * 0.1, false), h = pts[J.LHAND];
-      spawnProj(W, 'bullet', h, jitter(v, 0.015), u);
-      puff(W, h.x, h.y, h.z, 7, '#e9e4dc', 70, 5);
-      SFX.play('bang');
-    } else if (st === 'hoops') {
-      const v = lead(u, T, 600, GRAV, false), a = pts[J.LHAND], b = pts[J.RHAND];
-      spawnProj(W, 'ball', { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + 4 * u.S, z: (a.z + b.z) / 2 }, jitter(v, 0.05), u);
-      SFX.play('whoosh');
-    } else if (st === 'throw') {
-      const v = lead(u, T, 560, GRAV, false), a = pts[J.LHAND], b = pts[J.RHAND];
-      spawnProj(W, 'boulder', { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + 6 * u.S, z: (a.z + b.z) / 2 }, jitter(v, 0.07), u);
-      SFX.play('whoosh');
-    } else if (u.t.chain) {
-      chainLightning(u, T, W);
-    } else {
-      const v = lead(u, T, 380, GRAV * 0.35, false), h = pts[J.RHAND];
-      spawnProj(W, 'fire', { x: h.x, y: h.y + 14 * u.S, z: h.z }, jitter(v, 0.04), u);
-      SFX.play('whoosh');
+      return;
     }
+    if (st === 'cast' && u.t.chain) { chainLightning(u, T, W); return; }
+    const kind = u.t.proj || DEFAULT_PROJ[st], P0 = PROJ[kind];
+    const a = pts[J.LHAND], b = pts[J.RHAND], S = u.S;
+    const from = st === 'bow' || st === 'gun' ? a
+      : st === 'throw' || st === 'hoops' ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + (st === 'throw' ? 6 : 4) * S, z: (a.z + b.z) / 2 }
+      : st === 'cast' ? { x: b.x, y: b.y + 14 * S, z: b.z } : b;
+    // Banana peels are aimed at the ground just ahead of the target, everything else at the target.
+    const v = kind === 'peel'
+      ? aim(from, { x: T.P.x + T.fx * 35, y: 0, z: T.P.z + T.fz * 35 }, P0.speed, GRAV * P0.g, false)
+      : lead(u, T, P0.speed, GRAV * P0.g, false);
+    spawnProj(W, kind, from, jitter(v, SPREAD[kind]), u);
+    if (st === 'gun') {
+      puff(W, a.x, a.y, a.z, kind === 'cannon' ? 12 : 7, '#e9e4dc', 70, kind === 'cannon' ? 7 : 5);
+      SFX.play(kind === 'cannon' ? 'boom' : 'bang');
+    } else SFX.play(st === 'bow' ? 'twang' : 'whoosh');
     return;
   }
   const pel = u.P, victims = [];
@@ -455,6 +551,30 @@ function chainLightning(u, T, W) {
   }
   W.flashes.push({ x: from.x, y: from.y, z: from.z, life: 0.2, max: 0.2, r: 30, bolt: true });
   SFX.play('zap');
+}
+
+// Cupid's arrows: the unit fights for `team` until the charm wears off.
+function charm(e, team, dur, W) {
+  if (e.charmCool > 0 && e.team === e.home) return;   // just came to its senses: immune for a few seconds
+  if (e.team !== team) { e.team = team; e.target = null; e.retarget = 0; e.act = 'idle'; }
+  e.charm = Math.max(e.charm, dur);
+  const h = e.body.pts[J.HEAD];
+  glowBits(W, h.x, h.y + 10, h.z, 6, ['#ff6fa8', '#ffc2da'], 30, 3);
+  SFX.play('love');
+}
+
+// The Witch's hex: whatever it was, it is now a chicken on the same side.
+function polymorph(e, W) {
+  if (!e.alive) return;
+  const p = e.P, c = e.body.pts[J.CHEST];
+  glowBits(W, c.x, c.y, c.z, 14, ['#b56cff', '#e3c2ff', '#ffffff'], 70, 3.5);
+  puff(W, c.x, c.y, c.z, 8, '#d8c2ff', 60, 6);
+  const t = TYPES.chicken;
+  e.key = 'chicken'; e.t = t; e.S = t.S;
+  e.body = buildBody(p.x, p.z, e.S, e.fx >= 0 ? 1 : -1);
+  e.hp = t.hp; e.mass = e.S * e.S; e.r = 9 * e.S;
+  e.act = 'idle'; e.stun = 0; e.recover = 0.3; e.target = null; e.retarget = 0; e.cdT = 0.5; e.inspired = 0; e.dance = 0;
+  SFX.play('poof');
 }
 
 // A jagged line for the renderer. Visual only, so Math.random is fine.
@@ -507,7 +627,7 @@ function hurt(e, dmg, ix, iy, iz, from, W, src) {
   if (res === HIT && dmg > 0) puff(W, c.x, c.y, c.z, 3, '#f4efe4', 40, 3 * e.S);
   if (e.hp <= 0) {
     e.alive = false; e.hp = 0; e.act = 'dead';
-    W.lost[e.team]++;
+    W.lost[e.home]++;
     if (src) src.kills++;
     if (e.t.style === 'bomb' && !e.fired) { e.fired = true; explode(W, c.x, c.y, c.z, e.t.dmg, e.t.knock, 100, e); }
   }

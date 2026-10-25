@@ -12,7 +12,13 @@ const PAL = {
   robe: '#f3efe6', gold: '#f4c542', leather: '#6e4b30', stone: '#8d8a86', bomb: '#2b2b30', hair: '#3a2a22',
   purple: '#6b4a8a', storm: '#3b4256', glass: '#9fd8ef',
   fur: '#a0663a', furLight: '#c08552', lebronSkin: '#7b4a2d', beard: '#241812', ball: '#e2711d', sneaker: '#f4f4f4', shadow: '#1d1b22',
+  feather: '#f7f4ee', beak: '#f0a030', comb: '#e0393e', grey: '#d8d8dc', fish: '#7fa6b8', crust: '#e8c98f', cream: '#fffaf0',
+  burlap: '#cdb07a', witch: '#9fc78a', witchBlack: '#2c2433', monkey: '#6b4a2e', monkeyFace: '#e0b58f', banana: '#f5d33b',
+  robot: '#9aa3ad', robotDark: '#5d6570', laser: '#ff4d4d', bark: '#6e4a2c', leaf: '#4f9a3a', leafLight: '#6cb84a',
+  pink: '#f07ab0', blond: '#f2d16b', afro: '#2b1d16', iron: '#2b2b30',
 };
+// Skin, fur, bark or plating, for units that aren't plain people.
+const SKIN_OF = { giant: PAL.giantSkin, lebron: PAL.lebronSkin, squirrel: PAL.fur, witch: PAL.witch, monkey: PAL.monkey, treant: PAL.bark, robot: PAL.robot, chicken: PAL.feather };
 // Per-unit clothing that differs from the default team shirt, team sleeves and grey trousers.
 const LOOK = {
   knight: { limbs: 'steel', legs: 'steel', hands: 'steel' },
@@ -23,6 +29,19 @@ const LOOK = {
   squirrel: { limbs: 'skin', legs: 'skin', boot: PAL.fur },
   lebron: { limbs: 'skin', thigh: 'team', shin: 'skin', boot: PAL.sneaker },
   mystery: { all: PAL.shadow },
+  chicken: { torso: 'skin', limbs: 'skin', legs: PAL.beak, head: 'skin', hands: 'skin', boot: PAL.beak, belt: 'main' },
+  grandma: { legs: '#c9c3d6', boot: '#5a4a3a' },
+  fishmonger: { legs: '#3a4a5c', boot: '#2f3a44' },
+  jester: { legs: 'team' },
+  bard: { legs: '#5b4a3a' },
+  disco: { limbs: 'team', legs: '#ffffff', boot: '#ffffff' },
+  scarecrow: { limbs: PAL.straw, legs: '#7a6a4f', head: PAL.burlap, hands: PAL.straw, boot: '#7a6a4f' },
+  cupid: { torso: '#ffffff', limbs: 'skin', legs: 'skin', boot: PAL.skin, belt: 'main' },
+  witch: { torso: PAL.witchBlack, limbs: PAL.witchBlack, legs: PAL.witchBlack, belt: 'main' },
+  monkey: { limbs: 'skin', legs: 'skin', hands: PAL.monkeyFace, boot: PAL.monkey },
+  pirate: { legs: '#3b3226', boot: '#1f1b22' },
+  robot: { torso: 'skin', limbs: 'skin', legs: 'skin', hands: PAL.robotDark, boot: PAL.robotDark, belt: 'main', boxy: true },
+  treant: { torso: 'skin', limbs: 'skin', legs: 'skin', hands: 'skin', boot: '#4d3420', belt: 'main' },
 };
 
 const _colors = new Map();
@@ -56,24 +75,42 @@ class Batch {
   }
 }
 
-// A gold "?" with a dark outline, for hidden units.
-function questionTexture() {
+// A 128px canvas texture for floating markers, redrawn once web fonts arrive.
+function glyphTexture(paint) {
   const c = document.createElement('canvas'); c.width = c.height = 128;
   const tex = new THREE.CanvasTexture(c);
   const draw = () => {
     const x = c.getContext('2d');
     x.clearRect(0, 0, 128, 128);
-    x.font = '110px "Lilita One", "Arial Rounded MT Bold", sans-serif';
-    x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.lineWidth = 14; x.strokeStyle = PAL.ink; x.lineJoin = 'round';
-    x.strokeText('?', 64, 70);
-    x.fillStyle = '#f4b62e'; x.fillText('?', 64, 70);
+    x.lineWidth = 12; x.strokeStyle = PAL.ink; x.lineJoin = 'round';
+    paint(x);
     tex.needsUpdate = true;
   };
   draw();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   return tex;
 }
+
+// A gold "?" for hidden units.
+const questionTexture = () => glyphTexture(x => {
+  x.font = '110px "Lilita One", "Arial Rounded MT Bold", sans-serif';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.strokeText('?', 64, 70);
+  x.fillStyle = '#f4b62e'; x.fillText('?', 64, 70);
+});
+
+// A pink heart over charmed units.
+const heartTexture = () => glyphTexture(x => {
+  x.beginPath();
+  x.moveTo(64, 110);
+  x.bezierCurveTo(8, 70, 12, 20, 44, 20);
+  x.bezierCurveTo(56, 20, 62, 28, 64, 36);
+  x.bezierCurveTo(66, 28, 72, 20, 84, 20);
+  x.bezierCurveTo(116, 20, 120, 70, 64, 110);
+  x.closePath();
+  x.stroke();
+  x.fillStyle = '#ff6fa8'; x.fill();
+});
 
 const _m = new THREE.Matrix4(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
 const _d = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0);
@@ -104,8 +141,10 @@ class Painter {
     this.gcyl = new Batch(scene, cyl, glow, 2000, false);
     this.puff = new Batch(scene, sph, puff, 2500, false);
     this.flash = new Batch(scene, sph, flash, 80, false);
-    this.qmark = new Batch(scene, new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: questionTexture(), transparent: true, depthWrite: false }), cap, false);
-    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.puff, this.flash, this.qmark];
+    const plane = new THREE.PlaneGeometry(1, 1);
+    this.qmark = new Batch(scene, plane, new THREE.MeshBasicMaterial({ map: questionTexture(), transparent: true, depthWrite: false }), cap, false);
+    this.hearts = new Batch(scene, plane, new THREE.MeshBasicMaterial({ map: heartTexture(), transparent: true, depthWrite: false }), cap, false);
+    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.puff, this.flash, this.qmark, this.hearts];
     // Scratch vectors for one unit's frame and one weapon's frame.
     this.f = V3(); this.u = V3(); this.r = V3();
     this.wd = V3(); this.wx = V3(); this.wz = V3();
@@ -143,7 +182,7 @@ class Painter {
 
   // ---------- units ----------
   unit(u) {
-    const B = u.body.pts, S = u.S, t = u.t, look = LOOK[u.key] || {}, team = TEAM[u.team];
+    const B = u.body.pts, S = u.S, t = u.t, look = LOOK[u.key] || {}, team = TEAM[u.home];
     const white = u.hitFlash > 0 ? C('#ffffff') : null;
     const col = hex => white || C(hex);
     const fat = t.fat || 1, limbR = Math.sqrt(fat);
@@ -156,16 +195,22 @@ class Painter {
     f.normalize();
     r.crossVectors(f, up).normalize();
 
-    const skin = u.key === 'giant' ? PAL.giantSkin : u.key === 'lebron' ? PAL.lebronSkin : u.key === 'squirrel' ? PAL.fur : PAL.skin;
-    const pick = (k, dflt) => look.all || (k === 'steel' ? PAL.steel : k === 'skin' ? skin : k === 'ninja' ? PAL.ninja : k === 'robe' ? PAL.robe : k === 'team' ? team.main : dflt);
+    const skin = SKIN_OF[u.key] || PAL.skin;
+    const pick = (k, dflt) => look.all || (k && k[0] === '#' ? k : k === 'steel' ? PAL.steel : k === 'skin' ? skin : k === 'ninja' ? PAL.ninja
+      : k === 'robe' ? PAL.robe : k === 'team' ? team.main : dflt);
     const shirt = col(pick(look.torso, team.main)), sleeve = col(pick(look.limbs, team.light));
     const thigh = col(pick(look.thigh || look.legs, PAL.pants)), shin = col(pick(look.shin || look.legs, PAL.pants));
     const hand = col(pick(look.hands, skin)), headCol = col(pick(look.head, skin)), boot = col(look.all || look.boot || PAL.boot);
 
-    // Torso as a capsule, plus belt.
-    this.seg(this.cyl, pe, ch, 7 * S * fat, shirt);
-    this.ball(this.sph, ch, 7 * S * fat, shirt);
-    this.ball(this.sph, pe, 6.6 * S * fat, look.belt ? col(team[look.belt]) : shirt);
+    // Torso as a capsule (or a box, for robots), plus belt.
+    if (look.boxy) {
+      const len = Math.sqrt((ch.x - pe.x) ** 2 + (ch.y - pe.y) ** 2 + (ch.z - pe.z) ** 2);
+      this.axes(this.box, this.t1.set((pe.x + ch.x) / 2, (pe.y + ch.y) / 2, (pe.z + ch.z) / 2), r, up, f, 15 * S, len + 8 * S, 11 * S, shirt);
+    } else {
+      this.seg(this.cyl, pe, ch, 7 * S * fat, shirt);
+      this.ball(this.sph, ch, 7 * S * fat, shirt);
+      this.ball(this.sph, pe, 6.6 * S * fat, look.belt ? col(team[look.belt]) : shirt);
+    }
     if (look.belt) this.seg(this.cyl, this.at(this.t1, pe, up, -1 * S), this.at(this.t2, pe, up, 3 * S), 7.1 * S * fat, col(team[look.belt]));
 
     // Legs from the hips, arms from the shoulders.
@@ -186,11 +231,16 @@ class Painter {
     }
 
     // Head, eyes, hat.
-    this.ball(this.sph, hd, 8 * S, headCol);
+    if (look.boxy) this.axes(this.box, hd, r, up, f, 14 * S, 13 * S, 13 * S, headCol);
+    else this.ball(this.sph, hd, 8 * S, headCol);
     if (u.key === 'ninja') this.axes(this.box, this.at(this.t1, hd, f, 7.2 * S, up, -0.2 * S), r, up, f, 9.5 * S, 3 * S, 1.6 * S, col(skin));
     const eyeR = (u.alive ? 1.3 : 0.6) * S * (u.key === 'squirrel' ? 1.4 : 1);
-    if (!look.all) for (const side of [-1, 1]) this.ball(this.sph, this.at(this.t1, hd, f, 7.6 * S, up, -0.2 * S, r, side * 2.7 * S), eyeR, C(PAL.ink));
+    if (look.boxy) for (const side of [-1, 1]) this.ball(this.gsph, this.at(this.t1, hd, f, 6.8 * S, up, 1 * S, r, side * 3 * S), 1.6 * S, C(u.alive ? '#7ff3ff' : PAL.robotDark));
+    else if (!look.all) for (const side of [-1, 1]) this.ball(this.sph, this.at(this.t1, hd, f, 7.6 * S, up, -0.2 * S, r, side * 2.7 * S), eyeR, C(PAL.ink));
     if (u.key === 'squirrel') this.tail(u, pe, f, up, r, S, col);
+    if (u.key === 'monkey') this.tail(u, pe, f, up, r, S, col, true);
+    if (u.alive && u.charm > 0) this.billboard(this.hearts, this.at(this.t1, hd, _Y, 16 * S), 12 * S, C('#ffffff'));
+    if (u.alive && u.inspired > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, (13 + Math.sin(u.phase * 2)) * S), 2 * S, C('#ffd166'));
     this.hat(u, hd, f, up, r, S, team, col);
 
     // Weapons and shields.
@@ -271,23 +321,93 @@ class Painter {
         this.axes(this.sph, this.at(t1, H, f, 3.6 * S, up, -4.4 * S), r, up, f, 6 * S, 4 * S, 5 * S, col(PAL.beard));
         break;
       case 'mystery':
-        this.billboard(this.at(t1, H, up, 0, _Y, 17 * S), 15 * S, C('#ffffff'));
+        this.billboard(this.qmark, this.at(t1, H, up, 0, _Y, 17 * S), 15 * S, C('#ffffff'));
+        break;
+      case 'chicken':
+        for (const o of [-2.5, 0, 2.5]) this.ball(this.sph, this.at(t1, H, up, 7.5 * S - Math.abs(o) * 0.4 * S, f, o * S), 2.6 * S, col(PAL.comb));
+        this.spike(this.at(t1, H, f, 7 * S, up, -1 * S), f, 2.2 * S, 5 * S, col(PAL.beak));
+        this.ball(this.sph, this.at(t1, H, f, 6 * S, up, -5 * S), 1.9 * S, col(PAL.comb));
+        break;
+      case 'granny':
+        dome(0.8, 8.5, PAL.grey);
+        this.ball(this.sph, this.at(t1, H, up, 7 * S, f, -4 * S), 3.8 * S, col(PAL.grey));
+        for (const s of [-1, 1]) this.axes(this.torus, this.at(t1, H, f, 8.4 * S, up, -0.2 * S, r, s * 2.8 * S), r, f, up, 2.3 * S, 2.3 * S, 2.3 * S, C(PAL.ink));
+        break;
+      case 'cap':
+        this.axes(this.dome, this.at(t1, H, up, 2 * S), r, up, f, 8.8 * S, 4.5 * S, 8.8 * S, col('#5b6b5a'));
+        this.axes(this.box, this.at(t1, H, up, 2.6 * S, f, 8 * S), r, up, f, 10 * S, 0.9 * S, 5 * S, col('#4a5849'));
+        break;
+      case 'jester':
+        for (const s of [-1, 1]) {
+          const base = this.at(t1, H, up, 5 * S, r, s * 3 * S);
+          const dir = this.at(t2, r, r, s * 0.9 - 1, up, 0.6, f, -0.2).normalize();
+          this.spike(base, dir, 3.6 * S, 13 * S, col(s < 0 ? team.main : team.light));
+          this.ball(this.sph, this.at(this.t3, base, dir, 13.5 * S), 1.8 * S, C(PAL.gold));
+        }
+        break;
+      case 'feather':
+        this.axes(this.dome, this.at(t1, H, up, 4 * S, r, 1.5 * S), r, up, f, 9.5 * S, 4 * S, 9 * S, col(team.dark));
+        this.axes(this.box, this.at(t1, H, up, 9 * S, f, -5 * S, r, 4 * S), r, up, f, 0.6 * S, 11 * S, 2.2 * S, col(PAL.gold));
+        break;
+      case 'afro':
+        this.ball(this.sph, this.at(t1, H, up, 5 * S, f, -1.5 * S), 11 * S, col(PAL.afro));
+        this.axes(this.box, this.at(t1, H, f, 7.8 * S, up, -0.2 * S), r, up, f, 9.5 * S, 2.6 * S, 1.2 * S, C(PAL.ink));
+        this.ball(this.gsph, this.at(t1, H, _Y, 26 * S), 4 * S, C(['#ff5fd2', '#5fe3ff', '#ffe45f', '#ffffff'][Math.floor(u.phase * 3) & 3]));
+        break;
+      case 'scarecrow':
+        this.seg(this.cyl, this.at(t1, H, up, 4.6 * S), this.at(t2, H, up, 5.8 * S), 14 * S, col(PAL.straw));
+        this.seg(this.cyl, this.at(t1, H, up, 5 * S), this.at(t2, H, up, 10 * S), 6.2 * S, col(PAL.straw));
+        this.axes(this.box, this.at(t1, H, f, 7.8 * S, up, -3.2 * S), r, up, f, 6 * S, 0.8 * S, 0.7 * S, C(PAL.ink));
+        break;
+      case 'cupid':
+        for (const o of [[3, 4], [-3, 4], [0, 6], [4, 0], [-4, 0]]) this.ball(this.sph, this.at(t1, H, r, o[0] * S, up, (o[1] + 1) * S, f, -1.5 * S), 3.4 * S, col(PAL.blond));
+        for (const s of [-1, 1]) this.axes(this.sph, this.at(t1, H, up, -11 * S, f, -7 * S, r, s * 7 * S), r, up, f, 7 * S, 10 * S, 1.6 * S, col(PAL.white));
+        break;
+      case 'witch':
+        this.seg(this.cyl, this.at(t1, H, up, 4.5 * S), this.at(t2, H, up, 5.3 * S), 14 * S, col(PAL.witchBlack));
+        this.spike(this.at(t1, H, up, 5 * S), this.at(t2, up, up, 0, f, -0.3), 7.5 * S, 22 * S, col(PAL.witchBlack));
+        this.seg(this.cyl, this.at(t1, H, up, 5.2 * S), this.at(t2, H, up, 7.4 * S), 7.4 * S, col('#7a4fb0'));
+        this.spike(this.at(t1, H, f, 7.4 * S, up, -1.5 * S), this.at(t2, f, up, -0.3), 1.5 * S, 4.5 * S, col(PAL.witch));
+        break;
+      case 'monkey':
+        for (const s of [-1, 1]) this.ball(this.sph, this.at(t1, H, r, s * 7.6 * S, up, 1 * S), 3 * S, col(PAL.monkeyFace));
+        this.axes(this.sph, this.at(t1, H, f, 4.4 * S, up, -1.5 * S), r, up, f, 6 * S, 5 * S, 4 * S, col(PAL.monkeyFace));
+        break;
+      case 'pirate':
+        this.seg(this.cyl, this.at(t1, H, up, 5.2 * S), this.at(t2, H, up, 6.4 * S), 11.5 * S, col('#1f1b22'));
+        this.axes(this.dome, this.at(t1, H, up, 5.6 * S), r, up, f, 7 * S, 5 * S, 7 * S, col('#1f1b22'));
+        this.ball(this.sph, this.at(t1, H, up, 8 * S, f, 6.4 * S), 1.6 * S, C(PAL.white));
+        this.ball(this.sph, this.at(t1, H, f, 7.9 * S, up, -0.2 * S, r, 2.7 * S), 2.3 * S, C(PAL.ink));
+        break;
+      case 'robot':
+        this.seg(this.cyl, this.at(t1, H, up, 6 * S), this.at(t2, H, up, 13 * S), 0.6 * S, col(PAL.robotDark));
+        this.ball(this.gsph, this.at(t1, H, up, 13.5 * S), 1.8 * S, C(u.alive && Math.sin(u.phase * 3) > 0 ? PAL.laser : '#8a2a2a'));
+        break;
+      case 'treant':
+        for (const o of [[0, 9, 0, 11], [7, 5, -2, 8], [-7, 5, -2, 8], [0, 6, -7, 8], [4, 12, 4, 7], [-4, 12, 3, 7]]) {
+          this.ball(this.sph, this.at(t1, H, r, o[0] * S, up, o[1] * S, f, o[2] * S), o[3] * S, col(o[3] > 8 ? PAL.leaf : PAL.leafLight));
+        }
         break;
     }
   }
 
-  // A big bushy tail curling up behind the pelvis, swaying as it runs.
-  tail(u, pe, f, up, r, S, col) {
-    const pts = [[5, 2, 3], [10, 8, 4.5], [13, 16, 5.5], [13, 25, 6], [10, 33, 6], [6, 38, 5]];
-    const sway = Math.sin(u.phase) * 2 * S, fur = col(PAL.furLight);
+  // A big bushy squirrel tail curling up behind the pelvis, or a thin curly monkey tail, swaying as it runs.
+  tail(u, pe, f, up, r, S, col, thin) {
+    const pts = thin
+      ? [[5, -2, 1.6], [10, -2, 1.5], [14, 2, 1.4], [16, 8, 1.3], [14, 13, 1.2], [10, 14, 1.2], [9, 10, 1.1]]
+      : [[5, 2, 3], [10, 8, 4.5], [13, 16, 5.5], [13, 25, 6], [10, 33, 6], [6, 38, 5]];
+    const sway = Math.sin(u.phase) * 2 * S, fur = col(thin ? PAL.monkey : PAL.furLight);
     pts.forEach(([back, h, rad], i) => {
-      this.ball(this.sph, this.at(this.t1, pe, f, -back * S, up, h * S, r, sway * i / pts.length), rad * S, fur);
+      const p = this.at(this.t1, pe, f, -back * S, up, h * S, r, sway * i / pts.length);
+      this.ball(this.sph, p, rad * S, fur);
+      if (thin && i) this.seg(this.cyl, this.t2, p, rad * S, fur);
+      this.t2.copy(p);
     });
   }
 
-  billboard(p, size, col) {
+  billboard(batch, p, size, col) {
     _p.set(p.x, p.y, p.z); _s.set(size, size, size);
-    _m.compose(_p, this.camQ, _s); this.qmark.add(_m, col);
+    _m.compose(_p, this.camQ, _s); batch.add(_m, col);
   }
 
   // Sets this.wd (along the forearm), this.wx (sideways) and this.wz (the blade's broad axis).
@@ -354,7 +474,7 @@ class Painter {
       case 'bow': {
         const drawing = u.act === 'attack' && u.actT < 0.8;
         const nock = drawing ? B[J.RHAND] : along(t3, -3);
-        const bowCol = col('#7a4a26'), string = C('#f4efe4');
+        const bowCol = col(u.key === 'cupid' ? PAL.pink : '#7a4a26'), string = C('#f4efe4');
         for (const s of [-1, 1]) {
           const mid = this.at(t1, h, Z, s * 7 * S, d, 1 * S), tip = this.at(t2, h, Z, s * 13 * S, d, -3 * S);
           this.seg(this.cyl, h, mid, 0.9 * S, bowCol);
@@ -372,7 +492,47 @@ class Painter {
           this.ball(this.gsph, this.at(t2, m, this.u, 6.5 * S), (1 + Math.random() * 0.6) * S, C(Math.random() < 0.5 ? '#ffd166' : '#ff7a3d'));
         }
         break;
+      case 'pin':
+        this.seg(this.cyl, along(t1, 1), along(t2, 18), 2.6 * S, col('#d9b380'));
+        this.seg(this.cyl, along(t1, -3), along(t2, 1), 0.9 * S, col('#b88a55'));
+        this.ball(this.sph, along(t1, 19.5), 1.3 * S, col('#b88a55'));
+        break;
+      case 'fish':
+        this.axes(this.sph, along(t1, 12), X, d, Z, 2.4 * S, 11 * S, 4.6 * S, col(PAL.fish));
+        this.spike(along(t1, 20), d, 4 * S, 6 * S, col('#5f8597'));
+        this.ball(this.sph, this.at(t1, h, d, 4.5 * S, Z, 1.8 * S, X, 1.6 * S), 0.9 * S, C(PAL.ink));
+        break;
+      case 'pie':
+      case 'banana':
+        if (side === 'r' && !(u.act === 'attack' && u.fired)) {
+          if (w === 'pie') {
+            this.seg(this.cyl, along(t1, 1), along(t2, 3), 4.5 * S, col(PAL.crust));
+            this.ball(this.sph, along(t1, 3), 3.6 * S, col(PAL.cream));
+          } else {
+            this.seg(this.cyl, along(t1, -3), along(t2, 4), 1.5 * S, col(PAL.banana));
+            this.seg(this.cyl, along(t1, 4), this.at(t2, h, d, 8 * S, Z, 2 * S), 1.3 * S, col(PAL.banana));
+          }
+        }
+        break;
+      case 'lute':
+        if (side === 'r') {
+          const body = this.at(t3, B[J.CHEST], this.f, 7 * S, this.u, -7 * S, this.r, 1 * S);
+          this.axes(this.sph, body, this.r, this.u, this.f, 6.5 * S, 7.5 * S, 3 * S, col('#b5793a'));
+          this.ball(this.sph, this.at(t1, body, this.f, 2.6 * S), 1.8 * S, C(PAL.ink));
+          this.seg(this.cyl, body, B[J.LHAND], 1 * S, col('#7a4a26'));
+        }
+        break;
+      case 'broom':
+        this.seg(this.cyl, along(t1, -22), along(t2, 18), 1 * S, col(PAL.wood));
+        this.spike(along(t1, -20), this.at(t2, d, d, -2), 4.5 * S, 10 * S, col(PAL.straw));
+        break;
+      case 'blunderbuss':
+        this.seg(this.cyl, along(t1, -9), along(t2, 3), 1.9 * S, col(PAL.wood));
+        this.seg(this.cyl, along(t1, 3), along(t2, 26), 1.4 * S, col('#8a6d3b'));
+        this.spike(along(t1, 25), d, 3 * S, 5 * S, col('#8a6d3b'));
+        break;
       case 'none':
+        if (u.key === 'robot' && side === 'r') this.ball(this.gsph, along(t1, 2), 2.4 * S, C(u.act === 'attack' ? PAL.laser : '#c24a4a'));
         if (u.key === 'lebron' && side === 'r' && !(u.act === 'attack' && u.fired)) {
           const a = B[J.LHAND], b = B[J.RHAND];
           this.ball(this.sph, t1.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2).addScaledVector(this.f, 3 * S), 6.5, C(PAL.ball));
@@ -401,11 +561,13 @@ class Painter {
     const t1 = this.t1, t2 = this.t2;
     const sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz) || 1;
     const nx = p.vx / sp, ny = p.vy / sp, nz = p.vz / sp;
-    if (p.kind === 'arrow') {
+    if (p.kind === 'arrow' || p.kind === 'heart') {
+      const love = p.kind === 'heart';
       t1.set(p.x - nx * 17, p.y - ny * 17, p.z - nz * 17);
-      this.seg(this.cyl, t1, p, 0.6, C(PAL.wood));
-      this.seg(this.cyl, t1, t2.set(t1.x + nx * 4, t1.y + ny * 4, t1.z + nz * 4), 1.5, C(PAL.white));
-      this.spike(t1.set(p.x - nx * 1, p.y - ny * 1, p.z - nz * 1), _d.set(nx, ny, nz), 1.1, 3, C(PAL.darkSteel));
+      this.seg(this.cyl, t1, p, 0.6, C(love ? PAL.pink : PAL.wood));
+      this.seg(this.cyl, t1, t2.set(t1.x + nx * 4, t1.y + ny * 4, t1.z + nz * 4), 1.5, C(love ? '#ffc2da' : PAL.white));
+      if (love) this.ball(this.gsph, p, 2.2, C('#ff6fa8'));
+      else this.spike(t1.set(p.x - nx * 1, p.y - ny * 1, p.z - nz * 1), _d.set(nx, ny, nz), 1.1, 3, C(PAL.darkSteel));
     } else if (p.kind === 'bullet') {
       this.ball(this.gsph, p, 1.6, C('#fff3b0'));
       this.seg(this.gcyl, t1.set(p.x - nx * 30, p.y - ny * 30, p.z - nz * 30), p, 0.5, C('#fff7d6'));
@@ -413,6 +575,15 @@ class Painter {
       this.ball(this.sph, p, p.r, C(PAL.stone));
     } else if (p.kind === 'ball') {
       this.ball(this.sph, p, p.r, C(PAL.ball));
+    } else if (p.kind === 'cannon') {
+      this.ball(this.sph, p, p.r, C(PAL.iron));
+    } else if (p.kind === 'hex') {
+      this.ball(this.gsph, p, p.r, C('#b56cff'));
+    } else if (p.kind === 'pie') {
+      this.ball(this.sph, p, 4, C(PAL.crust));
+      this.ball(this.sph, t1.set(p.x, p.y + 2, p.z), 3.2, C(PAL.cream));
+    } else if (p.kind === 'peel') {
+      this.ball(this.sph, p, 3, C(PAL.banana));
     } else {
       this.ball(this.gsph, p, 6.5, C('#ffb347'));
     }
@@ -423,11 +594,13 @@ class Painter {
       const t = q.life / q.max;
       if (q.kind === 'puff') this.ball(this.puff, q, q.size * (0.4 + 0.9 * t), C(q.color));
       else if (q.kind === 'fire') this.ball(this.gsph, q, q.size * (0.5 + 0.6 * t), C(t > 0.5 ? '#ffd166' : '#f2622e'));
+      else if (q.kind === 'glow') this.ball(this.gsph, q, q.size * (0.4 + 0.6 * t), C(q.color));
       else this.ball(this.gsph, q, 1.1, C('#ffe58a'));
     }
     for (const fl of W.flashes) {
       const t = fl.life / fl.max;
-      this.ball(this.flash, fl, (1 - t) * fl.r * 0.9 + 8, C(fl.bolt ? '#cfefff' : '#fff3c4'));
+      const hex = fl.disco ? ['#ff5fd2', '#5fe3ff', '#ffe45f'][Math.floor(t * 9) % 3] : fl.bolt ? '#cfefff' : '#fff3c4';
+      this.ball(this.flash, fl, (1 - t) * fl.r * 0.9 + 8, C(hex));
     }
     for (const b of W.bolts) {
       for (let i = 1; i < b.pts.length; i++) {
@@ -437,8 +610,22 @@ class Painter {
     }
     for (const bm of W.beams) {
       const s = bm.a.body.pts[J.RHAND], c = bm.b.body.pts[J.CHEST];
-      this.seg(this.gcyl, this.t1.set(s.x, s.y + 22 * bm.a.S, s.z), c, 1.3, C('#9be8a0'));
-      this.ball(this.gsph, c, 4 * bm.b.S * (bm.life / 0.4), C('#c9f5cc'));
+      if (bm.laser) {
+        this.seg(this.gcyl, s, c, 1.4, C(PAL.laser));
+        this.ball(this.gsph, c, 3.5, C('#ffb0b0'));
+      } else {
+        this.seg(this.gcyl, this.t1.set(s.x, s.y + 22 * bm.a.S, s.z), c, 1.3, C('#9be8a0'));
+        this.ball(this.gsph, c, 4 * bm.b.S * (bm.life / 0.4), C('#c9f5cc'));
+      }
+    }
+    // Banana peels lying on the ground.
+    for (const h of W.hazards || []) {
+      const c = Math.cos(h.spin), sn = Math.sin(h.spin);
+      this.axes(this.sph, this.t1.set(h.x, 1, h.z), this.t2.set(c, 0, sn), _Y, this.t3.set(-sn, 0, c), 5, 1.4, 3.4, C(PAL.banana));
+      for (let i = 0; i < 3; i++) {
+        const a = h.spin + i * 2.1;
+        this.ball(this.sph, this.t1.set(h.x + Math.cos(a) * 6, 0.8, h.z + Math.sin(a) * 6), 2.2, C('#e8c23a'));
+      }
     }
   }
 }

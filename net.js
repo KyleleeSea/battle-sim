@@ -5,7 +5,7 @@
 // from the same armies and seed, so nothing else has to travel between players.
 
 const Net = (() => {
-  const PROTO = 4;               // Bump whenever the simulation changes: mismatched builds would disagree.
+  const PROTO = 5;               // Bump whenever the simulation changes: mismatched builds would disagree.
   const PREFIX = 'mabs-p' + PROTO + '-';
   const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : 0);

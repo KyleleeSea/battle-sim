@@ -6,7 +6,26 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-Squirrel, Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber, Wizard, Storm Caller, Healer, Sumo, LeBron James and Giant.
+30 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
+Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
+
+| Unit | Trick |
+|---|---|
+| Chicken | Pecks ankles. Ten gold each, so bring a hundred. |
+| Squirrel | Pounces in swarms. |
+| Grandma | Rolling pin. |
+| Fishmonger | A fish slap that sends people flying. |
+| Scarecrow | Enemies can't resist attacking it. |
+| Monkey | Throws banana peels; whoever steps on one slips over. |
+| Jester | Cream pies that leave targets staggering, blinded. |
+| Pirate | A hand cannon firing real cannonballs. |
+| Cupid | Love arrows make enemies switch sides for six seconds. |
+| Bard | Music that makes nearby allies fight and run faster. |
+| Disco Dancer | Every enemy nearby has to stop and dance. |
+| Witch | Turns enemies into chickens. Giants included. |
+| Robot | A laser that never misses. |
+| Treant | A grumpy old oak that swats whole rows aside. |
+| LeBron James | Bouncing basketballs from range, slam dunks up close. |
 
 ## Controls
 

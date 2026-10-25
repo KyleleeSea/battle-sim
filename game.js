@@ -43,6 +43,13 @@ const SFX = (() => {
     boing: () => tone(170, 430, 0.16, 'sine', 0.12),
     bang: () => { noise(0.3, 'lowpass', 1400, 0.8); tone(140, 60, 0.2, 'square', 0.08); },
     zap: () => { tone(1400, 180, 0.25, 'sawtooth', 0.06); noise(0.2, 'highpass', 2500, 0.25); },
+    pew: () => tone(1700, 380, 0.12, 'square', 0.04),
+    splat: () => noise(0.16, 'lowpass', 700, 0.5),
+    slip: () => tone(1100, 180, 0.35, 'sine', 0.07),
+    poof: () => { noise(0.2, 'bandpass', 1600, 0.3); tone(400, 1200, 0.2, 'sine', 0.05); },
+    strum: () => { tone(330, 330, 0.3, 'triangle', 0.06); tone(415, 415, 0.3, 'triangle', 0.05); tone(494, 494, 0.35, 'triangle', 0.04); },
+    disco: () => { tone(523, 523, 0.1, 'square', 0.04); setTimeout(() => tone(659, 659, 0.1, 'square', 0.04), 90); setTimeout(() => tone(784, 784, 0.15, 'square', 0.04), 180); },
+    love: () => tone(660, 990, 0.22, 'sine', 0.06),
     chime: () => { tone(880, 1320, 0.25, 'sine', 0.07); tone(1320, 1760, 0.3, 'sine', 0.04); },
     tick: () => tone(660, 660, 0.12, 'square', 0.05),
   };
@@ -59,7 +66,7 @@ const SFX = (() => {
   };
 })();
 
-const W = { units: [], projs: [], parts: [], flashes: [], bolts: [], beams: [], time: 0, state: 'place', over: false, winner: -1, shake: 0, lost: [0, 0], total: [0, 0], battleTime: 0, endT: 0 };
+const W = { units: [], projs: [], parts: [], flashes: [], bolts: [], beams: [], hazards: [], time: 0, state: 'place', over: false, winner: -1, shake: 0, lost: [0, 0], total: [0, 0], battleTime: 0, endT: 0 };
 
 const G = {
   mode: 'sandbox',            // 'sandbox' or 'online'
@@ -133,6 +140,11 @@ const PRESETS = {
   stable:  { name: 'Sumo stable', build: (L, t) => { block(L, 'sumo', t, 1, 4, 130, 70); block(L, 'healer', t, 1, 4, 230, 50); block(L, 'archer', t, 1, 8, 300, 36); } },
   nuts:    { name: 'Squirrel swarm', build: (L, t) => { block(L, 'squirrel', t, 8, 16, 100, 16); block(L, 'musketeer', t, 1, 4, 260, 60); } },
   king:    { name: 'The King\u2019s court', build: (L, t) => { block(L, 'squire', t, 1, 10, 110, 30); block(L, 'lebron', t, 1, 1, 200, 40); block(L, 'healer', t, 1, 2, 260, 80); block(L, 'archer', t, 1, 8, 300, 36); } },
+  circus:  { name: 'Circus', build: (L, t) => { block(L, 'grandma', t, 1, 8, 110, 30); block(L, 'disco', t, 1, 2, 160, 90); block(L, 'jester', t, 1, 8, 220, 34); block(L, 'monkey', t, 1, 6, 280, 40); } },
+  farm:    { name: 'Old MacDonald\u2019s', build: (L, t) => { block(L, 'chicken', t, 7, 14, 100, 13); block(L, 'scarecrow', t, 1, 4, 200, 60); block(L, 'fishmonger', t, 1, 8, 240, 36); block(L, 'witch', t, 1, 3, 320, 80); } },
+  love:    { name: 'Love and hexes', build: (L, t) => { block(L, 'squire', t, 1, 8, 110, 32); block(L, 'bard', t, 1, 2, 170, 100); block(L, 'cupid', t, 1, 5, 240, 50); block(L, 'witch', t, 1, 3, 310, 70); } },
+  crew:    { name: 'Pirate crew', build: (L, t) => { block(L, 'fishmonger', t, 1, 6, 110, 40); block(L, 'pirate', t, 1, 8, 200, 34); block(L, 'monkey', t, 1, 6, 270, 40); } },
+  forest:  { name: 'Robots and trees', build: (L, t) => { block(L, 'treant', t, 1, 2, 140, 160); block(L, 'robot', t, 1, 6, 250, 44); } },
   storm:   { name: 'Storm front', build: (L, t) => { block(L, 'squire', t, 1, 10, 110, 30); block(L, 'musketeer', t, 1, 6, 200, 40); block(L, 'storm', t, 1, 4, 280, 60); block(L, 'healer', t, 1, 3, 340, 70); } },
 };
 const SCENARIOS = {
@@ -141,6 +153,9 @@ const SCENARIOS = {
   archers:  { name: 'Archer duel', sides: ['archers', 'archers'] },
   magic:    { name: 'Wizard chaos', sides: ['magic', 'mob'] },
   nuts:     { name: 'Squirrels vs LeBron', sides: ['nuts', 'king'] },
+  circus:   { name: 'Circus vs Farm', sides: ['circus', 'farm'] },
+  pirates:  { name: 'Pirates vs Robots', sides: ['crew', 'forest'] },
+  love:     { name: 'Love and hexes vs Shield wall', sides: ['love', 'wall'] },
   ninjas:   { name: 'Ninjas vs Knights', sides: ['clan', 'knights'] },
   sumo:     { name: 'Sumo vs Storm', sides: ['stable', 'storm'] },
 };
@@ -188,7 +203,7 @@ function startBattle(seed) {
   NEXT_ID = 1; seedRng(seed);
   W.units = [];
   for (const team of [0, 1]) for (const a of G.armies[team]) W.units.push(new Unit(a.key, team, a.x, a.z));
-  W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.lost = [0, 0];
+  W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.lost = [0, 0];
   W.total = [G.armies[0].length, G.armies[1].length];
   W.time = 0; W.battleTime = 0; W.state = 'battle'; W.over = false; W.winner = -1; W.endT = 0;
   G.bannerShown = false; hideBanner(); hover = null;
@@ -196,7 +211,7 @@ function startBattle(seed) {
 }
 
 function backToDeploy() {
-  W.state = 'place'; W.over = false; W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = [];
+  W.state = 'place'; W.over = false; W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = [];
   W.units = [];
   setArmy(0, G.armies[0]); setArmy(1, G.armies[1]);
   G.bannerShown = false; hideBanner(); hud();
@@ -216,7 +231,7 @@ function step() {
 
 function checkWin() {
   const alive = [0, 0];
-  for (const u of W.units) if (u.alive) alive[u.team]++;
+  for (const u of W.units) if (u.alive) alive[u.home]++;
   if (alive[0] && alive[1] && W.battleTime < 240) return;
   W.state = 'over'; W.over = true; W.endT = W.time;
   W.winner = alive[0] === alive[1] ? -1 : alive[0] > alive[1] ? 0 : 1;
@@ -270,7 +285,7 @@ function hud() {
   for (const team of [0, 1]) {
     const n = G.armies[team].length;
     let alive = 0;
-    for (const u of W.units) if (u.team === team && u.alive) alive++;
+    for (const u of W.units) if (u.home === team && u.alive) alive++;
     $(`count${team}`).textContent = W.state === 'place' ? `${n} unit${n === 1 ? '' : 's'}` : `${alive} of ${W.total[team]} standing`;
     $(`gold${team}`).textContent = W.state !== 'place' ? `${W.lost[team]} down` : G.hidden[team] ? 'army hidden' : `${fmt(spent(team))} / ${budget === Infinity ? 'no limit' : fmt(budget)}`;
   }
