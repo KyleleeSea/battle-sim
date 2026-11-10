@@ -4,7 +4,13 @@
 const DT = 1 / 60;
 let GRAV = 900;               // set per map by setEnv()
 // Ground behaviour for the current map; maps.js swaps these in before each battle.
-const ENV_DEFAULT = { grav: 900, friction: 0.7, bounce: 0.15, traction: 1, lava: false, pools: null };
+const ENV_DEFAULT = { grav: 900, friction: 0.7, bounce: 0.15, traction: 1, lava: false, pools: null, platform: null, wall: null };
+
+// Is there ground under (x, z)? Everywhere, except off the edge of a floating platform.
+function onGround(p) {
+  const pl = ENV.platform;
+  return !pl || (Math.abs(p.x) < pl.x && p.z > pl.z0 && p.z < pl.z1);
+}
 const ENV = Object.assign({}, ENV_DEFAULT);
 const ITER = 4;
 const FIELD_X = 720;   // half-width of the battlefield
@@ -90,7 +96,16 @@ function stepBody(b) {
     const vx = (p.x - p.px) * 0.996, vy = (p.y - p.py) * 0.996, vz = (p.z - p.pz) * 0.996;
     p.px = p.x; p.py = p.y; p.pz = p.z;
     p.x += vx; p.y += vy - g; p.z += vz;
-    if (p.y < 0) {
+    if (ENV.wall) {
+      // An arena wall: anything that reaches it stops dead against it.
+      const w = ENV.wall, ex = p.x / w.rx, ez = (p.z - w.cz) / w.rz, q = ex * ex + ez * ez;
+      if (q > 1) {
+        const k = 1 / Math.sqrt(q);
+        p.x *= k; p.z = w.cz + (p.z - w.cz) * k;
+        p.px = p.x; p.pz = p.z;
+      }
+    }
+    if (p.y < 0 && onGround(p)) {
       // Ground contact: a small bounce and a lot of scrubbing friction (less on ice, more bounce on jelly).
       p.y = 0;
       p.py = vy < 0 ? vy * ENV.bounce : 0;
@@ -108,7 +123,7 @@ function stepBody(b) {
       a.x += dx * k; a.y += dy * k; a.z += dz * k;
       c.x -= dx * k; c.y -= dy * k; c.z -= dz * k;
     }
-    for (const p of pts) if (p.y < 0) p.y = 0;
+    for (const p of pts) if (p.y < 0 && onGround(p)) p.y = 0;
   }
 }
 

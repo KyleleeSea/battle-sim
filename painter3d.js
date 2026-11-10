@@ -20,7 +20,8 @@ const PAL = {
 // Skin, fur, bark or plating, for units that aren't plain people.
 const SKIN_OF = { giant: PAL.giantSkin, lebron: PAL.lebronSkin, squirrel: PAL.fur, witch: PAL.witch, monkey: PAL.monkey, treant: PAL.bark, robot: PAL.robot, chicken: PAL.feather,
   djkhaled: '#6b4229', miner: '#9ab07a', hogrider: '#c98a5e', ultraman: '#c9ced6', megaknight: '#3d4350',
-  kendrick: '#7a4a2e', drake: '#b0805a', paak: '#9a6a45', nicki: '#9a6a45', augustine: '#a8714a', mlk: '#6b4229' };
+  kendrick: '#7a4a2e', drake: '#b0805a', paak: '#9a6a45', nicki: '#9a6a45', augustine: '#a8714a', mlk: '#6b4229',
+  zuck: '#cdd6ad', jensen: '#e0b890', bigbird: '#f5d33b', minibot: PAL.robot, armadillo: '#c9a98a' };
 // Per-unit clothing that differs from the default team shirt, team sleeves and grey trousers.
 const LOOK = {
   knight: { limbs: 'steel', legs: 'steel', hands: 'steel' },
@@ -49,6 +50,16 @@ const LOOK = {
   megaknight: { torso: 'skin', limbs: 'skin', legs: 'skin', hands: '#2b3038', boot: '#2b3038', belt: 'main', noEyes: true },
   hogrider: { limbs: 'skin', legs: '#5a4632', boot: '#3a2a22' },
   kendrick: { limbs: 'skin', legs: '#1f1b22', boot: '#f4f4f4' },
+  elon: { legs: '#2b2b30', boot: '#1f1b22' },
+  zuck: { torso: '#8a8f98', limbs: 'skin', legs: '#3a4a6a', boot: '#f4f4f4', belt: 'main' },
+  jensen: { torso: '#151418', limbs: '#151418', legs: '#1f1b22', boot: '#1f1b22', belt: 'main' },
+  spy: { torso: 'dark', limbs: 'dark', legs: '#2b2b30', boot: '#1f1b22' },
+  altman: { torso: '#7d8590', limbs: '#7d8590', legs: '#3a4a6a', boot: '#f4f4f4', belt: 'main' },
+  swe: { legs: '#3a4a6a', boot: '#f4f4f4' },
+  oncall: { legs: '#5a5a66', boot: '#8a8f98' },
+  bigbird: { torso: 'skin', limbs: 'skin', legs: '#f0a030', hands: 'skin', boot: '#f0a030', belt: 'main' },
+  nathan: { torso: '#9ec5e8', limbs: '#9ec5e8', legs: '#c8b48a', boot: '#5a4632', belt: 'main' },
+  holmes: { torso: '#151418', limbs: '#151418', legs: '#151418', boot: '#151418', belt: 'main' },
   drake: { legs: '#2b2b30', boot: '#f4f4f4' },
   paak: { limbs: 'skin', legs: '#3a4a6a', boot: '#f4f4f4' },
   nicki: { limbs: 'skin', legs: '#ff5fb0', boot: '#ff5fb0' },
@@ -181,9 +192,15 @@ class Painter {
     this.qmark = new Batch(scene, plane, new THREE.MeshBasicMaterial({ map: questionTexture(), transparent: true, depthWrite: false }), cap, false);
     this.hearts = new Batch(scene, plane, new THREE.MeshBasicMaterial({ map: heartTexture(), transparent: true, depthWrite: false }), cap, false);
     const words = (text, fill, size) => new THREE.MeshBasicMaterial({ map: wordTexture(text, fill, size), transparent: true, depthWrite: false, side: THREE.DoubleSide });
-    this.callout = new Batch(scene, plane, words('ANOTHER ONE!', '#ffd166', 84), 32, false);
+    // Floating words over a unit's head, keyed by the callout's `text`.
+    this.callouts = {
+      another: new Batch(scene, plane, words('ANOTHER ONE!', '#ffd166', 84), 32, false),
+      rud: new Batch(scene, plane, words('RAPID UNSCHEDULED DISASSEMBLY', '#ff8a4a', 34), 32, false),
+      rehired: new Batch(scene, plane, words('REHIRED!', '#9fe8ff', 96), 16, false),
+      paged: new Batch(scene, plane, words('PAGED!', '#ff5f5f', 96), 64, false),
+    };
     this.label = new Batch(scene, plane, words('databrick', '#ffffff', 96), Math.max(16, cap >> 2), false);
-    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.gtorus, this.puff, this.flash, this.qmark, this.hearts, this.callout, this.label];
+    this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.gtorus, this.puff, this.flash, this.qmark, this.hearts, this.label, ...Object.values(this.callouts)];
     // Scratch vectors for one unit's frame and one weapon's frame.
     this.f = V3(); this.u = V3(); this.r = V3();
     this.wd = V3(); this.wx = V3(); this.wz = V3();
@@ -221,7 +238,8 @@ class Painter {
 
   // ---------- units ----------
   unit(u) {
-    const B = u.body.pts, S = u.S, t = u.t, look = LOOK[u.key] || {}, team = TEAM[u.home];
+    // A spy in disguise wears the other side's colours.
+    const B = u.body.pts, S = u.S, t = u.t, look = LOOK[u.key === 'actor' ? 'nathan' : u.key] || {}, team = TEAM[u.hidden ? 1 - u.home : u.home];
     const white = u.hitFlash > 0 ? C('#ffffff') : null;
     const col = hex => white || C(hex);
     const fat = t.fat || 1, limbR = Math.sqrt(fat);
@@ -234,16 +252,17 @@ class Painter {
     f.normalize();
     r.crossVectors(f, up).normalize();
 
-    const team0 = TEAM[u.home], col0 = col;
+    const team0 = team, col0 = col;
     if (u.burrow) { this.mound(u); return; }
     if (t.body === 'fish') { this.fishBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'dragon') { this.dragonBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'brick') { this.brickBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'log') { this.logBody(u, f, up, r, S, team0, col0); return; }
+    if (t.body === 'armadillo') { this.armadilloBody(u, f, up, r, S, team0, col0); return; }
 
     const skin = SKIN_OF[u.key] || PAL.skin;
     const pick = (k, dflt) => look.all || (k && k[0] === '#' ? k : k === 'steel' ? PAL.steel : k === 'skin' ? skin : k === 'ninja' ? PAL.ninja
-      : k === 'robe' ? PAL.robe : k === 'team' ? team.main : dflt);
+      : k === 'robe' ? PAL.robe : k === 'team' ? team.main : k === 'dark' ? team.dark : dflt);
     const shirt = col(pick(look.torso, team.main)), sleeve = col(pick(look.limbs, team.light));
     const thigh = col(pick(look.thigh || look.legs, PAL.pants)), shin = col(pick(look.shin || look.legs, PAL.pants));
     const hand = col(pick(look.hands, skin)), headCol = col(pick(look.head, skin)), boot = col(look.all || look.boot || PAL.boot);
@@ -287,6 +306,7 @@ class Painter {
     if (u.key === 'squirrel') this.tail(u, pe, f, up, r, S, col);
     if (u.key === 'monkey') this.tail(u, pe, f, up, r, S, col, true);
     if (u.alive && u.charm > 0) this.billboard(this.hearts, this.at(this.t1, hd, _Y, 16 * S), 12 * S, C('#ffffff'));
+    if (u.paged > 0) this.axes(this.gsph, this.at(this.t1, B[J.RHAND], f, 1 * S), r, up, f, 1.4 * S, 2.6 * S, 0.6 * S, C('#9fd8ff'));
     if (u.alive && u.peace > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, 15 * S), 2 * S, C('#ffffff'));
     if (u.alive && u.ward > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, 13 * S, r, 3.5 * S), 1.8 * S, C('#9fd8ff'));
     if (u.alive && u.daze > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, 13 * S, r, -3.5 * S), 1.8 * S, C('#5fbf5a'));
@@ -464,6 +484,67 @@ class Painter {
         this.ball(this.gsph, this.at(t1, ch, f, 7.2 * S, up, -3 * S), 2.2 * S, C(timer));
         break;
       }
+      case 'elon':
+        this.axes(this.dome, this.at(t1, H, up, 1.2 * S), r, up, f, 8.5 * S, 5 * S, 8.5 * S, col('#4a3424'));
+        break;
+      case 'zuck': {
+        this.axes(this.dome, this.at(t1, H, up, 1.2 * S), r, up, f, 8.5 * S, 4.6 * S, 8.5 * S, col('#5a4030'));
+        const pe = u.body.pts[J.PELVIS], green = col('#6a9a4a');
+        // A lizard tail, drooping to the ground and swishing.
+        for (let i = 0; i < 7; i++) {
+          const p = this.at(t1, pe, f, -(5 + i * 5) * S, up, -(2 + i * 2.4) * S, r, Math.sin(u.phase * 1.5 + i * 0.7) * 1.6 * S);
+          if (p.y < 1 * S) p.y = 1 * S;
+          this.ball(this.sph, p, (3 - i * 0.3) * S, green);
+        }
+        // The tongue shoots out while attacking.
+        if (u.act === 'attack' && u.actT > 0.3 && u.actT < 0.75) {
+          const len = (u.tongueLen || u.t.reach) * Math.sin((u.actT - 0.3) / 0.45 * PI);
+          const mouth = this.at(t1, H, f, 7.4 * S, up, -3.2 * S);
+          const tip = this.at(t2, mouth, f, len);
+          this.seg(this.cyl, mouth, tip, 1.1 * S, col('#e86a8a'));
+          this.ball(this.sph, tip, 1.8 * S, col('#e86a8a'));
+        }
+        break;
+      }
+      case 'jensen':
+        this.axes(this.dome, this.at(t1, H, up, 1.4 * S), r, up, f, 8.4 * S, 4.4 * S, 8.4 * S, col('#3a3a40'));
+        break;
+      case 'spy':
+        this.seg(this.cyl, this.at(t1, H, up, 5 * S), this.at(t2, H, up, 5.8 * S), 12 * S, col('#2b2b30'));
+        this.seg(this.cyl, this.at(t1, H, up, 5.6 * S), this.at(t2, H, up, 10.5 * S), 7.2 * S, col('#2b2b30'));
+        this.seg(this.cyl, this.at(t1, H, up, 5.8 * S), this.at(t2, H, up, 7 * S), 7.3 * S, col(team.main));
+        this.axes(this.box, this.at(t1, H, f, 7.8 * S, up, 0.2 * S), r, up, f, 9.5 * S, 2.4 * S, 1.2 * S, C(PAL.ink));
+        break;
+      case 'altman':
+        this.axes(this.dome, this.at(t1, H, up, 1.2 * S), r, up, f, 8.5 * S, 4.8 * S, 8.5 * S, col('#6b4a30'));
+        break;
+      case 'swe':
+        this.axes(this.dome, this.at(t1, H, f, -1.5 * S, up, 0.4 * S), r, up, f, 9.6 * S, 9.6 * S, 9.6 * S, col(team.dark));
+        for (const sd of [-1, 1]) this.axes(this.torus, this.at(t1, H, f, 8.2 * S, up, -0.2 * S, r, sd * 2.8 * S), r, f, up, 2.4 * S, 2.4 * S, 2.4 * S, C(PAL.ink));
+        break;
+      case 'oncall':
+        for (const o of [[0, 6, 0], [-4, 5, 2], [4, 5, -2], [2, 7, 3], [-3, 6, -3]]) this.ball(this.sph, this.at(t1, H, r, o[0] * S, up, o[1] * S, f, o[2] * S), 3.4 * S, col('#3a2a22'));
+        for (const sd of [-1, 1]) this.axes(this.sph, this.at(t1, H, f, 7.3 * S, up, -2 * S, r, sd * 2.7 * S), r, up, f, 1.8 * S, 0.9 * S, 0.8 * S, col('#8a6a8a'));
+        break;
+      case 'bigbird':
+        this.spike(this.at(t1, H, f, 6.5 * S, up, -1 * S), this.at(t2, f, up, -0.15), 3 * S, 8 * S, col('#f0a030'));
+        for (const sd of [-1, 1]) {
+          const e = this.at(t1, H, f, 6 * S, up, 2.5 * S, r, sd * 3.4 * S);
+          this.ball(this.sph, e, 2.6 * S, C(PAL.white));
+          if (u.alive) this.ball(this.sph, this.at(t2, e, f, 1.4 * S), 1.2 * S, C(PAL.ink));
+          this.axes(this.dome, e, r, up, f, 2.8 * S, 1.8 * S, 2.8 * S, col('#ff8ac8'));
+        }
+        for (const o of [-3, 0, 3]) this.spike(this.at(t1, H, up, 6.5 * S, r, o * S), this.at(t2, up, r, o * 0.12, f, -0.3), 1.6 * S, 6 * S, col('#f0c020'));
+        for (const o of [-3, 0, 3]) this.spike(this.at(t1, u.body.pts[J.PELVIS], f, -6 * S, r, o * S), this.at(t2, f, f, -2, up, 0.4, r, o * 0.1), 2.2 * S, 9 * S, col('#f5d33b'));
+        break;
+      case 'nathan':
+        this.axes(this.dome, this.at(t1, H, up, 1.2 * S, r, 0.6 * S), r, up, f, 8.5 * S, 5 * S, 8.5 * S, col('#5a4030'));
+        break;
+      case 'holmes':
+        this.axes(this.dome, this.at(t1, H, up, 1 * S), r, up, f, 8.6 * S, 5.5 * S, 8.6 * S, col('#e8cf8a'));
+        this.ball(this.sph, this.at(t1, H, up, 7.5 * S, f, -4 * S), 3.6 * S, col('#e8cf8a'));
+        this.seg(this.cyl, this.at(t1, u.body.pts[J.CHEST], up, 1 * S), this.at(t2, u.body.pts[J.CHEST], up, 4 * S), 4.4 * S, col('#151418'));
+        break;
       case 'kendrick':
         this.axes(this.dome, this.at(t1, H, up, 1 * S), r, up, f, 8.4 * S, 5.2 * S, 8.4 * S, col('#1d1512'));
         this.ball(this.sph, this.at(t1, H, f, 6.6 * S, up, -5.6 * S), 1.7 * S, col('#1d1512'));
@@ -635,6 +716,42 @@ class Painter {
   }
 
   // Tung Tung Tung Sahur: a wooden log with a face, stick limbs and a bat.
+  // Giant Armadillo: upright with a banded shell, or rolled up into a ball while it bowls along.
+  armadilloBody(u, f, up, r, S, team, col) {
+    const B = u.body.pts, pe = B[J.PELVIS], ch = B[J.CHEST], hd = B[J.HEAD];
+    const shell = col('#8a7d6a'), band = col('#6e624f'), skin = col('#c9a98a');
+    const mid = this.t1.set((pe.x + ch.x) / 2, (pe.y + ch.y) / 2, (pe.z + ch.z) / 2);
+    if (u.leaping) {
+      this.ball(this.sph, mid, 14 * S, shell);
+      const spin = u.leapT * 12;
+      for (let k = 0; k < 3; k++) {
+        const a = spin + k * 1.05, n = this.t2.set(f.x * Math.cos(a) + up.x * Math.sin(a), f.y * Math.cos(a) + up.y * Math.sin(a), f.z * Math.cos(a) + up.z * Math.sin(a));
+        this.axes(this.torus, mid, r, n, this.t3.crossVectors(r, n).normalize(), 14.2 * S, 14.2 * S, 14.2 * S, k ? band : col(team.main));
+      }
+      return;
+    }
+    const c = this.at(this.t2, mid, up, 2 * S, f, -2 * S);
+    this.axes(this.sph, c, r, up, f, 11 * S, 15 * S, 11 * S, shell);
+    for (let k = -2; k <= 2; k++) {
+      const w = 11.2 * S * Math.sqrt(1 - (k / 4.3) ** 2);
+      this.axes(this.torus, this.at(this.t3, c, up, k * 3.6 * S), r, up, f, w, w, w, k === 0 ? col(team.main) : band);
+    }
+    this.axes(this.sph, this.at(this.t3, c, f, 5 * S), r, up, f, 8 * S, 12 * S, 6 * S, skin);
+    this.axes(this.sph, hd, r, up, f, 5 * S, 5 * S, 6 * S, skin);
+    this.axes(this.dome, this.at(this.t3, hd, up, 1 * S), r, up, f, 5.2 * S, 3 * S, 6.2 * S, shell);
+    this.spike(this.at(this.t3, hd, f, 4 * S, up, -1 * S), this.at(this.t4, f, up, -0.2), 2 * S, 8 * S, skin);
+    for (const sd of [-1, 1]) {
+      this.spike(this.at(this.t3, hd, up, 3 * S, r, sd * 3 * S), this.at(this.t4, up, r, sd * 0.4), 1.6 * S, 4 * S, skin);
+      this.ball(this.sph, this.at(this.t3, hd, f, 4.6 * S, up, 1.5 * S, r, sd * 2.6 * S), 0.9 * S, C(PAL.ink));
+      const el = B[sd < 0 ? J.LELB : J.RELB], hn = B[sd < 0 ? J.LHAND : J.RHAND], kn = B[sd < 0 ? J.LKNEE : J.RKNEE], ft = B[sd < 0 ? J.LFOOT : J.RFOOT];
+      const sh = this.at(this.t3, ch, r, sd * 8 * S, up, -3 * S);
+      this.seg(this.cyl, sh, el, 2 * S, skin); this.seg(this.cyl, el, hn, 1.9 * S, skin); this.ball(this.sph, hn, 2.2 * S, band);
+      const hip = this.at(this.t3, pe, r, sd * 5 * S, up, -2 * S);
+      this.seg(this.cyl, hip, kn, 2.6 * S, skin); this.seg(this.cyl, kn, ft, 2.4 * S, skin); this.ball(this.sph, ft, 2.8 * S, band);
+    }
+    this.spike(this.at(this.t3, pe, f, -9 * S, up, -3 * S), this.at(this.t4, f, f, -2, up, -0.6), 3 * S, 14 * S, shell);
+  }
+
   logBody(u, f, up, r, S, team, col) {
     const B = u.body.pts, hd = B[J.HEAD], pe = B[J.PELVIS], ch = B[J.CHEST];
     const wood = col('#b07a45'), dark = col('#7a5230');
@@ -773,6 +890,32 @@ class Painter {
           this.ball(this.gsph, this.at(t2, m, this.u, 6.5 * S), (1 + Math.random() * 0.6) * S, C(Math.random() < 0.5 ? '#ffd166' : '#ff7a3d'));
         }
         break;
+      case 'gpu':
+        if (side === 'r') {
+          this.axes(this.box, along(t1, 5), X, d, Z, 3 * S, 10 * S, 6 * S, col('#1f1f22'));
+          this.axes(this.box, along(t1, 5), X, d, Z, 3.2 * S, 2 * S, 6.2 * S, col('#76b900'));
+        }
+        break;
+      case 'dagger':
+        this.axes(this.box, along(t1, 1), X, d, Z, 1 * S, 1 * S, 4 * S, col(PAL.ink));
+        this.axes(this.box, along(t1, 7), X, d, Z, 0.5 * S, 11 * S, 1.8 * S, col(PAL.steel));
+        break;
+      case 'laptop':
+        if (side !== 'r') break;
+        if (u.t.style === 'summon') {
+          // Held open between the hands.
+          const a = B[J.LHAND], c = t3.set((a.x + h.x) / 2, (a.y + h.y) / 2, (a.z + h.z) / 2).addScaledVector(this.u, 1 * S);
+          this.axes(this.box, c, this.r, this.u, this.f, 12 * S, 0.8 * S, 8 * S, col('#9aa3ad'));
+          this.axes(this.box, this.at(t1, c, this.u, 4 * S, this.f, -4 * S), this.r, this.u, this.f, 12 * S, 8 * S, 0.6 * S, col('#2b2f3a'));
+          this.axes(this.gsph, this.at(t1, c, this.u, 4 * S, this.f, -3.6 * S), this.r, this.u, this.f, 5 * S, 3.4 * S, 0.2 * S, C('#7fd6ff'));
+        } else this.axes(this.box, along(t1, 5), X, d, Z, 1 * S, 10 * S, 7 * S, col('#9aa3ad'));
+        break;
+      case 'edison':
+        if (side === 'r') {
+          this.axes(this.box, along(t1, 3), X, d, Z, 4 * S, 7 * S, 4 * S, col('#f4f4f4'));
+          this.axes(this.box, this.at(t1, h, d, 4 * S, Z, 2.1 * S), X, d, Z, 2.4 * S, 3 * S, 0.3 * S, C('#2b2f3a'));
+        }
+        break;
       case 'sticks':
         this.seg(this.cyl, along(t1, -2), along(t2, 16), 0.6 * S, col('#d9b380'));
         this.ball(this.sph, along(t1, 16), 0.9 * S, col('#d9b380'));
@@ -901,6 +1044,13 @@ class Painter {
       X.normalize();
       const Z = this.t5.crossVectors(X, n).normalize(), grow = 1 + (0.9 - p.life) * 1.2;
       this.axes(this.gtorus, p, X, n, Z, 9 * grow, 9 * grow, 9 * grow, C('#c9a0ff'));
+    } else if (p.kind === 'rocket') {
+      const n = this.t3.set(nx, ny, nz);
+      this.seg(this.cyl, t1.set(p.x - nx * 10, p.y - ny * 10, p.z - nz * 10), p, 2.2, C('#f4f4f4'));
+      this.spike(p, n, 2.2, 5, C(PAL.ink));
+      this.ball(this.gsph, t1.set(p.x - nx * 12, p.y - ny * 12, p.z - nz * 12), 2.6 + Math.random() * 1.5, C('#ffb347'));
+    } else if (p.kind === 'token') {
+      this.ball(this.gsph, p, 2.6, C('#7fd6ff'));
     } else if (p.kind === 'cash') {
       this.axes(this.box, p, _X, _Y, _Z, 6, 1, 3, C('#5fbf5a'));
     } else if (p.kind === 'cannon') {
@@ -927,7 +1077,7 @@ class Painter {
     }
     for (const fl of W.flashes) {
       const t = fl.life / fl.max;
-      const hex = fl.disco ? ['#ff5fd2', '#5fe3ff', '#ffe45f'][Math.floor(t * 9) % 3] : fl.bolt ? '#cfefff' : fl.heal ? '#b8ffc4' : fl.bass ? '#ff8ad0' : '#fff3c4';
+      const hex = fl.disco ? ['#ff5fd2', '#5fe3ff', '#ffe45f'][Math.floor(t * 9) % 3] : fl.bolt ? '#cfefff' : fl.heal ? '#b8ffc4' : fl.bass ? '#ff8ad0' : fl.gpu ? '#b6ff6a' : '#fff3c4';
       this.ball(this.flash, fl, (1 - t) * fl.r * 0.9 + 8, C(hex));
     }
     for (const b of W.bolts) {
@@ -938,7 +1088,8 @@ class Painter {
     }
     for (const c of W.callouts || []) {
       const t = c.life / c.max;
-      this.billboard(this.callout, c, 18 + (1 - t) * 6, C('#ffffff'), 4);
+      const batch = this.callouts[c.text] || this.callouts.another;
+      this.billboard(batch, c, 18 + (1 - t) * 6, C('#ffffff'), 4);
     }
     for (const bm of W.beams) {
       if (bm.specium) {

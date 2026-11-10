@@ -6,7 +6,7 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-48 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
+59 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
 Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 
 | Unit | Trick |
@@ -44,6 +44,17 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | Martin Luther King Jr. | Never strikes a blow. Inspires allies and makes nearby enemies lay down their arms. |
 | Pastor Hans | Prays over fallen allies and brings back up to five. |
 | Tung Tung Tung Sahur | A wooden log with a bat. Hits home runs with people. |
+| Elon Musk | Launches rockets. About one in ten blows up on the launch pad. |
+| Mark Zuckerberg | Definitely not a lizard. Reels enemies in with a very long tongue. |
+| Jensen Huang | The more you buy, the more you save: nearby allies hit 50% harder. |
+| Corporate Spy | Disguised as the enemy until it strikes; goes for the most expensive target. |
+| Sam Altman | Fired, then rehired: comes back four seconds after he first goes down. |
+| Software Engineer | Writes bots that fight for him, up to three. |
+| On-call Engineer | Fights fast, but stops every few seconds to answer the pager. |
+| Giant Armadillo | Curls into an armoured ball and bowls through crowds. |
+| Big Bird | Eight feet of friendly yellow bird. Flaps everyone out of the way. |
+| Nathan Fielder | Hires actors to play himself. Enemies go after the actors. |
+| Elizabeth Holmes | Blood tests with the Edison. The results look amazing. (They heal 1 HP.) |
 
 Units lighter than a person (Chickens, Little Fish, Squirrels, Monkeys, Cupids, Grandmas) get a speed boost that grows
 as their mass drops, so the smallest ones scurry at more than twice a person's pace.
@@ -54,6 +65,9 @@ as their mass drops, so the smallest ones scurry at more than twice a person's p
 |---|---|
 | Meadow | None. Rolling green hills. |
 | Basketball Court | Polished hardwood in an arena: feet slip and bodies slide. |
+| Tech Office | Thick carpet: nobody slides very far. |
+| Epic Arena | A walled colosseum: nobody gets thrown out of the fight. |
+| Outer Space | A floating platform with very low gravity. Get knocked off it and you drift away for good. |
 | Desert | Soft sand: everyone trudges slower and stops sliding sooner. |
 | Frozen Lake | Ice: feet skid and knocked-over units slide a long way. |
 | The Moon | Low gravity: hits send units much higher and further. |

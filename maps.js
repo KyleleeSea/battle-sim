@@ -20,6 +20,33 @@ const MAPS = {
       scenery: 'arena', clouds: null,
     },
   },
+  office: {
+    name: 'Tech Office', blurb: 'An open-plan office on thick carpet: nobody slides very far.',
+    env: { friction: 0.5 },
+    look: {
+      skyTop: '#d9e2ec', horizon: '#eef2f6', fog: [3200, 9500], ground: '#9aa4b3', carpet: true, stripes: ['#5d6b85', '#56637c'],
+      hemi: ['#ffffff', '#9aa3ad', 0.95], sun: ['#ffffff', 0.55], hills: null,
+      scenery: 'office', clouds: null,
+    },
+  },
+  arena: {
+    name: 'Epic Arena', blurb: 'A walled colosseum: nobody gets thrown out of the fight.',
+    env: { wall: { rx: FIELD_X + 170, rz: FIELD_Z / 2 + 200, cz: FIELD_Z / 2 } },
+    look: {
+      skyTop: '#d9824a', horizon: '#f2c48a', fog: [3200, 9500], ground: '#c9a36a', stripes: ['#d6b27c', '#d0ab74'],
+      hemi: ['#fff1d6', '#8a6a45', 0.85], sun: ['#ffd9a0', 0.85], hills: null,
+      scenery: 'colosseum', clouds: { color: '#fff1e0', count: 6 },
+    },
+  },
+  space: {
+    name: 'Outer Space', blurb: 'A platform floating in space. Very low gravity, and anyone knocked off it drifts away for good.',
+    env: { grav: 170, friction: 0.75, platform: { x: FIELD_X + 90, z0: -90, z1: FIELD_Z + 90 } },
+    look: {
+      skyTop: '#02030a', horizon: '#060816', fog: [12000, 16000], ground: null, plates: true, stripes: ['#5d6470', '#565d68'],
+      hemi: ['#b9c8ff', '#2a2f44', 0.6], sun: ['#ffffff', 1.0], hills: null,
+      scenery: 'space', clouds: null, stars: true, starsAll: true,
+    },
+  },
   desert: {
     name: 'Desert', blurb: 'Soft sand: everyone trudges a little slower and stops sliding sooner.',
     env: { friction: 0.5, traction: 0.8 },
@@ -66,7 +93,7 @@ const MAPS = {
     },
   },
 };
-const MAP_ORDER = ['meadow', 'court', 'desert', 'winter', 'moon', 'volcano', 'candy'];
+const MAP_ORDER = ['meadow', 'court', 'office', 'arena', 'desert', 'winter', 'moon', 'space', 'volcano', 'candy'];
 
 function setEnv(id) {
   Object.assign(ENV, ENV_DEFAULT, (MAPS[id] || MAPS.meadow).env);

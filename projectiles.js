@@ -15,6 +15,8 @@ const PROJ = {
   peel:    { speed: 450, g: 1, r: 3, life: 6 },
   wave:    { speed: 520, g: 0, r: 9, life: 0.9 },
   cash:    { speed: 480, g: 1, r: 4, life: 6 },
+  rocket:  { speed: 520, g: 0.6, r: 4, life: 6 },
+  token:   { speed: 640, g: 0, r: 3, life: 0.8 },
 };
 
 function spawnProj(W, kind, from, vel, u) {
@@ -60,6 +62,7 @@ function updateProjectiles(W) {
     p.x += p.vx * DT; p.y += p.vy * DT; p.z += p.vz * DT;
     if (p.kind === 'fire') flame(W, p.x, p.y, p.z);
     else if (p.kind === 'hex') glowBits(W, p.x, p.y, p.z, 1, ['#b56cff', '#e3c2ff'], 20, 2.5);
+    else if (p.kind === 'rocket') { flame(W, p.x, p.y, p.z); if (Math.random() < 0.4) puff(W, p.x, p.y, p.z, 1, '#d8d4cc', 15, 4); }
 
     const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
     const rolls = ROLLS[p.kind] !== undefined;
@@ -73,10 +76,10 @@ function updateProjectiles(W) {
       p.hits.push(e.id);
       const nx = p.vx / (speed || 1), ny = p.vy / (speed || 1), nz = p.vz / (speed || 1);
       const from = { x: ox, z: oz };
-      if (p.kind === 'arrow' || p.kind === 'heart' || p.kind === 'bullet') {
+      if (p.kind === 'arrow' || p.kind === 'heart' || p.kind === 'bullet' || p.kind === 'token') {
         const res = hurt(e, p.dmg * RR(0.85, 1.15), nx * p.knock, ny * p.knock + 40, nz * p.knock, from, W, p.owner);
         if (res === DODGED) continue;
-        if (p.kind === 'bullet') { p.dead = true; break; }
+        if (p.kind === 'bullet' || p.kind === 'token') { p.dead = true; break; }
         if (res === BLOCKED) {
           // Glances off the shield and drops.
           p.vx *= -0.25; p.vz *= -0.25; p.vy = 120; p.team = -1;
@@ -138,7 +141,7 @@ function updateProjectiles(W) {
         p.vx *= fr; p.vz *= fr;
       } else if (p.kind === 'arrow' || p.kind === 'heart') {
         p.y = 0; p.stuck = { unit: null }; p.life = 6;
-      } else if (p.kind === 'bullet') {
+      } else if (p.kind === 'bullet' || p.kind === 'token') {
         p.dead = true; puff(W, p.x, 0, p.z, 3, '#cdbb98', 40, 3);
       } else if (p.kind === 'pie') {
         p.dead = true; splat(W, p.x, 1, p.z);

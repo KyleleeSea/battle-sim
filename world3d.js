@@ -100,6 +100,139 @@ const World = (() => {
   }
 
   // Inside the arena: hoops, bleachers full of a bouncing crowd, a jumbotron and the lights.
+  // A crowd of little people on a list of seats [x, y, z], bobbing up and down.
+  function crowdOf(g, seatsXYZ, rnd, tick) {
+    const bodies = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert('#ffffff'), seatsXYZ.length);
+    const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), lambert('#ffffff'), seatsXYZ.length);
+    const shirts = ['#d9483b', '#3a6fd9', '#f4b62e', '#ffffff', '#2a2433', '#7be0b8'].map(c => new THREE.Color(c));
+    const skins = ['#f3c9a1', '#d9a57a', '#a8714a', '#6b4229'].map(c => new THREE.Color(c));
+    seatsXYZ.forEach((c, i) => { bodies.setColorAt(i, shirts[i % shirts.length]); heads.setColorAt(i, skins[(i * 7) % skins.length]); });
+    g.add(bodies, heads);
+    tick.push(clock => {
+      seatsXYZ.forEach(([x, y, z], i) => {
+        const hop = Math.max(0, Math.sin(clock * 6 + i * 1.7)) * 5;
+        place(bodies, i, x, y + 12 + hop, z, 12, 22, 9);
+        place(heads, i, x, y + 29 + hop, z, 6.5, 7, 6.5);
+      });
+      bodies.instanceMatrix.needsUpdate = true; heads.instanceMatrix.needsUpdate = true;
+    });
+  }
+
+  // Epic Arena: an oval stone wall with arches, tiers of cheering crowd, banners and torches.
+  function colosseum(g, rnd, tick) {
+    const cz = FIELD_Z / 2, rx = FIELD_X + 190, rz = FIELD_Z / 2 + 220, n = 72;
+    const stone = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert('#b59a72'), n * 6);
+    const arch = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert('#4a3a2a'), n);
+    const seats = [];
+    let k = 0;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * TAU, ca = Math.cos(a), sa = Math.sin(a), seg = TAU * Math.max(rx, rz) / n * 1.05;
+      const rot = -Math.atan2(sa * rx, ca * rz);
+      // The side nearest the camera is a low parapet, so the wall never hides the fight.
+      if (sa > 0.25) { place(stone, k++, ca * rx, 15, cz + sa * rz, seg, 30, 24, rot); place(arch, i, 0, -100, 0, 0.01, 0.01, 0.01); continue; }
+      place(stone, k++, ca * rx, 60, cz + sa * rz, seg, 120, 24, rot);
+      place(arch, i, ca * (rx - 13), 45, cz + sa * (rz - 13), seg * 0.45, 70, 4, rot);
+      for (let t = 1; t <= 5; t++) {
+        const f = 1 + t * 0.07;
+        place(stone, k++, ca * rx * f, 110 + t * 34, cz + sa * rz * f, seg * f, 34, 40, rot);
+        if (i % 2 === 0) seats.push([ca * rx * f, 112 + t * 34, cz + sa * rz * f]);
+      }
+    }
+    stone.count = k;
+    g.add(stone, arch);
+    crowdOf(g, seats, rnd, tick);
+    // Banners in both team colours, and torches.
+    const banner = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert('#ffffff'), 16);
+    const flame = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffb347' }), 16);
+    for (let i = 0; i < 16; i++) {
+      const a = (i + 0.5) / 16 * TAU, ca = Math.cos(a), sa = Math.sin(a), rot = -Math.atan2(sa * rx, ca * rz);
+      const front = sa > 0.25;
+      place(banner, i, ca * (rx - 14), front ? -200 : 80, cz + sa * (rz - 14), 34, 70, 2, rot);
+      banner.setColorAt(i, new THREE.Color(ca < 0 ? '#d9483b' : '#3a6fd9'));
+      place(flame, i, ca * (rx - 16), front ? 40 : 130, cz + sa * (rz - 16), 8, 12, 8);
+    }
+    g.add(banner, flame);
+    tick.push(clock => {
+      for (let i = 0; i < 16; i++) {
+        const a = (i + 0.5) / 16 * TAU, s = 1 + Math.sin(clock * 9 + i) * 0.2;
+        place(flame, i, Math.cos(a) * (rx - 16), Math.sin(a) > 0.25 ? 40 : 130, cz + Math.sin(a) * (rz - 16), 8 * s, 12 * s, 8 * s);
+      }
+      flame.instanceMatrix.needsUpdate = true;
+    });
+  }
+
+  // Tech Office: rows of desks with monitors and chairs, plants, a glass-walled meeting room and big windows.
+  function office(g, rnd, tick) {
+    const desks = [];
+    for (let x = -1300; x <= 1300; x += 170) for (const z of [-420, -260, FIELD_Z + 260, FIELD_Z + 420]) desks.push([x, z]);
+    for (const sd of [-1, 1]) for (let z = -100; z <= FIELD_Z + 100; z += 150) desks.push([sd * (FIELD_X + 300), z], [sd * (FIELD_X + 480), z]);
+    const n = desks.length, mk = (geo, color, count) => { const m = new THREE.InstancedMesh(geo, lambert(color), count); m.castShadow = true; g.add(m); return m; };
+    const box = new THREE.BoxGeometry(1, 1, 1);
+    const top = mk(box, '#e6e1d6', n), legs = mk(box, '#5d6470', n * 2), mon = mk(box, '#1f2330', n), chair = mk(box, '#2f3a55', n), back = mk(box, '#2f3a55', n);
+    const screen = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: '#7fd6ff' }), n);
+    g.add(screen);
+    desks.forEach(([x, z], i) => {
+      place(top, i, x, 44, z, 120, 4, 60);
+      place(legs, i * 2, x - 54, 21, z, 4, 42, 54); place(legs, i * 2 + 1, x + 54, 21, z, 4, 42, 54);
+      const facing = z < FIELD_Z / 2 ? 1 : -1;
+      place(mon, i, x, 70, z - facing * 14, 50, 32, 3);
+      tmpQ.setFromAxisAngle(UP, facing > 0 ? 0 : PI);
+      screen.setMatrixAt(i, tmpM.compose(tmpP.set(x, 70, z - facing * 12), tmpQ, tmpS.set(44, 26, 1)));
+      place(chair, i, x, 26, z + facing * 40, 34, 6, 34);
+      place(back, i, x, 46, z + facing * 56, 34, 40, 5);
+    });
+    const pots = mk(new THREE.CylinderGeometry(1, 0.8, 1, 10), '#c9b8a0', 14), leaves = mk(new THREE.SphereGeometry(1, 10, 8), '#4f9a3a', 14);
+    for (let i = 0; i < 14; i++) {
+      const x = -1250 + i * 190, z = i % 2 ? -560 : FIELD_Z + 560;
+      place(pots, i, x, 14, z, 14, 28, 14); place(leaves, i, x, 50, z, 22, 30, 22);
+    }
+    // Walls with a strip of windows, a meeting room, and ceiling lights.
+    const wallMat = lambert('#f1f3f6');
+    for (const [x, z, sx, sz] of [[0, -760, 3400, 20], [-1700, FIELD_Z / 2, 20, 2100], [1700, FIELD_Z / 2, 20, 2100]]) {
+      const wall = new THREE.Mesh(box, wallMat); wall.position.set(x, 160, z); wall.scale.set(sx, 320, sz); g.add(wall);
+    }
+    const sky = new THREE.Mesh(new THREE.PlaneGeometry(3200, 160), new THREE.MeshBasicMaterial({ map: canvas(512, 64, (c, w, h) => {
+      c.fillStyle = '#9fd0f0'; c.fillRect(0, 0, w, h);
+      const r = rng(4);
+      for (let i = 0; i < 40; i++) { const bw = 8 + r() * 20, bh = 14 + r() * 40; c.fillStyle = ['#5d6b85', '#6f7d96', '#4a566e'][i % 3]; c.fillRect(i * 13, h - bh, bw, bh); }
+    }) }));
+    sky.position.set(0, 200, -748); g.add(sky);
+    const glass = new THREE.Mesh(box, new THREE.MeshLambertMaterial({ color: '#bfe3f2', transparent: true, opacity: 0.35 }));
+    glass.position.set(-FIELD_X - 420, 70, -330); glass.scale.set(320, 140, 220); g.add(glass);
+    const table = new THREE.Mesh(box, lambert('#8a6a45')); table.position.set(-FIELD_X - 420, 40, -330); table.scale.set(200, 6, 80); g.add(table);
+    const lamps = new THREE.InstancedMesh(box, new THREE.MeshBasicMaterial({ color: '#ffffff', fog: false }), 18);
+    for (let i = 0; i < 18; i++) place(lamps, i, -1400 + (i % 9) * 350, 1000, FIELD_Z / 2 - 400 + Math.floor(i / 9) * 800, 160, 6, 40);
+    g.add(lamps);
+  }
+
+  // Outer Space: planets, a ringed giant, a distant sun and drifting asteroids.
+  function spaceProps(g, rnd, tick) {
+    const planet = (x, y, z, r, colors, ring) => {
+      const tex = canvas(256, 128, (c, w, h) => {
+        for (let j = 0; j < h; j += 8) { c.fillStyle = colors[(j / 8 + Math.floor(rng(j + 3)() * 2)) % colors.length]; c.fillRect(0, j, w, 8); }
+      });
+      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 20), new THREE.MeshLambertMaterial({ map: tex }));
+      m.position.set(x, y, z); g.add(m);
+      if (ring) {
+        const rg = new THREE.Mesh(new THREE.RingGeometry(r * 1.4, r * 2.1, 64), new THREE.MeshBasicMaterial({ color: ring, side: THREE.DoubleSide, transparent: true, opacity: 0.7, fog: false }));
+        rg.position.copy(m.position); rg.rotation.x = -PI / 2 + 0.35; g.add(rg);
+      }
+      tick.push(clock => { m.rotation.y = clock * 0.03; });
+    };
+    planet(-3000, 1600, -6500, 900, ['#d9a066', '#c98a5a', '#e8c18a', '#b5734a'], '#e8d4b0');
+    planet(3600, 2600, -5200, 420, ['#6fa8dc', '#4f86c6', '#9fc8ec']);
+    planet(1200, -1800, -4200, 260, ['#b56cff', '#8a4fd1']);
+    const sun = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.MeshBasicMaterial({ color: '#fff1c4', fog: false }));
+    sun.position.set(-6000, 3500, 2000); g.add(sun);
+    const rocks = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), lambert('#6e6a66'), 40);
+    const data = Array.from({ length: 40 }, () => ({ a: rnd() * TAU, d: 1300 + rnd() * 1800, y: -600 + rnd() * 1400, s: 10 + rnd() * 50, v: 0.01 + rnd() * 0.03 }));
+    g.add(rocks);
+    tick.push(clock => {
+      data.forEach((o, i) => place(rocks, i, Math.cos(o.a + clock * o.v) * o.d * 1.3, o.y, FIELD_Z / 2 + Math.sin(o.a + clock * o.v) * o.d, o.s, o.s * 0.8, o.s, clock * o.v * 20));
+      rocks.instanceMatrix.needsUpdate = true;
+    });
+  }
+
   function arena(g, rnd, tick) {
     const cz = FIELD_Z / 2;
     for (const sd of [-1, 1]) {
@@ -174,10 +307,12 @@ const World = (() => {
     if (L.lavaGround) {
       const t = lavaTexture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(40, 40);
       mat = new THREE.MeshBasicMaterial({ map: t });
-    } else mat = lambert(L.ground);
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(18000, 18000), mat);
-    plane.rotation.x = -PI / 2; plane.receiveShadow = !L.lavaGround;
-    g.add(plane);
+    } else if (L.ground) mat = lambert(L.ground);
+    if (mat) {
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(18000, 18000), mat);
+      plane.rotation.x = -PI / 2; plane.receiveShadow = !L.lavaGround;
+      g.add(plane);
+    }
 
     // The field: mown stripes (or a hardwood court), plus ice cracks or moon dust where the map has them.
     const tex = L.court ? courtTexture(L) : canvas(512, 256, (x, w, h) => {
@@ -192,6 +327,22 @@ const World = (() => {
           x.stroke();
         }
       }
+      if (L.carpet) {
+        // Office carpet tiles: a squared pattern with speckle.
+        x.fillStyle = L.stripes[0]; x.fillRect(0, 0, w, h);
+        for (let i = 0; i < w; i += 32) for (let j = 0; j < h; j += 32) {
+          x.fillStyle = ((i + j) / 32) % 2 ? L.stripes[0] : L.stripes[1]; x.fillRect(i, j, 32, 32);
+        }
+        for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(255,255,255,${r() * 0.12})`; x.fillRect(r() * w, r() * h, 1.5, 1.5); }
+      }
+      if (L.plates) {
+        // Metal deck plates with rivets.
+        x.strokeStyle = 'rgba(20,24,32,0.6)'; x.lineWidth = 2;
+        for (let i = 0; i <= w; i += 64) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, h); x.stroke(); }
+        for (let j = 0; j <= h; j += 64) { x.beginPath(); x.moveTo(0, j); x.lineTo(w, j); x.stroke(); }
+        x.fillStyle = 'rgba(220,226,236,0.5)';
+        for (let i = 6; i < w; i += 64) for (let j = 6; j < h; j += 64) for (const [a, b] of [[0, 0], [52, 0], [0, 52], [52, 52]]) { x.beginPath(); x.arc(i + a, j + b, 2, 0, TAU); x.fill(); }
+      }
       if (L.dots) {
         for (let i = 0; i < 160; i++) {
           x.fillStyle = `rgba(60,60,70,${0.08 + r() * 0.15})`;
@@ -203,6 +354,18 @@ const World = (() => {
     const field = new THREE.Mesh(new THREE.PlaneGeometry(FIELD_X * 2 + margin, FIELD_Z + margin), new THREE.MeshLambertMaterial({ map: tex }));
     field.rotation.x = -PI / 2; field.position.set(0, 0.4, FIELD_Z / 2); field.receiveShadow = true;
     g.add(field);
+    if (L.plates) {
+      // The platform is a slab hanging in space, with glowing edges.
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(FIELD_X * 2 + margin, 40, FIELD_Z + margin), lambert('#3a3f4c'));
+      slab.position.set(0, -20.2, FIELD_Z / 2); slab.receiveShadow = true;
+      g.add(slab);
+      const glow = new THREE.MeshBasicMaterial({ color: '#7fd6ff', fog: false });
+      const W2 = FIELD_X + margin / 2, z0 = -margin / 2, z1 = FIELD_Z + margin / 2;
+      for (const [x, z, sx, sz] of [[0, z0, W2 * 2, 3], [0, z1, W2 * 2, 3], [-W2, FIELD_Z / 2, 3, z1 - z0], [W2, FIELD_Z / 2, 3, z1 - z0]]) {
+        const edge = new THREE.Mesh(new THREE.BoxGeometry(sx, 3, sz), glow);
+        edge.position.set(x, 1, z); g.add(edge);
+      }
+    }
 
     // Lava pools inside the field.
     for (const [x, z, r] of env.pools || []) {
@@ -294,6 +457,15 @@ const World = (() => {
       case 'arena':
         arena(g, rnd, tick);
         return;
+      case 'colosseum':
+        colosseum(g, rnd, tick);
+        return;
+      case 'office':
+        office(g, rnd, tick);
+        return;
+      case 'space':
+        spaceProps(g, rnd, tick);
+        return;
       case 'lollipops': {
         const sticks = add(new THREE.InstancedMesh(cyl, lambert('#ffffff'), n));
         const candy = add(new THREE.InstancedMesh(cyl, lambert('#ffffff'), n));
@@ -378,7 +550,7 @@ const World = (() => {
     if (L.stars) {
       const n = 2200, pos = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) {
-        const a = rnd() * TAU, e = Math.asin(rnd()) * 0.98, r = 8500;
+        const a = rnd() * TAU, e = Math.asin(L.starsAll ? rnd() * 2 - 1 : rnd()) * 0.98, r = 8500;
         pos[i * 3] = Math.cos(a) * Math.cos(e) * r; pos[i * 3 + 1] = Math.sin(e) * r; pos[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r;
       }
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));

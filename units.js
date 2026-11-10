@@ -114,15 +114,44 @@ Object.assign(TYPES, {
   tung:       { name: 'Tung Tung Tung Sahur', cost: 220, hp: 260, S: 1.1, speed: 55, reach: 34, dmg: 34, cd: 1.0, knock: 650, style: 'chop', anim: 0.5, weapon: 'bat', hat: 'none', block: 0, body: 'log',
                 blurb: 'Tung tung tung tung tung tung tung tung tung sahur. Hits home runs with people.' },
 });
+Object.assign(TYPES, {
+  elon:       { name: 'Elon Musk', cost: 450, hp: 170, S: 1.05, speed: 50, range: 420, dmg: 75, cd: 2.8, knock: 700, style: 'throw', proj: 'rocket', anim: 1.1, weapon: 'none', hat: 'elon', block: 0, rud: 0.1,
+                blurb: 'Launches rockets at the enemy. About one in ten blows up on the launch pad.' },
+  zuck:       { name: 'Mark Zuckerberg', cost: 300, hp: 220, S: 1, speed: 52, reach: 70, dmg: 22, cd: 1.2, knock: 380, style: 'tongue', anim: 0.7, weapon: 'none', hat: 'zuck', block: 0,
+                blurb: 'Definitely not a lizard. Grabs enemies with a very long tongue and reels them in.' },
+  jensen:     { name: 'Jensen Huang', cost: 450, hp: 170, S: 1, speed: 48, auraR: 170, dmg: 0, cd: 2.5, knock: 0, style: 'aura', aura: 'gpu', support: true, anim: 0.8, weapon: 'gpu', hat: 'jensen', block: 0,
+                blurb: 'The more you buy, the more you save: nearby allies hit 50% harder.' },
+  spy:        { name: 'Corporate Spy', cost: 260, hp: 90, S: 0.95, speed: 70, reach: 26, dmg: 60, cd: 1.1, knock: 250, style: 'thrust', anim: 0.45, weapon: 'dagger', hat: 'spy', block: 0, stealth: true,
+                blurb: 'Disguised as the enemy until it strikes. Goes straight for the most expensive target.' },
+  altman:     { name: 'Sam Altman', cost: 350, hp: 140, S: 1, speed: 52, range: 360, dmg: 18, cd: 0.9, knock: 120, style: 'rap', proj: 'token', anim: 0.5, weapon: 'none', hat: 'altman', block: 0, rehire: 4,
+                blurb: 'Fired, then rehired: the first time he goes down, he is back four seconds later.' },
+  swe:        { name: 'Software Engineer', cost: 300, hp: 100, S: 1, speed: 48, range: 260, dmg: 0, cd: 6, knock: 0, style: 'summon', summon: 'minibot', summonN: 1, summonMax: 3, anim: 1, weapon: 'laptop', hat: 'swe', block: 0,
+                blurb: 'Writes bots that fight for him and ships one every few seconds, up to three.' },
+  minibot:    { name: 'Bot', cost: 0, hp: 45, S: 0.6, speed: 60, range: 220, dmg: 9, cd: 1.0, knock: 80, style: 'laser', anim: 0.5, weapon: 'none', hat: 'robot', block: 0,
+                blurb: 'Written by a Software Engineer.' },
+  oncall:     { name: 'On-call Engineer', cost: 200, hp: 170, S: 1, speed: 75, reach: 30, dmg: 30, cd: 0.6, knock: 300, style: 'chop', anim: 0.4, weapon: 'laptop', hat: 'oncall', block: 0, pager: true,
+                blurb: 'Fights fast on three hours of sleep, but stops every few seconds to answer the pager.' },
+  armadillo:  { name: 'Giant Armadillo', cost: 650, hp: 900, S: 1.8, speed: 38, reach: 40, dmg: 40, cd: 1.4, knock: 500, style: 'shove', anim: 0.7, weapon: 'none', hat: 'none', block: 0, body: 'armadillo', heavy: 2, leap: true, leapFlight: 0.5, slam: 120,
+                blurb: 'Curls into an armoured ball and bowls through crowds.' },
+  bigbird:    { name: 'Big Bird', cost: 550, hp: 700, S: 2.2, speed: 44, reach: 50, dmg: 30, cd: 1.6, knock: 800, style: 'shove', anim: 0.7, weapon: 'none', hat: 'bigbird', block: 0, aoe: true, fat: 1.25,
+                blurb: 'Eight feet of friendly yellow bird. Flaps everyone out of the way.' },
+  nathan:     { name: 'Nathan Fielder', cost: 300, hp: 120, S: 1, speed: 50, reach: 28, dmg: 10, cd: 1.2, knock: 150, style: 'punch', anim: 0.6, weapon: 'none', hat: 'nathan', block: 0, actors: 2,
+                blurb: 'Hires actors to play himself. Enemies go after the actors.' },
+  actor:      { name: 'Actor', cost: 0, hp: 70, S: 1, speed: 50, reach: 28, dmg: 6, cd: 1.4, knock: 100, style: 'punch', anim: 0.6, weapon: 'none', hat: 'nathan', block: 0, taunt: true,
+                blurb: 'Playing Nathan Fielder.' },
+  holmes:     { name: 'Elizabeth Holmes', cost: 150, hp: 110, S: 0.95, speed: 46, auraR: 150, healAura: 1, dmg: 0, cd: 2.5, knock: 0, style: 'aura', aura: 'edison', support: true, anim: 0.8, weapon: 'edison', hat: 'holmes', block: 0,
+                blurb: 'Runs blood tests on her allies with the Edison. The results look amazing. (They heal 1 HP.)' },
+});
 TYPES.giant.fat = 1.15;
 const ORDER = ['chicken', 'squirrel', 'peasant', 'grandma', 'squire', 'fishmonger', 'hoplite', 'berserker', 'knight', 'ninja', 'scarecrow',
   'archer', 'musketeer', 'monkey', 'jester', 'thrower', 'pirate', 'bomber', 'cupid', 'bard', 'healer', 'disco', 'wizard', 'witch', 'storm',
   'robot', 'sumo', 'treant', 'lebron', 'giant', 'fish', 'databrick', 'hogrider', 'miner', 'djkhaled', 'megaknight', 'dragon', 'ultraman',
-  'kendrick', 'drake', 'paak', 'nicki', 'augustine', 'luther', 'bonhoeffer', 'mlk', 'pastorhans', 'tung'];
-const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, rap: 0.5, none: 2 };
+  'kendrick', 'drake', 'paak', 'nicki', 'augustine', 'luther', 'bonhoeffer', 'mlk', 'pastorhans', 'tung',
+  'elon', 'zuck', 'jensen', 'spy', 'altman', 'swe', 'oncall', 'armadillo', 'bigbird', 'nathan', 'holmes'];
+const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, rap: 0.5, tongue: 0.45, none: 2 };
 // What each ranged style throws or fires unless the unit names its own projectile.
 const DEFAULT_PROJ = { bow: 'arrow', gun: 'bullet', throw: 'boulder', hoops: 'ball', cast: 'fire', rap: 'wave' };
-const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06, wave: 0.02, cash: 0.08 };
+const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06, wave: 0.02, cash: 0.08, rocket: 0.04, token: 0.02 };
 
 let NEXT_ID = 1;
 
@@ -149,6 +178,8 @@ class Unit {
     this.breath = 0; this.footUp = [false, false]; this.clones = 0; this.owner = null;
     this.anchored = false; this.ax = 0; this.az = 0;   // where a standing unit holds its ground
     this.daze = 0; this.peace = 0; this.ward = 0;       // picking up cash; laid down arms; shielded by a friend
+    this.overclock = 0; this.hidden = false; this.revealed = false; this.rehired = false; this.rehireT = 0;
+    this.paged = 0; this.pageCd = 4 + R() * 3; this.cast = false;
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -157,7 +188,7 @@ function nearestEnemy(u, units) {
   const p = u.P;
   let best = null, bd = Infinity;
   for (const e of units) {
-    if (!e.alive || e.team === u.team || e.burrow) continue;
+    if (!e.alive || e.team === u.team || e.burrow || e.hidden) continue;
     // Scarecrows are irresistible: they count as much closer than they are.
     const dx = e.P.x - p.x, dz = e.P.z - p.z, d = (dx * dx + dz * dz) * (e.t.taunt ? 0.2 : 1);
     if (d < bd) { bd = d; best = e; }
@@ -197,7 +228,10 @@ function turnToward(u, dx, dz, k) {
 
 function updateUnit(u, W, active) {
   if (u.hitFlash > 0) u.hitFlash -= DT;
-  if (!u.alive) return;
+  if (!u.alive) {
+    if (u.rehireT > 0) { u.rehireT -= DT; if (u.rehireT <= 0) rehire(u, W); }
+    return;
+  }
   if (u.stun > 0) {
     u.stun -= DT; u.act = 'idle';
     if (u.stun <= 0) u.recover = 0;
@@ -211,6 +245,21 @@ function updateUnit(u, W, active) {
   if (u.daze > 0) { u.daze -= DT; u.act = 'idle'; }
   if (u.peace > 0) u.peace -= DT;
   if (u.ward > 0) u.ward -= DT;
+  if (u.overclock > 0) u.overclock -= DT;
+  if (u.paged > 0) { u.paged -= DT; u.act = 'idle'; }
+  if (active) {
+    // Spies wear the enemy's colours until they strike; Nathan Fielder brings his actors.
+    if (u.t.stealth && !u.revealed) u.hidden = true;
+    if (u.t.actors && !u.cast) {
+      u.cast = true;
+      for (let i = 0; i < u.t.actors; i++) spawnUnit(W, 'actor', u.P.x - u.fx * 10, u.P.z + (i ? 30 : -30), u);
+    }
+    if (u.t.pager && (u.pageCd -= DT) <= 0) {
+      u.paged = 1.2; u.pageCd = 9 + R() * 3; u.act = 'idle';
+      if (W.callouts) W.callouts.push({ x: u.P.x, y: u.body.pts[J.HEAD].y + 30, z: u.P.z, life: 1.2, max: 1.2, text: 'paged' });
+      SFX.play('pager');
+    }
+  }
   const calm = u.peace > 0;
   if (u.inspired > 0) u.inspired -= DT;
   u.cdT -= DT * (u.inspired > 0 ? 1.7 : 1);
@@ -221,7 +270,8 @@ function updateUnit(u, W, active) {
   if (active) {
     u.retarget -= DT;
     if (!u.target || !u.target.alive || u.retarget <= 0) {
-      u.target = u.t.heal ? healTarget(u, W.units) || nearestAlly(u, W.units) : u.t.support ? nearestAlly(u, W.units) : nearestEnemy(u, W.units);
+      u.target = u.t.heal ? healTarget(u, W.units) || nearestAlly(u, W.units) : u.t.support ? nearestAlly(u, W.units)
+        : u.t.stealth ? mostValuable(u, W.units) : nearestEnemy(u, W.units);
       u.retarget = 0.35 + R() * 0.2;
     }
   } else u.target = null;
@@ -232,7 +282,7 @@ function updateUnit(u, W, active) {
   if (u.t.stomp && active) stomp(u, W);
 
   const T = u.target, pel = u.P;
-  if (T && u.stun <= 0 && !cheer && !(u.dance > 0) && !(u.daze > 0)) {
+  if (T && u.stun <= 0 && !cheer && !(u.dance > 0) && !(u.daze > 0) && !(u.paged > 0)) {
     const tp = T.P, dx = tp.x - pel.x, dz = tp.z - pel.z;
     const d = Math.sqrt(dx * dx + dz * dz) || 1;
     turnToward(u, dx / d, dz / d, 0.12);
@@ -278,6 +328,7 @@ function updateUnit(u, W, active) {
 
 function startAttack(u) {
   u.act = 'attack'; u.actT = 0; u.fired = false; u.alt = !u.alt;
+  if (u.t.stealth) { u.hidden = false; u.revealed = true; }
   if (u.t.style === 'pounce') {
     // A short leap at the target.
     for (const j of [J.PELVIS, J.CHEST, J.HEAD]) addVel(u.body.pts[j], u.fx * 150, 170, u.fz * 150);
@@ -332,6 +383,7 @@ function armPose(u, moving, cheer, time) {
   const swing = (a, s) => [a[0] + s, a[1], a[2], a[3], a[4], a[5]];
   if (u.dance > 0 || u.t.aura === 'disco') return dancePose(u, time);
   if (u.leaping) return { r: [4, 16, 7, 0.2, 1, 0], l: [4, 16, -7, 0.2, 1, 0] };
+  if (u.paged > 0) return { r: [4, 12, 5, 0, 1, 0], l: [6, -8, -5, 0.6, -0.5, 0] };   // phone to the ear
   if (u.daze > 0) return { r: [10, -16, 4, 0.3, -1, 0], l: [10, -16, -4, 0.3, -1, 0] };   // stooping for the cash
   if (cheer) {
     const b = dsin(time * 9 + u.phase) * 2;
@@ -396,7 +448,11 @@ function armPose(u, moving, cheer, time) {
       const strum = att ? dsin(t * 40) * 2 : 0;
       return { r: [7, -6 + strum, 3, 0.1, -1, 0], l: [13, 2, -3, 1, 0.5, 0] };
     }
+    case 'tongue':
+      return { r: swing(HANG_R, sw), l: swing(HANG_L, -sw) };
     case 'summon': {
+      // Typing on a laptop held out in front.
+      if (u.t.weapon === 'laptop') { const k = att ? dsin(t * 50) : 0; return { r: [10, -6 + k, 4, 0.2, -1, 0], l: [10, -6 - k, -4, 0.2, -1, 0] }; }
       const flap = att ? dsin(t * 30) * 3 : dsin(time * 4 + u.phase);
       return { r: [3, -4 + flap, 9, 0, -1, 0.3], l: [3, -4 + flap, -9, 0, -1, -0.3] };
     }
@@ -430,7 +486,7 @@ function musclePose(u, moving, m, cheer, W) {
   const hipH = (BONES.thigh + BONES.shin) * S * 0.92;
   const footY = Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y);
   const mount = u.t.mount;      // riders' feet dangle beside the hog instead of walking
-  const grounded = !u.leaping && (mount ? pel.y < hipH * 1.4 : footY < 6 * S || pel.y < 20 * S);
+  const grounded = !u.leaping && pel.y > -5 * S && onGround(pel) && (mount ? pel.y < hipH * 1.4 : footY < 6 * S || pel.y < 20 * S);
 
   if (!grounded) u.anchored = false;
   if (grounded && m > 0.3) {
@@ -525,7 +581,8 @@ function lead(u, T, speed, g, high) {
 
 function strike(u, W) {
   const st = u.t.style, pts = u.body.pts;
-  if (st === 'summon') { summonFish(u, W); return; }
+  if (st === 'summon') { summonUnits(u, W); return; }
+  if (st === 'tongue') { tongueGrab(u, W); return; }
   if (st === 'specium') { speciumRay(u, W); return; }
   if (st === 'breath') { u.breath = 1.2; SFX.play('roar'); return; }
   if (st === 'heal') {
@@ -580,6 +637,12 @@ function strike(u, W) {
     const from = st === 'bow' || st === 'gun' ? a
       : st === 'throw' || st === 'hoops' ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + (st === 'throw' ? 6 : 4) * S, z: (a.z + b.z) / 2 }
       : st === 'cast' ? { x: b.x, y: b.y + 14 * S, z: b.z } : b;
+    if (u.t.rud && R() < u.t.rud) {
+      // Rapid unscheduled disassembly: the rocket blows up on the pad.
+      explode(W, from.x, from.y, from.z, u.t.dmg, u.t.knock, 70, u);
+      if (W.callouts) W.callouts.push({ x: from.x, y: from.y + 40, z: from.z, life: 1.4, max: 1.4, text: 'rud' });
+      return;
+    }
     // Banana peels are aimed at the ground just ahead of the target, everything else at the target.
     const v = kind === 'peel'
       ? aim(from, { x: T.P.x + T.fx * 35, y: 0, z: T.P.z + T.fz * 35 }, P0.speed, GRAV * P0.g, false)
@@ -588,7 +651,7 @@ function strike(u, W) {
     if (st === 'gun') {
       puff(W, a.x, a.y, a.z, kind === 'cannon' ? 12 : 7, '#e9e4dc', 70, kind === 'cannon' ? 7 : 5);
       SFX.play(kind === 'cannon' ? 'boom' : 'bang');
-    } else SFX.play(st === 'bow' ? 'twang' : st === 'rap' ? 'rap' : kind === 'cash' ? 'cash' : 'whoosh');
+    } else SFX.play(st === 'bow' ? 'twang' : kind === 'token' ? 'pew' : st === 'rap' ? 'rap' : kind === 'cash' ? 'cash' : kind === 'rocket' ? 'launch' : 'whoosh');
     return;
   }
   const pel = u.P, victims = [];
@@ -701,6 +764,7 @@ function hurt(e, dmg, ix, iy, iz, from, W, src) {
     }
   }
   if (e.ward > 0) { dmg *= 0.65; ix *= 0.75; iy *= 0.75; iz *= 0.75; }
+  if (src && src.overclock > 0) dmg *= 1.5;
   const inv = 1 / e.mass, pts = e.body.pts;
   for (let i = 0; i < pts.length; i++) {
     const w = i === J.CHEST || i === J.HEAD ? 1 : i === J.PELVIS ? 0.75 : 0.5;
@@ -720,6 +784,7 @@ function kill(e, W, src) {
   e.alive = false; e.hp = 0; e.act = 'dead';
   W.lost[e.home]++;
   if (src) src.kills++;
+  if (e.t.rehire && !e.rehired) e.rehireT = e.t.rehire;
   if (e.t.style === 'bomb' && !e.fired) {
     const c = e.body.pts[J.CHEST];
     e.fired = true; explode(W, c.x, c.y, c.z, e.t.dmg, e.t.knock, 100, e);
@@ -727,7 +792,9 @@ function kill(e, W, src) {
 }
 
 // Volcano map: anyone standing in the lava around the field hops about and burns.
+// Outer Space: anyone who falls off the platform drifts away for good.
 function lavaBurn(W) {
+  if (ENV.platform) for (const u of W.units) if (u.alive && u.P.y < -250) kill(u, W, null);
   if (!ENV.lava) return;
   for (const u of W.units) {
     if (!u.alive || u.burrow) continue;
@@ -757,7 +824,8 @@ function auraPulse(u, W) {
     if (kind === 'inspire' || kind === 'anotherone') { if (ally) e.inspired = 4.5; }
     else if (kind === 'disco') {
       if (!ally && e.stun <= 0) { e.dance = 1.8; e.act = 'idle'; addVel(e.body.pts[J.CHEST], 0, 110 / e.mass, 0); }
-    } else if (kind === 'heal') {
+    } else if (kind === 'gpu') { if (ally) e.overclock = 4.5; }
+    else if (kind === 'heal' || kind === 'edison') {
       if (ally && e.hp < e.t.hp) {
         e.hp = Math.min(e.t.hp, e.hp + u.t.healAura);
         const q = e.body.pts[J.CHEST];
@@ -781,6 +849,15 @@ function auraPulse(u, W) {
     W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.3, max: 0.3, r: R0 });
     W.shake = Math.max(W.shake, 3);
     SFX.play('drum');
+  } else if (kind === 'gpu') {
+    glowBits(W, c.x, c.y, c.z, 10, ['#76b900', '#c9ff7a'], 60, 2.5);
+    W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.4, max: 0.4, r: R0, gpu: true });
+    SFX.play('chime');
+  } else if (kind === 'edison') {
+    // Very impressive-looking results.
+    glowBits(W, c.x, c.y + 10, c.z, 24, ['#9be8a0', '#ffffff', '#ffd166'], 90, 3.5);
+    W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.5, max: 0.5, r: R0, heal: true });
+    SFX.play('chime');
   } else if (kind === 'heal') {
     glowBits(W, c.x, c.y + 6, c.z, 10, ['#9be8a0', '#fff3c4'], 50, 3);
     W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.45, max: 0.45, r: R0, heal: true });
@@ -840,17 +917,52 @@ function spawnUnit(W, key, x, z, src) {
   return n;
 }
 
-// Fish: three little fish at a time, up to a dozen alive per big fish.
-function summonFish(u, W) {
+// Fish: three little fish at a time, up to a dozen. Software Engineers: one bot at a time, up to three.
+function summonUnits(u, W) {
+  const n = u.t.summonN || 3, max = u.t.summonMax || 12;
   let mine = 0;
   for (const e of W.units) if (e.alive && e.owner === u) mine++;
   const p = u.P;
-  for (let i = 0; i < 3 && mine < 12; i++, mine++) {
+  for (let i = 0; i < n && mine < max; i++, mine++) {
     const a = R() * TAU, d = 20 + R() * 25;
     spawnUnit(W, u.t.summon, p.x + dcos(a) * d, p.z + dsin(a) * d, u);
   }
-  glowBits(W, p.x, 10, p.z, 12, ['#7fd6ff', '#c9f1ff'], 50, 3);
-  SFX.play('bubble');
+  if (u.t.summon === 'minibot') { glowBits(W, p.x, 30, p.z, 10, ['#7fff9f', '#c9ffd8'], 40, 2.5); SFX.play('keys'); }
+  else { glowBits(W, p.x, 10, p.z, 12, ['#7fd6ff', '#c9f1ff'], 50, 3); SFX.play('bubble'); }
+}
+
+// Spies pick the most expensive enemy they can see; the nearest one breaks ties.
+function mostValuable(u, units) {
+  const p = u.P;
+  let best = null, bc = -1, bd = Infinity;
+  for (const e of units) {
+    if (!e.alive || e.team === u.team || e.burrow || e.hidden) continue;
+    const dx = e.P.x - p.x, dz = e.P.z - p.z, d = dx * dx + dz * dz;
+    if (e.t.cost > bc || (e.t.cost === bc && d < bd)) { bc = e.t.cost; bd = d; best = e; }
+  }
+  return best;
+}
+
+// Mark Zuckerberg: the tongue grabs the target and reels it in.
+function tongueGrab(u, W) {
+  const T = u.target;
+  if (!T || !T.alive || T.burrow) return;
+  const pel = u.P, dx = T.P.x - pel.x, dz = T.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+  if (d > u.t.reach * 1.2 + T.r) return;
+  const k = u.t.knock;
+  hurt(T, u.t.dmg, -dx / d * k, k * 0.35, -dz / d * k, pel, W, u);
+  u.tongueLen = d;
+  SFX.play('slurp');
+}
+
+// Sam Altman: back on his feet, at full health, once per battle.
+function rehire(u, W) {
+  Object.assign(u, { alive: true, rehired: true, hp: u.t.hp, act: 'idle', stun: 0.3, recover: 0, team: u.home, charm: 0, target: null, retarget: 0, anchored: false });
+  W.lost[u.home]--;
+  const c = u.body.pts[J.CHEST];
+  glowBits(W, c.x, c.y, c.z, 14, ['#ffffff', '#c9f6ff'], 60, 3);
+  if (W.callouts) W.callouts.push({ x: c.x, y: c.y + 50, z: c.z, life: 1.4, max: 1.4, text: 'rehired' });
+  SFX.play('chime');
 }
 
 // DJ Khaled: "Another one." Copies the nearest ally worth 400 gold or less.
@@ -910,7 +1022,7 @@ function emerge(u, W) {
 function leap(u, T, d) {
   const pts = u.body.pts;
   if (Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) > 6 * u.S) return;
-  const flight = 0.8, vy = GRAV * flight / 2, vh = d / flight;
+  const flight = u.t.leapFlight || 0.8, vy = GRAV * flight / 2, vh = d / flight;
   const dx = (T.P.x - u.P.x) / d, dz = (T.P.z - u.P.z) / d;
   for (const q of pts) addVel(q, dx * vh, vy, dz * vh);
   u.leaping = true; u.leapT = 0; u.leapCd = 5;
@@ -931,7 +1043,7 @@ function checkLanding(u, W) {
     const dx = e.P.x - p.x, dz = e.P.z - p.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
     if (d > R0 + e.r) continue;
     const f = 1 - d / (R0 + e.r) * 0.5, k = 700 * f;
-    hurt(e, 140 * f, dx / d * k, k, dz / d * k, null, W, u);
+    hurt(e, (u.t.slam || 140) * f, dx / d * k, k, dz / d * k, null, W, u);
   }
   W.shake = Math.max(W.shake, 9);
   W.flashes.push({ x: p.x, y: 4, z: p.z, life: 0.35, max: 0.35, r: R0 });
