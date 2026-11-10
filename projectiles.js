@@ -17,6 +17,9 @@ const PROJ = {
   cash:    { speed: 480, g: 1, r: 4, life: 6 },
   rocket:  { speed: 520, g: 0.6, r: 4, life: 6 },
   token:   { speed: 640, g: 0, r: 3, life: 0.8 },
+  freeze:  { speed: 700, g: 0, r: 4, life: 0.8 },
+  clacker: { speed: 520, g: 1, r: 3, life: 3 },
+  roller:  { speed: 100, g: 1.6, r: 30, life: 6 },
 };
 
 function spawnProj(W, kind, from, vel, u) {
@@ -47,7 +50,10 @@ function projHitsUnit(p, e, ox, oy, oz) {
 const ROLLS = { boulder: 0.35, cannon: 0.35, ball: 0.72 };   // ground bounciness of things that roll
 
 function updateProjectiles(W) {
+  if (W.timeStop && (W.timeStop.t -= DT) <= 0) W.timeStop = null;
   for (const p of W.projs) {
+    // In stopped time, only the time-stopper's side keeps moving.
+    if (W.timeStop && p.team !== W.timeStop.team && !p.stuck) continue;
     p.life -= DT;
     if (p.life <= 0) { p.dead = true; continue; }
     if (p.stuck) {
@@ -76,10 +82,21 @@ function updateProjectiles(W) {
       p.hits.push(e.id);
       const nx = p.vx / (speed || 1), ny = p.vy / (speed || 1), nz = p.vz / (speed || 1);
       const from = { x: ox, z: oz };
-      if (p.kind === 'arrow' || p.kind === 'heart' || p.kind === 'bullet' || p.kind === 'token') {
+      if (p.kind === 'freeze') {
+        const res = hurt(e, p.dmg, nx * p.knock, 40, nz * p.knock, from, W, p.owner);
+        if (res === DODGED) continue;
+        if (e.alive) { e.frozen = Math.max(e.frozen, 2.5); e.iced = Math.max(e.iced, 2.5); }
+        glowBits(W, p.x, p.y, p.z, 10, ['#bfe9ff', '#ffffff'], 60, 3);
+        p.dead = true;
+        break;
+      } else if (p.kind === 'roller') {
+        explode(W, p.x, Math.max(p.y, 10), p.z, p.dmg, p.knock, 130, p.owner);
+        p.dead = true;
+        break;
+      } else if (p.kind === 'arrow' || p.kind === 'heart' || p.kind === 'bullet' || p.kind === 'token' || p.kind === 'clacker') {
         const res = hurt(e, p.dmg * RR(0.85, 1.15), nx * p.knock, ny * p.knock + 40, nz * p.knock, from, W, p.owner);
         if (res === DODGED) continue;
-        if (p.kind === 'bullet' || p.kind === 'token') { p.dead = true; break; }
+        if (p.kind === 'bullet' || p.kind === 'token' || p.kind === 'clacker') { p.dead = true; break; }
         if (res === BLOCKED) {
           // Glances off the shield and drops.
           p.vx *= -0.25; p.vz *= -0.25; p.vy = 120; p.team = -1;
@@ -141,7 +158,7 @@ function updateProjectiles(W) {
         p.vx *= fr; p.vz *= fr;
       } else if (p.kind === 'arrow' || p.kind === 'heart') {
         p.y = 0; p.stuck = { unit: null }; p.life = 6;
-      } else if (p.kind === 'bullet' || p.kind === 'token') {
+      } else if (p.kind === 'bullet' || p.kind === 'token' || p.kind === 'clacker' || p.kind === 'freeze') {
         p.dead = true; puff(W, p.x, 0, p.z, 3, '#cdbb98', 40, 3);
       } else if (p.kind === 'pie') {
         p.dead = true; splat(W, p.x, 1, p.z);

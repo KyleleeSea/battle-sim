@@ -142,16 +142,37 @@ Object.assign(TYPES, {
   holmes:     { name: 'Elizabeth Holmes', cost: 150, hp: 110, S: 0.95, speed: 46, auraR: 150, healAura: 1, dmg: 0, cd: 2.5, knock: 0, style: 'aura', aura: 'edison', support: true, anim: 0.8, weapon: 'edison', hat: 'holmes', block: 0,
                 blurb: 'Runs blood tests on her allies with the Edison. The results look amazing. (They heal 1 HP.)' },
 });
+Object.assign(TYPES, {
+  duck:       { name: 'Duck', cost: 4000, hp: 5000, S: 1, speed: 75, reach: 100, auraR: 190, dmg: 200, cd: 2, knock: 1400, style: 'aura', aura: 'quack', anim: 0.6, weapon: 'none', hat: 'none', block: 0, body: 'duck', heavy: 8, steadfast: true, leap: true, leapMax: 480, leapFlight: 0.9, slam: 260,
+                blurb: 'Do not underestimate the duck. Its QUACK flattens everything nearby, and nothing can knock it over.' },
+  squirrelking: { name: 'Squirrel King', cost: 800, hp: 700, S: 1.7, speed: 50, range: 220, dmg: 0, cd: 3.2, knock: 0, style: 'summon', summon: 'squirrel', summonN: 5, summonMax: 20, anim: 0.8, weapon: 'none', hat: 'squirrelking', block: 0,
+                blurb: 'Ruler of all squirrels. Summons his subjects five at a time, up to twenty, and his royal decrees make them fight twice as hard.' },
+  minion:     { name: 'Minion', cost: 35, hp: 45, S: 0.7, speed: 70, reach: 22, dmg: 12, cd: 0.6, knock: 150, style: 'punch', anim: 0.5, weapon: 'none', hat: 'none', block: 0, body: 'minion', dodge: 0.15,
+                blurb: 'Small, yellow and enthusiastic. Best in large numbers.' },
+  gru:        { name: 'Gru', cost: 600, hp: 260, S: 1.1, speed: 46, range: 380, dmg: 30, cd: 2.2, knock: 100, style: 'gun', proj: 'freeze', anim: 0.9, weapon: 'freezeray', hat: 'gru', block: 0, minions: 6,
+                blurb: 'Freezes enemies solid with his freeze ray, and brings six Minions.' },
+  joseph:     { name: 'Joseph Joestar', cost: 450, hp: 200, S: 1, speed: 58, range: 280, dmg: 16, cd: 1.6, knock: 220, style: 'throw', proj: 'clacker', volley: 3, anim: 0.8, weapon: 'none', hat: 'joseph', block: 0, dodge: 0.4, flee: true,
+                blurb: 'Your next line is: "he dodges a lot." Throws clacker volleys, and when hurt, runs away and breathes his health back.' },
+  jotaro:     { name: 'Jotaro Kujo', cost: 700, hp: 320, S: 1.05, speed: 46, reach: 55, dmg: 12, cd: 2.4, knock: 900, style: 'barrage', stand: '#8a5ad8', cry: 'ora', anim: 1.1, weapon: 'none', hat: 'jotaro', block: 0,
+                blurb: 'Star Platinum: a stand that throws a barrage of punches. ORA ORA ORA!' },
+  dio:        { name: 'DIO', cost: 1200, hp: 600, S: 1.05, speed: 50, reach: 55, dmg: 15, cd: 2.4, knock: 900, style: 'barrage', stand: '#f4c542', cry: 'muda', anim: 1.1, weapon: 'none', hat: 'dio', block: 0, timeStop: true, roller: true,
+                blurb: 'ZA WARUDO stops time for every enemy, then MUDA MUDA, then a road roller from the sky.' },
+  naruto:     { name: 'Naruto', cost: 650, hp: 280, S: 1, speed: 72, reach: 34, dmg: 140, cd: 2.2, knock: 1000, style: 'rasengan', anim: 0.75, weapon: 'none', hat: 'naruto', block: 0, clones: 4,
+                blurb: 'Shadow Clone Jutsu brings four clones that vanish when hit. Finishes with a Rasengan.' },
+  narutoclone: { name: 'Shadow Clone', cost: 0, hp: 50, S: 1, speed: 72, reach: 30, dmg: 22, cd: 0.9, knock: 250, style: 'punch', anim: 0.5, weapon: 'none', hat: 'naruto', block: 0, poof: true,
+                blurb: 'A shadow clone. Vanishes in a puff of smoke.' },
+});
 TYPES.giant.fat = 1.15;
 const ORDER = ['chicken', 'squirrel', 'peasant', 'grandma', 'squire', 'fishmonger', 'hoplite', 'berserker', 'knight', 'ninja', 'scarecrow',
   'archer', 'musketeer', 'monkey', 'jester', 'thrower', 'pirate', 'bomber', 'cupid', 'bard', 'healer', 'disco', 'wizard', 'witch', 'storm',
   'robot', 'sumo', 'treant', 'lebron', 'giant', 'fish', 'databrick', 'hogrider', 'miner', 'djkhaled', 'megaknight', 'dragon', 'ultraman',
   'kendrick', 'drake', 'paak', 'nicki', 'augustine', 'luther', 'bonhoeffer', 'mlk', 'pastorhans', 'tung',
-  'elon', 'zuck', 'jensen', 'spy', 'altman', 'swe', 'oncall', 'armadillo', 'bigbird', 'nathan', 'holmes'];
-const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, rap: 0.5, tongue: 0.45, none: 2 };
+  'elon', 'zuck', 'jensen', 'spy', 'altman', 'swe', 'oncall', 'armadillo', 'bigbird', 'nathan', 'holmes',
+  'minion', 'gru', 'squirrelking', 'joseph', 'jotaro', 'dio', 'naruto', 'duck'];
+const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, rap: 0.5, tongue: 0.45, barrage: 0.85, rasengan: 0.6, none: 2 };
 // What each ranged style throws or fires unless the unit names its own projectile.
 const DEFAULT_PROJ = { bow: 'arrow', gun: 'bullet', throw: 'boulder', hoops: 'ball', cast: 'fire', rap: 'wave' };
-const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06, wave: 0.02, cash: 0.08, rocket: 0.04, token: 0.02 };
+const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06, wave: 0.02, cash: 0.08, rocket: 0.04, token: 0.02, freeze: 0.01, clacker: 0.14 };
 
 let NEXT_ID = 1;
 
@@ -180,6 +201,7 @@ class Unit {
     this.daze = 0; this.peace = 0; this.ward = 0;       // picking up cash; laid down arms; shielded by a friend
     this.overclock = 0; this.hidden = false; this.revealed = false; this.rehired = false; this.rehireT = 0;
     this.paged = 0; this.pageCd = 4 + R() * 3; this.cast = false;
+    this.frozen = 0; this.iced = 0; this.flee = 0; this.fled = false; this.barrageT = 0; this.zaCd = 4; this.rollerCd = 9; this.vanished = false;
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -228,6 +250,8 @@ function turnToward(u, dx, dz, k) {
 
 function updateUnit(u, W, active) {
   if (u.hitFlash > 0) u.hitFlash -= DT;
+  if (u.iced > 0) u.iced -= DT;
+  if (u.frozen > 0) { u.frozen -= DT; return; }   // stopped time or a freeze ray: nothing moves, nothing acts
   if (!u.alive) {
     if (u.rehireT > 0) { u.rehireT -= DT; if (u.rehireT <= 0) rehire(u, W); }
     return;
@@ -247,12 +271,31 @@ function updateUnit(u, W, active) {
   if (u.ward > 0) u.ward -= DT;
   if (u.overclock > 0) u.overclock -= DT;
   if (u.paged > 0) { u.paged -= DT; u.act = 'idle'; }
+  if (u.flee > 0) { u.flee -= DT; u.hp = Math.min(u.t.hp, u.hp + 25 * DT); }   // running away, breathing (Hamon)
   if (active) {
     // Spies wear the enemy's colours until they strike; Nathan Fielder brings his actors.
     if (u.t.stealth && !u.revealed) u.hidden = true;
     if (u.t.actors && !u.cast) {
       u.cast = true;
       for (let i = 0; i < u.t.actors; i++) spawnUnit(W, 'actor', u.P.x - u.fx * 10, u.P.z + (i ? 30 : -30), u);
+    }
+    // Gru brings his Minions; Naruto brings his shadow clones.
+    if ((u.t.minions || u.t.clones) && !u.cast) {
+      u.cast = true;
+      const n = u.t.minions || u.t.clones, key = u.t.minions ? 'minion' : 'narutoclone';
+      for (let i = 0; i < n; i++) spawnUnit(W, key, u.P.x + u.fx * 20, u.P.z + (i - (n - 1) / 2) * 26, u);
+      if (u.t.clones) {
+        puff(W, u.P.x, 20, u.P.z, 16, '#f4f4f4', 80, 8);
+        if (W.callouts) W.callouts.push({ x: u.P.x, y: u.body.pts[J.HEAD].y + 34, z: u.P.z, life: 1.4, max: 1.4, text: 'jutsu' });
+        SFX.play('poof');
+      }
+    }
+    if (u.t.timeStop && (u.zaCd -= DT) <= 0 && u.target && u.target.alive) zaWarudo(u, W);
+    if (u.t.roller && (u.rollerCd -= DT) <= 0 && u.target && u.target.alive) roadRoller(u, W);
+    if (u.t.flee && !u.fled && u.hp < u.t.hp * 0.3) {
+      u.fled = true; u.flee = 3; u.act = 'idle';
+      if (W.callouts) W.callouts.push({ x: u.P.x, y: u.body.pts[J.HEAD].y + 30, z: u.P.z, life: 1.4, max: 1.4, text: 'nigerundayo' });
+      SFX.play('whoosh');
     }
     if (u.t.pager && (u.pageCd -= DT) <= 0) {
       u.paged = 1.2; u.pageCd = 9 + R() * 3; u.act = 'idle';
@@ -286,7 +329,11 @@ function updateUnit(u, W, active) {
     const tp = T.P, dx = tp.x - pel.x, dz = tp.z - pel.z;
     const d = Math.sqrt(dx * dx + dz * dz) || 1;
     turnToward(u, dx / d, dz / d, 0.12);
-    if (u.t.heal || u.t.support) {
+    if (u.flee > 0) {
+      // Nigerundayo: turn tail and run.
+      turnToward(u, -dx / d, -dz / d, 0.4);
+      moving = true;
+    } else if (u.t.heal || u.t.support) {
       // Stay close to the army; walk up to whoever is hurt (healers) or just play (bards).
       const needs = u.t.heal ? T.hp < T.t.hp : true;
       if (u.act !== 'attack') {
@@ -301,7 +348,7 @@ function updateUnit(u, W, active) {
         moving = d > 150 + T.r;
         if (u.act !== 'attack' && u.cdT <= 0 && d < reach && u.recover > 0.6 && !calm) startAttack(u);
       } else if (u.act !== 'attack') {
-        if (u.t.leap && !u.leaping && u.leapCd <= 0 && d > 90 && d < 300 && u.recover > 0.6 && !calm) leap(u, T, d);
+        if (u.t.leap && !u.leaping && u.leapCd <= 0 && d > 90 && d < (u.t.leapMax || 300) && !T.leaping && u.recover > 0.6 && !calm) leap(u, T, d);
         else if (d > reach * (ranged ? 1 : 0.85)) moving = true;
         else if (u.cdT <= 0 && u.recover > 0.6 && !calm) startAttack(u);
       }
@@ -320,6 +367,7 @@ function updateUnit(u, W, active) {
 
   if (u.act === 'attack') {
     u.actT += DT / u.t.anim;
+    if (u.t.style === 'barrage' && u.actT > 0.15 && u.actT < 0.8 && (u.barrageT -= DT) <= 0) { u.barrageT = 0.07; barrageHit(u, W, false); }
     if (!u.fired && u.actT >= HIT_T[u.t.style]) { u.fired = true; strike(u, W); }
     if (u.actT >= 1) u.act = 'idle';
   }
@@ -384,6 +432,7 @@ function armPose(u, moving, cheer, time) {
   if (u.dance > 0 || u.t.aura === 'disco') return dancePose(u, time);
   if (u.leaping) return { r: [4, 16, 7, 0.2, 1, 0], l: [4, 16, -7, 0.2, 1, 0] };
   if (u.paged > 0) return { r: [4, 12, 5, 0, 1, 0], l: [6, -8, -5, 0.6, -0.5, 0] };   // phone to the ear
+  if (u.t.clones && moving && u.act !== 'attack') return { r: [-10, -6, 6, -1, -0.3, 0], l: [-10, -6, -6, -1, -0.3, 0] };   // the Naruto run
   if (u.daze > 0) return { r: [10, -16, 4, 0.3, -1, 0], l: [10, -16, -4, 0.3, -1, 0] };   // stooping for the cash
   if (cheer) {
     const b = dsin(time * 9 + u.phase) * 2;
@@ -447,6 +496,12 @@ function armPose(u, moving, cheer, time) {
       // Bard: left hand on the lute's neck, right hand strumming.
       const strum = att ? dsin(t * 40) * 2 : 0;
       return { r: [7, -6 + strum, 3, 0.1, -1, 0], l: [13, 2, -3, 1, 0.5, 0] };
+    }
+    case 'barrage':
+      return att ? { r: [8, 2, 4, 1, 0, 0], l: [8, 2, -4, 1, 0, 0] } : { r: [6, -4, 5, 0.3, -0.6, 0], l: [6, -4, -5, 0.3, -0.6, 0] };
+    case 'rasengan': {
+      const r = att ? keyf([[0, [10, 0, 6, 1, 0, 0]], [0.5, [4, 4, 7, 0.5, 0.5, 0]], [0.62, [22, 0, 4, 1, 0, 0]], [1, [10, 0, 6, 1, 0, 0]]], t) : swing(GUARD_R, sw);
+      return { r, l: att ? [10, 2, -2, 1, 0.2, 0.3] : swing(HANG_L, -sw) };
     }
     case 'tongue':
       return { r: swing(HANG_R, sw), l: swing(HANG_L, -sw) };
@@ -583,6 +638,22 @@ function strike(u, W) {
   const st = u.t.style, pts = u.body.pts;
   if (st === 'summon') { summonUnits(u, W); return; }
   if (st === 'tongue') { tongueGrab(u, W); return; }
+  if (st === 'barrage') { barrageHit(u, W, true); return; }
+  if (st === 'rasengan') {
+    // The Rasengan: one enormous hit on whoever is in front.
+    const T = u.target, pel = u.P;
+    if (T && T.alive && !T.burrow) {
+      const dx = T.P.x - pel.x, dz = T.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+      if (d < u.t.reach * 1.3 + T.r) {
+        const k = u.t.knock, c = T.body.pts[J.CHEST];
+        hurt(T, u.t.dmg, dx / d * k, k * 0.5, dz / d * k, null, W, u);
+        glowBits(W, c.x, c.y, c.z, 16, ['#7fd6ff', '#ffffff'], 120, 3);
+        if (W.callouts) W.callouts.push({ x: pel.x, y: u.body.pts[J.HEAD].y + 30, z: pel.z, life: 1.2, max: 1.2, text: 'rasengan' });
+        SFX.play('rasengan');
+      }
+    }
+    return;
+  }
   if (st === 'specium') { speciumRay(u, W); return; }
   if (st === 'breath') { u.breath = 1.2; SFX.play('roar'); return; }
   if (st === 'heal') {
@@ -647,11 +718,14 @@ function strike(u, W) {
     const v = kind === 'peel'
       ? aim(from, { x: T.P.x + T.fx * 35, y: 0, z: T.P.z + T.fz * 35 }, P0.speed, GRAV * P0.g, false)
       : lead(u, T, P0.speed, GRAV * P0.g, false);
-    spawnProj(W, kind, from, jitter(v, SPREAD[kind]), u);
+    for (let i = 0; i < (u.t.volley || 1); i++) spawnProj(W, kind, from, jitter(v, SPREAD[kind]), u);
     if (st === 'gun') {
-      puff(W, a.x, a.y, a.z, kind === 'cannon' ? 12 : 7, '#e9e4dc', 70, kind === 'cannon' ? 7 : 5);
-      SFX.play(kind === 'cannon' ? 'boom' : 'bang');
-    } else SFX.play(st === 'bow' ? 'twang' : kind === 'token' ? 'pew' : st === 'rap' ? 'rap' : kind === 'cash' ? 'cash' : kind === 'rocket' ? 'launch' : 'whoosh');
+      if (kind === 'freeze') SFX.play('freeze');
+      else {
+        puff(W, a.x, a.y, a.z, kind === 'cannon' ? 12 : 7, '#e9e4dc', 70, kind === 'cannon' ? 7 : 5);
+        SFX.play(kind === 'cannon' ? 'boom' : 'bang');
+      }
+    } else SFX.play(st === 'bow' ? 'twang' : kind === 'token' ? 'pew' : kind === 'clacker' ? 'clack' : st === 'rap' ? 'rap' : kind === 'cash' ? 'cash' : kind === 'rocket' ? 'launch' : 'whoosh');
     return;
   }
   const pel = u.P, victims = [];
@@ -785,6 +859,7 @@ function kill(e, W, src) {
   W.lost[e.home]++;
   if (src) src.kills++;
   if (e.t.rehire && !e.rehired) e.rehireT = e.t.rehire;
+  if (e.t.poof) { e.vanished = true; const q = e.body.pts[J.CHEST]; puff(W, q.x, q.y, q.z, 12, '#f4f4f4', 70, 7); SFX.play('poof'); }
   if (e.t.style === 'bomb' && !e.fired) {
     const c = e.body.pts[J.CHEST];
     e.fired = true; explode(W, c.x, c.y, c.z, e.t.dmg, e.t.knock, 100, e);
@@ -825,6 +900,10 @@ function auraPulse(u, W) {
     else if (kind === 'disco') {
       if (!ally && e.stun <= 0) { e.dance = 1.8; e.act = 'idle'; addVel(e.body.pts[J.CHEST], 0, 110 / e.mass, 0); }
     } else if (kind === 'gpu') { if (ally) e.overclock = 4.5; }
+    else if (kind === 'quack' && !ally) {
+      const d = Math.sqrt(d2) || 1, k = u.t.knock;
+      hurt(e, u.t.dmg, dx / d * k, k * 0.65, dz / d * k, null, W, u);
+    }
     else if (kind === 'heal' || kind === 'edison') {
       if (ally && e.hp < e.t.hp) {
         e.hp = Math.min(e.t.hp, e.hp + u.t.healAura);
@@ -849,6 +928,11 @@ function auraPulse(u, W) {
     W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.3, max: 0.3, r: R0 });
     W.shake = Math.max(W.shake, 3);
     SFX.play('drum');
+  } else if (kind === 'quack') {
+    W.flashes.push({ x: pel.x, y: 6, z: pel.z, life: 0.45, max: 0.45, r: R0 });
+    W.shake = Math.max(W.shake, 7);
+    if (W.callouts) W.callouts.push({ x: pel.x, y: c.y + 30, z: pel.z, life: 1, max: 1, text: 'quack' });
+    SFX.play('quack');
   } else if (kind === 'gpu') {
     glowBits(W, c.x, c.y, c.z, 10, ['#76b900', '#c9ff7a'], 60, 2.5);
     W.flashes.push({ x: pel.x, y: 4, z: pel.z, life: 0.4, max: 0.4, r: R0, gpu: true });
@@ -927,6 +1011,11 @@ function summonUnits(u, W) {
     const a = R() * TAU, d = 20 + R() * 25;
     spawnUnit(W, u.t.summon, p.x + dcos(a) * d, p.z + dsin(a) * d, u);
   }
+  if (u.key === 'squirrelking') {
+    // A royal decree: every subject fights harder for a while.
+    for (const e of W.units) if (e.alive && e.owner === u) e.inspired = 5;
+    SFX.play('strum');
+  }
   if (u.t.summon === 'minibot') { glowBits(W, p.x, 30, p.z, 10, ['#7fff9f', '#c9ffd8'], 40, 2.5); SFX.play('keys'); }
   else { glowBits(W, p.x, 10, p.z, 12, ['#7fd6ff', '#c9f1ff'], 50, 3); SFX.play('bubble'); }
 }
@@ -953,6 +1042,47 @@ function tongueGrab(u, W) {
   hurt(T, u.t.dmg, -dx / d * k, k * 0.35, -dz / d * k, pel, W, u);
   u.tongueLen = d;
   SFX.play('slurp');
+}
+
+// Star Platinum and The World: rapid punches on whoever is in front, then one big one to finish.
+function barrageHit(u, W, last) {
+  const pel = u.P;
+  let best = null, bd = Infinity;
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz);
+    if (d > u.t.reach * 1.2 + e.r || (dx * u.fx + dz * u.fz) / (d || 1) < 0.3) continue;
+    if (d < bd) { bd = d; best = e; }
+  }
+  if (!last && u.actT < 0.25 && !u.cried) {
+    u.cried = true;
+    if (W.callouts) W.callouts.push({ x: pel.x, y: u.body.pts[J.HEAD].y + 30, z: pel.z, life: 1.2, max: 1.2, text: u.t.cry });
+  }
+  if (last) u.cried = false;
+  if (!best) return;
+  const k = last ? u.t.knock : 60, up = last ? 0.45 : 0.1;
+  hurt(best, last ? u.t.dmg * 4 : u.t.dmg, u.fx * k, k * up, u.fz * k, pel, W, u);
+  SFX.play(last ? 'thud' : 'hit');
+}
+
+// DIO: ZA WARUDO. Every enemy stops for three seconds; blows landed meanwhile all arrive when time resumes.
+function zaWarudo(u, W) {
+  u.zaCd = 15;
+  W.timeStop = { team: u.team, t: 3 };
+  for (const e of W.units) if (e.alive && e.team !== u.team && !e.burrow) e.frozen = Math.max(e.frozen, 3);
+  if (W.callouts) W.callouts.push({ x: u.P.x, y: u.body.pts[J.HEAD].y + 34, z: u.P.z, life: 1.6, max: 1.6, text: 'zawarudo' });
+  SFX.play('zawarudo');
+}
+
+// DIO: ROAD ROLLER DA! A road roller drops out of the sky onto the target.
+function roadRoller(u, W) {
+  u.rollerCd = 18;
+  const T = u.target;
+  spawnProj(W, 'roller', { x: T.P.x, y: 700, z: T.P.z }, { x: 0, y: -100, z: 0 }, u);
+  const p = W.projs[W.projs.length - 1];
+  p.dmg = 220; p.knock = 1200;
+  if (W.callouts) W.callouts.push({ x: u.P.x, y: u.body.pts[J.HEAD].y + 34, z: u.P.z, life: 1.6, max: 1.6, text: 'roller' });
+  SFX.play('whoosh');
 }
 
 // Sam Altman: back on his feet, at full health, once per battle.
@@ -1115,7 +1245,7 @@ function speciumRay(u, W) {
 }
 
 function separate(units) {
-  const a = units.filter(u => u.alive && !u.burrow && !u.t.colossal).sort((p, q) => p.P.x - q.P.x);
+  const a = units.filter(u => u.alive && !u.burrow && !u.t.colossal && !(u.frozen > 0)).sort((p, q) => p.P.x - q.P.x);
   for (let i = 0; i < a.length; i++) {
     const u = a[i], p = u.P;
     for (let j = i + 1; j < a.length; j++) {

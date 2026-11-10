@@ -55,6 +55,11 @@ const SFX = (() => {
     launch: () => { noise(0.6, 'bandpass', 500, 0.4); tone(200, 900, 0.5, 'sawtooth', 0.04); },
     slurp: () => tone(600, 200, 0.15, 'sine', 0.08),
     pager: () => { tone(1800, 1800, 0.08, 'square', 0.04); setTimeout(() => tone(1800, 1800, 0.08, 'square', 0.04), 140); },
+    quack: () => { tone(620, 380, 0.18, 'square', 0.08); setTimeout(() => tone(560, 340, 0.2, 'square', 0.07), 120); noise(0.3, 'lowpass', 300, 0.6); },
+    zawarudo: () => { tone(110, 55, 1.2, 'sawtooth', 0.06); tone(880, 880, 0.8, 'sine', 0.05); },
+    rasengan: () => { tone(300, 1200, 0.4, 'sawtooth', 0.05); noise(0.4, 'bandpass', 1500, 0.3); },
+    freeze: () => { tone(2400, 1200, 0.25, 'sine', 0.06); noise(0.2, 'highpass', 4000, 0.2); },
+    clack: () => { tone(1600, 1600, 0.03, 'square', 0.05); setTimeout(() => tone(1600, 1600, 0.03, 'square', 0.05), 70); },
     keys: () => { for (let i = 0; i < 6; i++) setTimeout(() => noise(0.02, 'highpass', 3000, 0.2), i * 45); },
     bubble: () => { for (let i = 0; i < 3; i++) setTimeout(() => tone(420 + i * 140, 900 + i * 120, 0.07, 'sine', 0.05), i * 70); },
     bang: () => { noise(0.3, 'lowpass', 1400, 0.8); tone(140, 60, 0.2, 'square', 0.08); },
@@ -171,6 +176,12 @@ const PRESETS = {
   reform:  { name: 'Reformation', build: (L, t) => { block(L, 'luther', t, 1, 4, 110, 60); block(L, 'squire', t, 1, 8, 150, 32); block(L, 'bonhoeffer', t, 1, 2, 220, 120); block(L, 'augustine', t, 1, 2, 270, 120); block(L, 'pastorhans', t, 1, 1, 320, 40); } },
   march:   { name: 'Peaceful march', build: (L, t) => { block(L, 'squire', t, 1, 12, 110, 26); block(L, 'mlk', t, 1, 2, 190, 120); block(L, 'pastorhans', t, 1, 1, 250, 40); block(L, 'archer', t, 1, 6, 300, 40); } },
   sahur:   { name: 'Tung tung tung', build: (L, t) => { block(L, 'tung', t, 2, 8, 110, 34); block(L, 'chicken', t, 6, 8, 200, 13); } },
+  joestars: { name: 'The Joestars', build: (L, t) => { block(L, 'squire', t, 1, 8, 110, 32); block(L, 'jotaro', t, 1, 2, 160, 100); block(L, 'joseph', t, 1, 2, 240, 100); block(L, 'healer', t, 1, 2, 300, 100); block(L, 'archer', t, 1, 4, 330, 50); } },
+  world:   { name: 'DIO\u2019s mansion', build: (L, t) => { block(L, 'peasant', t, 3, 10, 110, 24); block(L, 'dio', t, 1, 1, 220, 40); block(L, 'archer', t, 1, 8, 300, 34); } },
+  gru:     { name: 'Gru and his Minions', build: (L, t) => { block(L, 'minion', t, 4, 10, 100, 18); block(L, 'gru', t, 1, 2, 220, 120); block(L, 'archer', t, 1, 8, 300, 34); } },
+  leaf:    { name: 'Hidden Leaf', build: (L, t) => { block(L, 'naruto', t, 1, 3, 130, 90); block(L, 'ninja', t, 1, 4, 180, 60); block(L, 'archer', t, 1, 6, 300, 40); } },
+  kingdom: { name: 'Squirrel kingdom', build: (L, t) => { block(L, 'squirrel', t, 6, 10, 100, 16); block(L, 'squirrelking', t, 1, 2, 240, 140); block(L, 'healer', t, 1, 2, 320, 120); } },
+  theduck: { name: 'The Duck', build: (L, t) => { block(L, 'duck', t, 1, 1, 200, 40); block(L, 'healer', t, 1, 2, 300, 120); } },
   bigtech: { name: 'Big Tech', build: (L, t) => { block(L, 'oncall', t, 1, 4, 110, 50); block(L, 'zuck', t, 1, 2, 160, 90); block(L, 'altman', t, 1, 2, 230, 90); block(L, 'jensen', t, 1, 1, 270, 40); block(L, 'swe', t, 1, 2, 300, 90); block(L, 'elon', t, 1, 2, 340, 90); } },
   startup: { name: 'Startup', build: (L, t) => { block(L, 'squire', t, 1, 9, 110, 30); block(L, 'nathan', t, 1, 2, 160, 90); block(L, 'spy', t, 1, 3, 200, 60); block(L, 'oncall', t, 1, 5, 230, 44); block(L, 'swe', t, 1, 3, 300, 60); block(L, 'holmes', t, 1, 1, 340, 40); } },
   critters: { name: 'Big animals', build: (L, t) => { block(L, 'armadillo', t, 1, 2, 130, 120); block(L, 'bigbird', t, 1, 2, 200, 120); block(L, 'squirrel', t, 4, 10, 250, 16); block(L, 'monkey', t, 1, 6, 340, 40); } },
@@ -187,6 +198,9 @@ const SCENARIOS = {
   kaiju:    { name: 'Ultraman vs Peasant mob', sides: ['kaiju', 'mob'] },
   beef:     { name: 'Kendrick vs Drake', sides: ['tde', 'ovo'] },
   tech:     { name: 'Big Tech vs Startup', sides: ['bigtech', 'startup'] },
+  jojo:     { name: 'The Joestars vs DIO', sides: ['joestars', 'world'] },
+  minions:  { name: 'Gru vs Hidden Leaf', sides: ['gru', 'leaf'] },
+  duck:     { name: 'The Duck vs Peasant mob', sides: ['theduck', 'mob'] },
   animals:  { name: 'Big animals vs Shield wall', sides: ['critters', 'wall'] },
   reform:   { name: 'Reformation vs Tung tung tung', sides: ['reform', 'sahur'] },
   march:    { name: 'Peaceful march vs Berserker rush', sides: ['march', 'rush'] },
@@ -280,7 +294,7 @@ function step() {
   W.time += DT;
   for (const u of W.units) updateUnit(u, W, active);
   separate(W.units);
-  for (const u of W.units) stepBody(u.body);
+  for (const u of W.units) if (!(u.frozen > 0)) stepBody(u.body);   // frozen bodies hang where they are
   updateProjectiles(W);
   updateParticles(W);
   if (W.shake > 0) W.shake = Math.max(0, W.shake - DT * 30);
@@ -526,6 +540,9 @@ function frame(now) {
   while (acc >= DT && n < maxSteps) { step(); acc -= DT; n++; }
   if (n === maxSteps) acc = 0;
   if (W.state === 'over' && !G.bannerShown && W.time - W.endT > 1.2) showBanner();
+  // ZA WARUDO: the world flashes inverted, then goes grey until time resumes.
+  const filter = W.timeStop ? (W.timeStop.t > 2.75 ? 'invert(1) hue-rotate(180deg)' : 'grayscale(1) contrast(1.15)') : '';
+  if (cv.style.filter !== filter) cv.style.filter = filter;
   View.render(W, { clock: G.clock, placing: W.state === 'place', editable: G.editable, ghost: W.state === 'place' && canEdit() ? hover : null, reducedMotion });
   if (++frameN % 12 === 0) hud();
   requestAnimationFrame(frame);

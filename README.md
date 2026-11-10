@@ -6,7 +6,7 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-59 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
+67 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
 Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 
 | Unit | Trick |
@@ -55,6 +55,14 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | Big Bird | Eight feet of friendly yellow bird. Flaps everyone out of the way. |
 | Nathan Fielder | Hires actors to play himself. Enemies go after the actors. |
 | Elizabeth Holmes | Blood tests with the Edison. The results look amazing. (They heal 1 HP.) |
+| Duck | 4,000 gold. Its QUACK flattens everything nearby, it can't be knocked over, and it flaps onto anyone who runs. |
+| Squirrel King | Summons squirrels five at a time; his royal decrees make them fight twice as hard. |
+| Minion | Small, yellow, enthusiastic. Best by the dozen. |
+| Gru | A freeze ray that turns enemies into blocks of ice. Brings six Minions. |
+| Joseph Joestar | Clacker volleys and a lot of dodging. When hurt, he runs away and breathes his health back. |
+| Jotaro Kujo | Star Platinum: a barrage of punches. ORA ORA ORA! |
+| DIO | ZA WARUDO stops time for every enemy; then MUDA MUDA, then a road roller from the sky. |
+| Naruto | Shadow Clone Jutsu brings four clones that vanish when hit; the Rasengan can't be blocked. |
 
 Units lighter than a person (Chickens, Little Fish, Squirrels, Monkeys, Cupids, Grandmas) get a speed boost that grows
 as their mass drops, so the smallest ones scurry at more than twice a person's pace.
