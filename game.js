@@ -73,6 +73,7 @@ const SFX = (() => {
     love: () => tone(660, 990, 0.22, 'sine', 0.06),
     chime: () => { tone(880, 1320, 0.25, 'sine', 0.07); tone(1320, 1760, 0.3, 'sine', 0.04); },
     tick: () => tone(660, 660, 0.12, 'square', 0.05),
+    sizzle: () => noise(0.5, 'highpass', 3500, 0.2),
   };
   return {
     unlock() { init(); if (ac && ac.state === 'suspended') ac.resume(); },
@@ -181,6 +182,9 @@ const PRESETS = {
   gru:     { name: 'Gru and his Minions', build: (L, t) => { block(L, 'minion', t, 4, 10, 100, 18); block(L, 'gru', t, 1, 2, 220, 120); block(L, 'archer', t, 1, 8, 300, 34); } },
   leaf:    { name: 'Hidden Leaf', build: (L, t) => { block(L, 'naruto', t, 1, 3, 130, 90); block(L, 'ninja', t, 1, 4, 180, 60); block(L, 'archer', t, 1, 6, 300, 40); } },
   kingdom: { name: 'Squirrel kingdom', build: (L, t) => { block(L, 'squirrel', t, 6, 10, 100, 16); block(L, 'squirrelking', t, 1, 2, 240, 140); block(L, 'healer', t, 1, 2, 320, 120); } },
+  titans:  { name: 'Titans', build: (L, t) => { block(L, 'titan', t, 2, 2, 150, 140); block(L, 'giant', t, 1, 1, 330, 100); } },
+  corps:   { name: 'Survey Corps', build: (L, t) => { block(L, 'scout', t, 2, 6, 120, 50); block(L, 'eren', t, 1, 1, 240, 60); block(L, 'healer', t, 1, 2, 300, 120); } },
+  datacenter: { name: 'Datacenter', build: (L, t) => { block(L, 'squire', t, 1, 6, 110, 34); block(L, 'gpu', t, 2, 3, 220, 60); block(L, 'jensen', t, 1, 1, 330, 60); } },
   theduck: { name: 'The Duck', build: (L, t) => { block(L, 'duck', t, 1, 1, 200, 40); block(L, 'healer', t, 1, 2, 300, 120); } },
   bigtech: { name: 'Big Tech', build: (L, t) => { block(L, 'oncall', t, 1, 4, 110, 50); block(L, 'zuck', t, 1, 2, 160, 90); block(L, 'altman', t, 1, 2, 230, 90); block(L, 'jensen', t, 1, 1, 270, 40); block(L, 'swe', t, 1, 2, 300, 90); block(L, 'elon', t, 1, 2, 340, 90); } },
   startup: { name: 'Startup', build: (L, t) => { block(L, 'squire', t, 1, 9, 110, 30); block(L, 'nathan', t, 1, 2, 160, 90); block(L, 'spy', t, 1, 3, 200, 60); block(L, 'oncall', t, 1, 5, 230, 44); block(L, 'swe', t, 1, 3, 300, 60); block(L, 'holmes', t, 1, 1, 340, 40); } },
@@ -201,6 +205,8 @@ const SCENARIOS = {
   jojo:     { name: 'The Joestars vs DIO', sides: ['joestars', 'world'] },
   minions:  { name: 'Gru vs Hidden Leaf', sides: ['gru', 'leaf'] },
   duck:     { name: 'The Duck vs Peasant mob', sides: ['theduck', 'mob'] },
+  aot:      { name: 'Attack on Titan', sides: ['corps', 'titans'] },
+  gpus:     { name: 'Datacenter vs Peasant mob', sides: ['datacenter', 'mob'] },
   animals:  { name: 'Big animals vs Shield wall', sides: ['critters', 'wall'] },
   reform:   { name: 'Reformation vs Tung tung tung', sides: ['reform', 'sahur'] },
   march:    { name: 'Peaceful march vs Berserker rush', sides: ['march', 'rush'] },

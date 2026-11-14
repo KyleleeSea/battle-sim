@@ -6,7 +6,7 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-67 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
+71 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
 Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 
 | Unit | Trick |
@@ -55,6 +55,10 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 | Big Bird | Eight feet of friendly yellow bird. Flaps everyone out of the way. |
 | Nathan Fielder | Hires actors to play himself. Enemies go after the actors. |
 | Elizabeth Holmes | Blood tests with the Edison. The results look amazing. (They heal 1 HP.) |
+| Titan | A grinning, mindless giant. Grabs whoever is nearest and hurls them across the field. |
+| Scout | Survey Corps: swings in on ODM gear and does triple damage to Titans. |
+| Eren Yeager | A Scout until he's hurt or the enemy gets close; then lightning strikes and he becomes the Attack Titan. |
+| GPU | A literal graphics card. Ray-traced beams bounce between enemies; overheats every six shots; fires faster near Jensen. |
 | Duck | 4,000 gold. Its QUACK flattens everything nearby, it can't be knocked over, and it flaps onto anyone who runs. |
 | Squirrel King | Summons squirrels five at a time; his royal decrees make them fight twice as hard. |
 | Minion | Small, yellow, enthusiastic. Best by the dozen. |

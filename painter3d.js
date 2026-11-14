@@ -22,7 +22,7 @@ const SKIN_OF = { giant: PAL.giantSkin, lebron: PAL.lebronSkin, squirrel: PAL.fu
   djkhaled: '#6b4229', miner: '#9ab07a', hogrider: '#c98a5e', ultraman: '#c9ced6', megaknight: '#3d4350',
   kendrick: '#7a4a2e', drake: '#b0805a', paak: '#9a6a45', nicki: '#9a6a45', augustine: '#a8714a', mlk: '#6b4229',
   zuck: '#cdd6ad', jensen: '#e0b890', bigbird: '#f5d33b', minibot: PAL.robot, armadillo: '#c9a98a',
-  squirrelking: PAL.fur, gru: '#f2d9c2', dio: '#f8dcc6' };
+  squirrelking: PAL.fur, gru: '#f2d9c2', dio: '#f8dcc6', titan: '#e8b49a', attacktitan: '#c98a6a' };
 // Per-unit clothing that differs from the default team shirt, team sleeves and grey trousers.
 const LOOK = {
   knight: { limbs: 'steel', legs: 'steel', hands: 'steel' },
@@ -75,6 +75,10 @@ const LOOK = {
   jotaro: { torso: '#1f2a3a', limbs: '#1f2a3a', legs: '#1f2a3a', boot: '#2b2224', belt: 'main' },
   dio: { torso: '#f4c542', limbs: '#f4c542', legs: '#f4c542', boot: '#f4c542', belt: 'main' },
   naruto: { torso: '#f08a24', limbs: '#f08a24', legs: '#f08a24', boot: '#2b3a5a', belt: 'main' },
+  titan: { torso: 'skin', limbs: 'skin', legs: 'skin', hands: 'skin', boot: 'skin', belt: 'main', noEyes: true },
+  attacktitan: { torso: 'skin', limbs: 'skin', legs: 'skin', hands: 'skin', boot: 'skin', belt: 'main', noEyes: true },
+  scout: { torso: '#8a6a45', limbs: '#8a6a45', legs: '#efe8da', boot: '#3a2a22', belt: 'main' },
+  eren: { torso: '#8a6a45', limbs: '#8a6a45', legs: '#efe8da', boot: '#3a2a22', belt: 'main' },
   ultraman: { torso: 'skin', limbs: '#d8262c', thigh: 'skin', shin: '#d8262c', hands: 'skin', boot: 'skin', belt: 'main', noEyes: true },
 };
 
@@ -219,6 +223,8 @@ class Painter {
       rasengan: new Batch(scene, plane, words('RASENGAN!', '#7fd6ff', 86), 16, false),
       jutsu: new Batch(scene, plane, words('SHADOW CLONE JUTSU!', '#ffa040', 46), 8, false),
       nigerundayo: new Batch(scene, plane, words('NIGERUNDAYO!', '#9fe8ff', 70), 16, false),
+      tatakae: new Batch(scene, plane, words('TATAKAE!', '#7fe08a', 96), 8, false),
+      overheat: new Batch(scene, plane, words('THERMAL THROTTLING', '#ff7a4a', 46), 16, false),
     };
     this.label = new Batch(scene, plane, words('databrick', '#ffffff', 96), Math.max(16, cap >> 2), false);
     this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.gtorus, this.puff, this.flash, this.ice, this.ghostS, this.ghostC, this.qmark, this.hearts, this.label, ...Object.values(this.callouts)];
@@ -279,6 +285,7 @@ class Painter {
     if (u.burrow) { this.mound(u); return; }
     if (t.body === 'duck') { this.duckBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'minion') { this.minionBody(u, f, up, r, S, team0, col0); return; }
+    if (t.body === 'gpu') { this.gpuBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'fish') { this.fishBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'dragon') { this.dragonBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'brick') { this.brickBody(u, f, up, r, S, team0, col0); return; }
@@ -338,6 +345,10 @@ class Painter {
     if (u.alive && u.inspired > 0) this.ball(this.gsph, this.at(this.t1, hd, _Y, (13 + Math.sin(u.phase * 2)) * S), 2 * S, C('#ffd166'));
     this.hat(u, hd, f, up, r, S, team, col);
     if (t.stand && u.alive && u.act === 'attack') this.stand(u, f, up, r, S);
+    if (t.odm && u.leaping && u.alive) {
+      const T = u.target, a = T && T.alive ? this.at(this.t4, T.body.pts[J.HEAD], _Y, 40 * T.S) : this.at(this.t4, hd, f, 120, _Y, 90);
+      for (const sd of [-1, 1]) this.seg(this.cyl, this.at(this.t1, pe, r, sd * 8 * S), a, 0.35 * S, C('#d8dde4'));
+    }
     if (t.style === 'rasengan' && u.alive && u.act === 'attack') {
       const q = this.at(this.t1, B[J.RHAND], f, 3 * S), k = 1 + Math.random() * 0.2;
       this.ball(this.gsph, q, 4.2 * S * k, C('#c9f1ff'));
@@ -701,6 +712,53 @@ class Painter {
         }
         break;
       }
+      case 'titan': {
+        const hair = ['#3a2a22', '#6b4a2e', '#c9a46a', '#2b2b30'][u.id % 4];
+        this.axes(this.dome, this.at(t1, H, up, 1.4 * S), r, up, f, 8.7 * S, 7.2 * S, 8.7 * S, col(hair));
+        for (const sd of [-1, 1]) {
+          const e = this.at(t1, H, f, 6.4 * S, up, 1.8 * S, r, sd * 3.3 * S);
+          this.ball(this.sph, e, 2.1 * S, C('#ffffff'));
+          if (u.alive) this.ball(this.sph, this.at(t2, e, f, 1.9 * S), 0.6 * S, C(PAL.ink));
+          this.ball(this.sph, this.at(t1, H, r, sd * 8 * S, up, 0.5 * S), 2 * S, col('#e0a58a'));
+        }
+        // The grin: far too many teeth, ear to ear.
+        this.axes(this.box, this.at(t1, H, f, 6.6 * S, up, -3.4 * S), r, up, f, 11 * S, 3.6 * S, 2.6 * S, col('#9a5a48'));
+        this.axes(this.box, this.at(t1, H, f, 7.4 * S, up, -3.4 * S), r, up, f, 10 * S, 2.2 * S, 1.6 * S, C('#f6f0e2'));
+        for (const o of [-3.75, -1.25, 1.25, 3.75]) this.axes(this.box, this.at(t1, H, f, 8.25 * S, up, -3.4 * S, r, o * S), r, up, f, 0.25 * S, 2.3 * S, 0.2 * S, C('#c9bfae'));
+        break;
+      }
+      case 'attacktitan': {
+        this.axes(this.dome, this.at(t1, H, up, 1.4 * S, f, -0.8 * S), r, up, f, 9 * S, 7.4 * S, 9.2 * S, col('#2b1d16'));
+        this.axes(this.box, this.at(t1, H, f, -6 * S, up, -5 * S), r, up, f, 13 * S, 12 * S, 3 * S, col('#2b1d16'));
+        for (const sd of [-1, 1]) {
+          this.ball(this.gsph, this.at(t1, H, f, 7 * S, up, 1.4 * S, r, sd * 3 * S), 1.3 * S, C(u.alive ? '#5fe08a' : '#2a4a3a'));
+          this.axes(this.box, this.at(t1, H, f, 7.3 * S, up, 3 * S, r, sd * 3.2 * S), r, up, f, 4 * S, 1.1 * S, 1.4 * S, C(PAL.ink));
+          this.spike(this.at(t1, H, r, sd * 7.6 * S, up, 1 * S), this.at(t2, up, r, sd * 1.2, f, -0.4), 1.6 * S, 4.5 * S, col('#c98a6a'));
+          for (const k of [0, 1]) this.axes(this.box, this.at(t1, H, f, 6.4 * S, up, (-2.6 - k * 1.3) * S, r, sd * 5.4 * S), r, up, f, 2.6 * S, 0.5 * S, 1.8 * S, C('#a8453a'));
+        }
+        // No lips: just a long row of bared teeth.
+        this.axes(this.box, this.at(t1, H, f, 7.2 * S, up, -3.4 * S), r, up, f, 7.5 * S, 2.8 * S, 2 * S, C('#f6f0e2'));
+        for (const o of [-2.6, -0.9, 0.9, 2.6]) this.axes(this.box, this.at(t1, H, f, 8.25 * S, up, -3.4 * S, r, o * S), r, up, f, 0.25 * S, 2.9 * S, 0.2 * S, C('#b0705a'));
+        break;
+      }
+      case 'scout':
+      case 'eren': {
+        const eren = u.t.hat === 'eren', hair = eren ? '#3a2a22' : ['#6b4a2e', '#c9a46a', '#2b2b30', '#8a5a33'][u.id % 4];
+        this.axes(this.dome, this.at(t1, H, up, 1.2 * S), r, up, f, 8.6 * S, 7.2 * S, 8.6 * S, col(hair));
+        if (eren) this.ball(this.sph, this.at(t1, H, f, -5 * S, up, -1 * S), 4.5 * S, col(hair));
+        const ch = u.body.pts[J.CHEST], pe = u.body.pts[J.PELVIS];
+        const mid = this.t3.set((ch.x + pe.x) / 2, (ch.y + pe.y) / 2, (ch.z + pe.z) / 2);
+        // A cape in team colours with white wings on the back.
+        this.axes(this.box, this.at(t1, mid, f, -7.2 * S, up, 1 * S), r, up, f, 15 * S, 28 * S, 1.2 * S, col(team.main));
+        for (const sd of [-1, 1]) this.axes(this.box, this.at(t1, mid, f, -8 * S, up, 5 * S, r, sd * 2 * S), r, up, f, 3.2 * S, 5 * S, 0.5 * S, C(sd < 0 ? '#ffffff' : '#c9d1dc'));
+        // ODM gear: gas canisters on both hips.
+        for (const sd of [-1, 1]) {
+          this.seg(this.cyl, this.at(t1, pe, r, sd * 9 * S, f, -5 * S), this.at(t2, pe, r, sd * 9 * S, f, 4 * S), 2.1 * S, col('#9aa3ad'));
+          this.axes(this.box, this.at(t1, pe, r, sd * 7.5 * S, up, 2 * S), r, up, f, 2 * S, 4 * S, 4 * S, col('#5d6570'));
+        }
+        if (eren) this.ball(this.sph, this.at(t1, ch, f, 7 * S, up, -3 * S), 1 * S, C(PAL.gold));   // the key
+        break;
+      }
       case 'treant':
         for (const o of [[0, 9, 0, 11], [7, 5, -2, 8], [-7, 5, -2, 8], [0, 6, -7, 8], [4, 12, 4, 7], [-4, 12, 3, 7]]) {
           this.ball(this.sph, this.at(t1, H, r, o[0] * S, up, o[1] * S, f, o[2] * S), o[3] * S, col(o[3] > 8 ? PAL.leaf : PAL.leafLight));
@@ -784,6 +842,43 @@ class Painter {
       const hip = this.at(this.t3, pe, r, sd * 4 * S, up, -3 * S);
       this.seg(this.cyl, hip, kn, 2.8 * S, denim); this.seg(this.cyl, kn, ft, 2.6 * S, denim);
       this.axes(this.sph, this.at(this.t3, ft, f, 1.5 * S), r, up, f, 3.2 * S, 2.4 * S, 4.4 * S, black);
+    }
+  }
+
+  // GPU: a graphics card standing on end on stubby legs, two fans facing the enemy and a team-coloured light strip.
+  gpuBody(u, f, up, r, S, team, col) {
+    const B = u.body.pts, hd = B[J.HEAD], lk = B[J.LKNEE], rk = B[J.RKNEE];
+    const bottom = this.t1.set((lk.x + rk.x) / 2, (lk.y + rk.y) / 2, (lk.z + rk.z) / 2);
+    const h = Math.max(36 * S, bottom.distanceTo(hd) + 6 * S), w = 17 * S, th = 5 * S;
+    const c = this.t2.set((bottom.x + hd.x) / 2, (bottom.y + hd.y) / 2, (bottom.z + hd.z) / 2);
+    const hot = u.heat > 0, dark = col('#26242c');
+    for (const sd of [-1, 1]) {
+      const ft = B[sd < 0 ? J.LFOOT : J.RFOOT];
+      this.seg(this.cyl, this.at(this.t3, c, up, -h / 2 + 1 * S, r, sd * 5 * S), ft, 1.5 * S, dark);
+      this.ball(this.sph, ft, 2.6 * S, dark);
+    }
+    this.axes(this.box, c, r, up, f, w, h, th, col('#1f2024'));
+    this.axes(this.box, this.at(this.t3, c, f, th * 0.5 + 0.5 * S), r, up, f, w - 1 * S, h - 1 * S, 1.2 * S, col('#3a3d44'));
+    this.axes(this.box, this.at(this.t3, c, r, w / 2 + 0.2 * S, f, th * 0.3), r, up, f, 0.8 * S, h * 0.85, 1.4 * S, col(team.main));
+    this.axes(this.box, this.at(this.t3, c, up, h / 2 - 0.5 * S, f, th * 0.3), r, up, f, w * 0.8, 0.8 * S, 1.4 * S, col(team.main));
+    this.axes(this.box, this.at(this.t3, c, r, -w / 2 - 0.3 * S, up, -h * 0.1), r, up, f, 1 * S, h * 0.45, th * 0.5, col('#e8b94a'));
+    this.axes(this.box, this.at(this.t3, c, up, h / 2 + 1 * S), r, up, f, w * 0.9, 2 * S, th + 1 * S, col('#c9d1dc'));
+    // Two fans, spinning flat out when it overheats.
+    const Rf = Math.min(w * 0.42, h * 0.22), spin = performance.now() / 1000 * (hot ? 40 : 14) + u.id;
+    for (const o of [0.24, -0.24]) {
+      const fc = this.at(this.t3, c, f, th / 2 + 1.3 * S, up, o * h);
+      this.axes(this.cyl, fc, r, f, up, Rf, 1 * S, Rf, col('#151418'));
+      for (let k = 0; k < 7; k++) {
+        const a = spin + k * TAU / 7, ca = Math.cos(a), sa = Math.sin(a);
+        const dir = this.t4.set(r.x * ca + up.x * sa, r.y * ca + up.y * sa, r.z * ca + up.z * sa);
+        const perp = this.t5.crossVectors(f, dir);
+        this.axes(this.box, this.at(this.nr, fc, dir, Rf * 0.55, f, 0.7 * S), dir, perp, f, Rf * 0.8, 2.2 * S, 0.4 * S, col('#2b2d33'));
+      }
+      if (hot) this.ball(this.gsph, this.at(this.nr, fc, f, 1 * S), Rf * 0.35, C('#ff5a2e'));
+      else this.axes(this.cyl, this.at(this.nr, fc, f, 0.7 * S), r, f, up, Rf * 0.3, 1.2 * S, Rf * 0.3, col('#5a5f68'));
+    }
+    if (hot) for (let k = 0; k < 3; k++) {
+      this.ball(this.puff, this.at(this.t3, c, up, h / 2 + (4 + k * 6 + Math.random() * 3) * S, r, (Math.random() - 0.5) * 6 * S), (3 + Math.random() * 2) * S, C('#8a8f98'));
     }
   }
 
@@ -1009,7 +1104,7 @@ class Painter {
   weapon(u, side, col) {
     const B = u.body.pts, S = u.S, w = u.t.weapon;
     const h = B[side === 'r' ? J.RHAND : J.LHAND], e = B[side === 'r' ? J.RELB : J.LELB];
-    const dual = w === 'axe' || w === 'katana' || w === 'mace' || w === 'sticks';
+    const dual = w === 'axe' || w === 'katana' || w === 'mace' || w === 'sticks' || w === 'blades';
     if (side === 'l' && !dual && w !== 'bow') return;
     if (side === 'r' && w === 'bow') return;
     this.weaponFrame(h, e);
@@ -1035,6 +1130,10 @@ class Painter {
         this.seg(this.cyl, along(t1, -4), along(t2, 1), 0.9 * S, col(PAL.ink));
         this.ball(this.sph, along(t1, 1.5), 1.6 * S, C(PAL.bronze));
         this.axes(this.box, along(t1, 16), X, d, Z, 0.5 * S, 28 * S, 1.9 * S, col(PAL.steel));
+        break;
+      case 'blades':
+        this.axes(this.box, along(t1, 0), X, d, Z, 1.8 * S, 4 * S, 2.4 * S, col('#5d6570'));
+        this.axes(this.box, along(t1, 15), X, d, Z, 0.35 * S, 25 * S, 2 * S, col('#e4e9f0'));
         break;
       case 'spear':
         this.seg(this.cyl, along(t1, -26), along(t2, 38), 1.1 * S, col(PAL.wood));
@@ -1308,10 +1407,13 @@ class Painter {
         this.seg(this.gcyl, bm.from, bm.end, 6 + 14 * (bm.life / 0.5), C('#c9f6ff'));
         continue;
       }
-      const s = bm.a.body.pts[J.RHAND], c = bm.b.body.pts[J.CHEST];
+      let s = bm.a.body.pts[J.RHAND];
+      const c = bm.b.body.pts[J.CHEST];
+      if (bm.bounce) s = bm.a.body.pts[J.CHEST];
+      else if (bm.gpu) { const q = bm.a.body.pts[J.CHEST], S = bm.a.S; s = this.t3.set(q.x + bm.a.fx * 5 * S, q.y + 4 * S, q.z + bm.a.fz * 5 * S); }
       if (bm.laser) {
-        this.seg(this.gcyl, s, c, 1.4, C(PAL.laser));
-        this.ball(this.gsph, c, 3.5, C('#ffb0b0'));
+        this.seg(this.gcyl, s, c, bm.gpu ? 1.8 : 1.4, C(bm.gpu ? '#a6ff4a' : PAL.laser));
+        this.ball(this.gsph, c, 3.5, C(bm.gpu ? '#e0ffc0' : '#ffb0b0'));
       } else {
         this.seg(this.gcyl, this.t1.set(s.x, s.y + 22 * bm.a.S, s.z), c, 1.3, C('#9be8a0'));
         this.ball(this.gsph, c, 4 * bm.b.S * (bm.life / 0.4), C('#c9f5cc'));

@@ -159,6 +159,19 @@ Object.assign(TYPES, {
                 blurb: 'ZA WARUDO stops time for every enemy, then MUDA MUDA, then a road roller from the sky.' },
   naruto:     { name: 'Naruto', cost: 650, hp: 280, S: 1, speed: 72, reach: 34, dmg: 140, cd: 2.2, knock: 1000, style: 'rasengan', anim: 0.75, weapon: 'none', hat: 'naruto', block: 0, clones: 4,
                 blurb: 'Shadow Clone Jutsu brings four clones that vanish when hit. Finishes with a Rasengan.' },
+  titan:      { name: 'Titan', cost: 900, hp: 1500, S: 2.6, speed: 32, reach: 50, dmg: 70, cd: 2.4, knock: 600, style: 'grab', anim: 1.4, weapon: 'none', hat: 'titan', block: 0, heavy: 1.2, fat: 1.1, titan: true,
+                blurb: 'A mindless Titan with a wide, empty grin. Grabs whoever is nearest and hurls them across the field. Weak spot: the back of the neck.' },
+  scout:      { name: 'Scout', cost: 220, hp: 100, S: 1, speed: 58, reach: 34, dmg: 28, cd: 0.9, knock: 200, style: 'dual', anim: 0.5, weapon: 'blades', hat: 'scout', block: 0, dodge: 0.2,
+                leap: true, leapMax: 380, leapFlight: 0.6, slam: 30, slamR: 45, odm: true, slayer: 3,
+                blurb: 'Survey Corps. Zips through the air on ODM gear and goes for the back of the neck: triple damage against Titans.' },
+  eren:       { name: 'Eren Yeager', cost: 1100, hp: 150, S: 1, speed: 60, reach: 34, dmg: 26, cd: 0.9, knock: 220, style: 'dual', anim: 0.5, weapon: 'blades', hat: 'eren', block: 0, dodge: 0.2,
+                leap: true, leapMax: 380, leapFlight: 0.6, slam: 30, slamR: 45, odm: true, slayer: 3, shift: 'attacktitan',
+                blurb: 'Fights as a Scout until he is hurt or the enemy gets close. Then lightning strikes, and he becomes the Attack Titan.' },
+  attacktitan: { name: 'Attack Titan', cost: 0, hp: 1800, S: 2.7, speed: 46, reach: 56, dmg: 85, cd: 1.3, knock: 900, style: 'punch', anim: 0.8, weapon: 'none', hat: 'attacktitan', block: 0, heavy: 1.3, aoe: true, titan: true,
+                blurb: 'Eren, fifteen metres tall and furious.' },
+  gpu:        { name: 'GPU', cost: 550, hp: 220, S: 1, speed: 40, range: 340, dmg: 24, cd: 1.5, knock: 150, style: 'laser', anim: 0.5, weapon: 'none', hat: 'none', block: 0, body: 'gpu', heavy: 1.5,
+                chain: 3, overheat: 6, overclockable: true,
+                blurb: 'A literal graphics card. Ray-traced beams bounce between enemies. Runs hot: every six shots it stops to cool down. Fires faster next to Jensen.' },
   narutoclone: { name: 'Shadow Clone', cost: 0, hp: 50, S: 1, speed: 72, reach: 30, dmg: 22, cd: 0.9, knock: 250, style: 'punch', anim: 0.5, weapon: 'none', hat: 'naruto', block: 0, poof: true,
                 blurb: 'A shadow clone. Vanishes in a puff of smoke.' },
 });
@@ -168,8 +181,8 @@ const ORDER = ['chicken', 'squirrel', 'peasant', 'grandma', 'squire', 'fishmonge
   'robot', 'sumo', 'treant', 'lebron', 'giant', 'fish', 'databrick', 'hogrider', 'miner', 'djkhaled', 'megaknight', 'dragon', 'ultraman',
   'kendrick', 'drake', 'paak', 'nicki', 'augustine', 'luther', 'bonhoeffer', 'mlk', 'pastorhans', 'tung',
   'elon', 'zuck', 'jensen', 'spy', 'altman', 'swe', 'oncall', 'armadillo', 'bigbird', 'nathan', 'holmes',
-  'minion', 'gru', 'squirrelking', 'joseph', 'jotaro', 'dio', 'naruto', 'duck'];
-const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, rap: 0.5, tongue: 0.45, barrage: 0.85, rasengan: 0.6, none: 2 };
+  'minion', 'gru', 'squirrelking', 'joseph', 'jotaro', 'dio', 'naruto', 'titan', 'scout', 'eren', 'gpu', 'duck'];
+const HIT_T = { thrust: 0.55, chop: 0.55, dual: 0.55, punch: 0.55, shove: 0.55, pounce: 0.45, bow: 0.8, gun: 0.5, throw: 0.62, hoops: 0.55, lob: 0.55, cast: 0.62, heal: 0.45, aura: 0.5, laser: 0.3, bomb: 0.3, summon: 0.5, breath: 0.3, specium: 0.55, rap: 0.5, tongue: 0.45, barrage: 0.85, rasengan: 0.6, grab: 0.4, none: 2 };
 // What each ranged style throws or fires unless the unit names its own projectile.
 const DEFAULT_PROJ = { bow: 'arrow', gun: 'bullet', throw: 'boulder', hoops: 'ball', cast: 'fire', rap: 'wave' };
 const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder: 0.07, ball: 0.05, fire: 0.04, hex: 0.04, pie: 0.05, peel: 0.06, wave: 0.02, cash: 0.08, rocket: 0.04, token: 0.02, freeze: 0.01, clacker: 0.14 };
@@ -202,6 +215,7 @@ class Unit {
     this.overclock = 0; this.hidden = false; this.revealed = false; this.rehired = false; this.rehireT = 0;
     this.paged = 0; this.pageCd = 4 + R() * 3; this.cast = false;
     this.frozen = 0; this.iced = 0; this.flee = 0; this.fled = false; this.barrageT = 0; this.zaCd = 4; this.rollerCd = 9; this.vanished = false;
+    this.held = null; this.grabbed = null; this.shots = 0; this.heat = 0; this.shifted = false; this.shiftT = 5;
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -271,6 +285,7 @@ function updateUnit(u, W, active) {
   if (u.ward > 0) u.ward -= DT;
   if (u.overclock > 0) u.overclock -= DT;
   if (u.paged > 0) { u.paged -= DT; u.act = 'idle'; }
+  if (u.heat > 0) u.heat -= DT;
   if (u.flee > 0) { u.flee -= DT; u.hp = Math.min(u.t.hp, u.hp + 25 * DT); }   // running away, breathing (Hamon)
   if (active) {
     // Spies wear the enemy's colours until they strike; Nathan Fielder brings his actors.
@@ -290,6 +305,12 @@ function updateUnit(u, W, active) {
         SFX.play('poof');
       }
     }
+    // Eren: once he is hurt, or the enemy is close and he has had a few seconds, he becomes the Attack Titan.
+    if (u.t.shift && !u.shifted && u.stun <= 0) {
+      const T0 = u.target, near = T0 && T0.alive && (T0.P.x - u.P.x) ** 2 + (T0.P.z - u.P.z) ** 2 < 260 * 260;
+      if (near) u.shiftT -= DT;
+      if (u.hp < u.t.hp * 0.6 || u.shiftT <= 0) { titanShift(u, W); return; }
+    }
     if (u.t.timeStop && (u.zaCd -= DT) <= 0 && u.target && u.target.alive) zaWarudo(u, W);
     if (u.t.roller && (u.rollerCd -= DT) <= 0 && u.target && u.target.alive) roadRoller(u, W);
     if (u.t.flee && !u.fled && u.hp < u.t.hp * 0.3) {
@@ -305,7 +326,7 @@ function updateUnit(u, W, active) {
   }
   const calm = u.peace > 0;
   if (u.inspired > 0) u.inspired -= DT;
-  u.cdT -= DT * (u.inspired > 0 ? 1.7 : 1);
+  u.cdT -= DT * (u.inspired > 0 ? 1.7 : 1) * (u.overclock > 0 && u.t.overclockable ? 1.6 : 1);
   if (u.leapCd > 0) u.leapCd -= DT;
 
   let moving = false;
@@ -371,6 +392,7 @@ function updateUnit(u, W, active) {
     if (!u.fired && u.actT >= HIT_T[u.t.style]) { u.fired = true; strike(u, W); }
     if (u.actT >= 1) u.act = 'idle';
   }
+  if (u.held) holdVictim(u, W);
   musclePose(u, moving, m, cheer && W.over, W);
 }
 
@@ -496,6 +518,12 @@ function armPose(u, moving, cheer, time) {
       // Bard: left hand on the lute's neck, right hand strumming.
       const strum = att ? dsin(t * 40) * 2 : 0;
       return { r: [7, -6 + strum, 3, 0.1, -1, 0], l: [13, 2, -3, 1, 0.5, 0] };
+    }
+    case 'grab': {
+      // Reach out low, lift the victim up high, then hurl it.
+      const rest = [8, -8, 7, 1, -0.3, 0];
+      const r = att ? keyf([[0, rest], [0.4, [22, -10, 5, 1, -0.4, 0]], [0.6, [10, 14, 6, 0.4, 1, 0]], [0.82, [6, 16, 6, 0.1, 1, 0]], [0.92, [24, 6, 5, 1, 0.3, 0]], [1, rest]], t) : swing(rest, sw);
+      return { r, l: att ? [14, -6, -7, 1, -0.2, 0] : swing(mirror(rest), -sw) };
     }
     case 'barrage':
       return att ? { r: [8, 2, 4, 1, 0, 0], l: [8, 2, -4, 1, 0, 0] } : { r: [6, -4, 5, 0.3, -0.6, 0], l: [6, -4, -5, 0.3, -0.6, 0] };
@@ -639,6 +667,7 @@ function strike(u, W) {
   if (st === 'summon') { summonUnits(u, W); return; }
   if (st === 'tongue') { tongueGrab(u, W); return; }
   if (st === 'barrage') { barrageHit(u, W, true); return; }
+  if (st === 'grab') { titanGrab(u, W); return; }
   if (st === 'rasengan') {
     // The Rasengan: one enormous hit on whoever is in front.
     const T = u.target, pel = u.P;
@@ -679,9 +708,16 @@ function strike(u, W) {
     if (d > u.t.range * 1.1) return;
     const k = u.t.knock;
     hurt(T, u.t.dmg * (0.9 + R() * 0.2), dx / d * k, k * 0.3, dz / d * k, pel, W, u);
-    W.beams.push({ a: u, b: T, life: 0.15, laser: true });
+    W.beams.push({ a: u, b: T, life: 0.15, laser: true, gpu: !!u.t.chain });
     sparks(W, c.x, c.y, c.z, 5);
     SFX.play('pew');
+    if (u.t.chain) rayTrace(u, T, W);
+    if (u.t.overheat && ++u.shots >= u.t.overheat) {
+      // Thermal throttling.
+      u.shots = 0; u.cdT = 3; u.heat = 3;
+      if (W.callouts) W.callouts.push({ x: pel.x, y: u.body.pts[J.HEAD].y + 30, z: pel.z, life: 1.2, max: 1.2, text: 'overheat' });
+      SFX.play('sizzle');
+    }
     return;
   }
   if (DEFAULT_PROJ[st] || st === 'lob') {
@@ -839,6 +875,7 @@ function hurt(e, dmg, ix, iy, iz, from, W, src) {
   }
   if (e.ward > 0) { dmg *= 0.65; ix *= 0.75; iy *= 0.75; iz *= 0.75; }
   if (src && src.overclock > 0) dmg *= 1.5;
+  if (src && src.t.slayer && e.t.titan) dmg *= src.t.slayer;   // the back of the neck
   const inv = 1 / e.mass, pts = e.body.pts;
   for (let i = 0; i < pts.length; i++) {
     const w = i === J.CHEST || i === J.HEAD ? 1 : i === J.PELVIS ? 0.75 : 0.5;
@@ -858,6 +895,7 @@ function kill(e, W, src) {
   e.alive = false; e.hp = 0; e.act = 'dead';
   W.lost[e.home]++;
   if (src) src.kills++;
+  if (e.held) dropVictim(e);
   if (e.t.rehire && !e.rehired) e.rehireT = e.t.rehire;
   if (e.t.poof) { e.vanished = true; const q = e.body.pts[J.CHEST]; puff(W, q.x, q.y, q.z, 12, '#f4f4f4', 70, 7); SFX.play('poof'); }
   if (e.t.style === 'bomb' && !e.fired) {
@@ -1085,6 +1123,102 @@ function roadRoller(u, W) {
   SFX.play('whoosh');
 }
 
+// Titans: grab the nearest enemy that's light enough to lift; anything heavier just gets punched.
+function titanGrab(u, W) {
+  const pel = u.P;
+  let T = null, bd = Infinity;
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow || e.grabbed) continue;
+    const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz);
+    if (d > u.t.reach * 1.3 + e.r || (dx * u.fx + dz * u.fz) / (d || 1) < 0.2) continue;
+    const score = d - (e === u.target ? 30 : 0);
+    if (score < bd) { bd = score; T = e; }
+  }
+  if (!T) return;
+  if (T.mass > 4 || T.t.titan) {
+    const k = u.t.knock;
+    hurt(T, u.t.dmg, u.fx * k, k * 0.6, u.fz * k, pel, W, u);
+    W.shake = Math.max(W.shake, 5);
+    SFX.play('thud');
+    return;
+  }
+  u.held = T; T.grabbed = u; T.act = 'idle'; T.leaping = false;
+  SFX.play('whoosh');
+}
+
+// Carries the victim in the right hand, then hurls it.
+function holdVictim(u, W) {
+  const v = u.held;
+  if (!v.alive || u.act !== 'attack' || u.stun > 0 || v.grabbed !== u) { dropVictim(u); return; }
+  const pts = v.body.pts;
+  if (u.actT >= 0.86) {
+    for (const p of pts) addVel(p, u.fx * 520, 380, u.fz * 520);
+    hurt(v, u.t.dmg, 0, 0, 0, null, W, u);
+    if (v.alive) v.stun = Math.max(v.stun, 1.6);
+    dropVictim(u);
+    W.shake = Math.max(W.shake, 4);
+    SFX.play('whoosh');
+    return;
+  }
+  const h = u.body.pts[J.RHAND], c = pts[J.CHEST], S = u.S;
+  const dx = h.x + u.fx * 3 * S - c.x, dy = h.y - 2 * S - c.y, dz = h.z + u.fz * 3 * S - c.z;
+  for (const p of pts) {
+    p.x += dx * 0.4; p.y += dy * 0.4; p.z += dz * 0.4;
+    p.px = p.x - (p.x - dx * 0.4 - p.px) * 0.3; p.py = p.y - (p.y - dy * 0.4 - p.py) * 0.3; p.pz = p.z - (p.z - dz * 0.4 - p.pz) * 0.3;
+  }
+  v.stun = Math.max(v.stun, 0.3); v.act = 'idle';
+}
+
+function dropVictim(u) {
+  if (u.held && u.held.grabbed === u) u.held.grabbed = null;
+  u.held = null;
+}
+
+// Eren bites his hand: lightning, a shockwave, and the Attack Titan stands where he was.
+function titanShift(u, W) {
+  u.shifted = true;
+  const x = u.P.x, z = u.P.z, t = TYPES[u.t.shift];
+  W.bolts.push(boltPath({ x, y: 900, z }, { x, y: 0, z }));
+  W.flashes.push({ x, y: 30, z, life: 0.6, max: 0.6, r: 220, bolt: true });
+  W.shake = Math.max(W.shake, 14);
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const dx = e.P.x - x, dz = e.P.z - z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+    if (d > 140 + e.r) continue;
+    hurt(e, 50, dx / d * 900, 500, dz / d * 900, null, W, u);
+  }
+  if (u.held) dropVictim(u);
+  u.key = u.t.shift; u.t = t; u.S = t.S;
+  u.body = buildBody(x, z, u.S, u.fx >= 0 ? 1 : -1);
+  u.hp = t.hp; u.mass = u.S * u.S * (t.heavy || 1); u.r = 9 * u.S * Math.sqrt(t.fat || 1);
+  Object.assign(u, { act: 'idle', stun: 0, recover: 0.3, cdT: 0.8, leaping: false, anchored: false, target: null, retarget: 0 });
+  puff(W, x, 40, z, 24, '#f4f4f4', 160, 14);
+  if (W.callouts) W.callouts.push({ x, y: 190, z, life: 1.8, max: 1.8, text: 'tatakae' });
+  SFX.play('zap'); SFX.play('roar');
+}
+
+// The GPU's beam bounces on to the nearest enemies it hasn't hit yet: ray tracing.
+function rayTrace(u, T, W) {
+  const struck = [T.id];
+  let cur = T;
+  for (let i = 1; i < u.t.chain; i++) {
+    const c = cur.body.pts[J.CHEST];
+    let next = null, bd = 170 * 170;
+    for (const e of W.units) {
+      if (!e.alive || e.team === u.team || e.burrow || struck.includes(e.id)) continue;
+      const ex = e.P.x - c.x, ez = e.P.z - c.z, d2 = ex * ex + ez * ez;
+      if (d2 < bd) { bd = d2; next = e; }
+    }
+    if (!next) return;
+    struck.push(next.id);
+    const q = next.body.pts[J.CHEST], dx = q.x - c.x, dz = q.z - c.z, d = Math.sqrt(dx * dx + dz * dz) || 1, k = u.t.knock;
+    hurt(next, u.t.dmg * (0.75 - i * 0.1), dx / d * k, k * 0.3, dz / d * k, null, W, u);
+    W.beams.push({ a: cur, b: next, life: 0.15, laser: true, gpu: true, bounce: true });
+    sparks(W, q.x, q.y, q.z, 4);
+    cur = next;
+  }
+}
+
 // Sam Altman: back on his feet, at full health, once per battle.
 function rehire(u, W) {
   Object.assign(u, { alive: true, rehired: true, hp: u.t.hp, act: 'idle', stun: 0.3, recover: 0, team: u.home, charm: 0, target: null, retarget: 0, anchored: false });
@@ -1167,7 +1301,7 @@ function checkLanding(u, W) {
     return;
   }
   u.leaping = false;
-  const p = u.P, R0 = 110;
+  const p = u.P, R0 = u.t.slamR || 110;
   for (const e of W.units) {
     if (!e.alive || e.team === u.team || e.burrow) continue;
     const dx = e.P.x - p.x, dz = e.P.z - p.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
@@ -1175,6 +1309,7 @@ function checkLanding(u, W) {
     const f = 1 - d / (R0 + e.r) * 0.5, k = 700 * f;
     hurt(e, (u.t.slam || 140) * f, dx / d * k, k, dz / d * k, null, W, u);
   }
+  if (u.t.odm) { SFX.play('hit'); return; }   // Scouts land light, blades first
   W.shake = Math.max(W.shake, 9);
   W.flashes.push({ x: p.x, y: 4, z: p.z, life: 0.35, max: 0.35, r: R0 });
   puff(W, p.x, 2, p.z, 14, '#cdbb98', 120, 8);
@@ -1245,7 +1380,7 @@ function speciumRay(u, W) {
 }
 
 function separate(units) {
-  const a = units.filter(u => u.alive && !u.burrow && !u.t.colossal && !(u.frozen > 0)).sort((p, q) => p.P.x - q.P.x);
+  const a = units.filter(u => u.alive && !u.burrow && !u.t.colossal && !(u.frozen > 0) && !u.grabbed).sort((p, q) => p.P.x - q.P.x);
   for (let i = 0; i < a.length; i++) {
     const u = a[i], p = u.P;
     for (let j = i + 1; j < a.length; j++) {
