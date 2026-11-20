@@ -4,7 +4,7 @@
 const DT = 1 / 60;
 let GRAV = 900;               // set per map by setEnv()
 // Ground behaviour for the current map; maps.js swaps these in before each battle.
-const ENV_DEFAULT = { grav: 900, friction: 0.7, bounce: 0.15, traction: 1, lava: false, pools: null, platform: null, wall: null };
+const ENV_DEFAULT = { grav: 900, friction: 0.7, bounce: 0.15, traction: 1, lava: false, pools: null, platform: null, wall: null, blocks: null };
 
 // Is there ground under (x, z)? Everywhere, except off the edge of a floating platform.
 function onGround(p) {
@@ -12,6 +12,65 @@ function onGround(p) {
   return !pl || (Math.abs(p.x) < pl.x && p.z > pl.z0 && p.z < pl.z1);
 }
 const ENV = Object.assign({}, ENV_DEFAULT);
+
+// ---------- terrain ----------
+// Solid boxes standing on the ground: houses, walls, stages. ENV.blocks lists them as [x0, x1, z0, z1, height, kind];
+// a grid of 64-unit cells finds the few near any point quickly.
+const TERRAIN = { cs: 64, cells: new Map(), list: [] };
+const NO_BLOCKS = [];
+const cellKey = (cx, cz) => (cx + 512) * 4096 + (cz + 512);
+function buildTerrain() {
+  TERRAIN.list = ENV.blocks || [];
+  TERRAIN.cells = new Map();
+  const cs = TERRAIN.cs;
+  TERRAIN.list.forEach((b, i) => {
+    for (let cx = Math.floor(b[0] / cs); cx <= Math.floor(b[1] / cs); cx++) {
+      for (let cz = Math.floor(b[2] / cs); cz <= Math.floor(b[3] / cs); cz++) {
+        const k = cellKey(cx, cz);
+        if (!TERRAIN.cells.has(k)) TERRAIN.cells.set(k, []);
+        TERRAIN.cells.get(k).push(b);
+      }
+    }
+  });
+}
+function blocksNear(x, z) {
+  if (!TERRAIN.list.length) return NO_BLOCKS;
+  return TERRAIN.cells.get(cellKey(Math.floor(x / TERRAIN.cs), Math.floor(z / TERRAIN.cs))) || NO_BLOCKS;
+}
+// Height of whatever is underfoot at (x, z): a roof, or the ground.
+function groundH(x, z) {
+  let h = 0;
+  for (const b of blocksNear(x, z)) if (x > b[0] && x < b[1] && z > b[2] && z < b[3] && b[4] > h) h = b[4];
+  return h;
+}
+// Is there a block between the ground and height y at (x, z)?
+function insideBlock(x, y, z) {
+  for (const b of blocksNear(x, z)) if (x > b[0] && x < b[1] && z > b[2] && z < b[3] && y < b[4]) return b;
+  return null;
+}
+// A body point that has moved into a block: it lands on the roof if it came from above, scrambles up a
+// low one (anything under `climb`), and is stopped against the side of anything taller.
+function terrainCollide(p, ox, oy, oz, vx, vy, vz, climb) {
+  for (const b of blocksNear(p.x, p.z)) {
+    if (!(p.x > b[0] && p.x < b[1] && p.z > b[2] && p.z < b[3] && p.y < b[4])) continue;
+    const h = b[4];
+    if (oy >= h - 1) {
+      p.y = h;
+      p.py = h + (vy < 0 ? vy * ENV.bounce : 0);
+      p.px = p.x - vx * ENV.friction;
+      p.pz = p.z - vz * ENV.friction;
+    } else if (h - p.y <= climb) {
+      p.y = Math.min(h, p.y + 3.5); p.py = p.y;
+    } else {
+      // Out through the nearest side.
+      const l = p.x - b[0], rt = b[1] - p.x, n = p.z - b[2], f = b[3] - p.z, m = Math.min(l, rt, n, f);
+      if (m === l) { p.x = b[0] - 0.01; p.px = p.x; }
+      else if (m === rt) { p.x = b[1] + 0.01; p.px = p.x; }
+      else if (m === n) { p.z = b[2] - 0.01; p.pz = p.z; }
+      else { p.z = b[3] + 0.01; p.pz = p.z; }
+    }
+  }
+}
 const ITER = 4;
 const FIELD_X = 720;   // half-width of the battlefield
 const FIELD_Z = 560;   // depth of the battlefield along z
@@ -92,7 +151,9 @@ function buildBody(x, z, S, fx) {
 function stepBody(b) {
   const pts = b.pts;
   const g = GRAV * DT * DT;
+  const terrain = TERRAIN.list.length > 0, climb = b.climb || 30;
   for (const p of pts) {
+    const ox = p.x, oy = p.y, oz = p.z;
     const vx = (p.x - p.px) * 0.996, vy = (p.y - p.py) * 0.996, vz = (p.z - p.pz) * 0.996;
     p.px = p.x; p.py = p.y; p.pz = p.z;
     p.x += vx; p.y += vy - g; p.z += vz;
@@ -112,6 +173,7 @@ function stepBody(b) {
       p.px = p.x - vx * ENV.friction;
       p.pz = p.z - vz * ENV.friction;
     }
+    if (terrain) terrainCollide(p, ox, oy, oz, vx, vy, vz, climb);
   }
   const sticks = b.sticks;
   for (let it = 0; it < ITER; it++) {
@@ -123,7 +185,10 @@ function stepBody(b) {
       a.x += dx * k; a.y += dy * k; a.z += dz * k;
       c.x -= dx * k; c.y -= dy * k; c.z -= dz * k;
     }
-    for (const p of pts) if (p.y < 0 && onGround(p)) p.y = 0;
+    for (const p of pts) {
+      if (p.y < 0 && onGround(p)) p.y = 0;
+      else if (terrain && p.y < 400) { const g = groundH(p.x, p.z); if (p.y < g && g - p.y < 6) p.y = g; }
+    }
   }
 }
 

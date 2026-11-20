@@ -189,13 +189,21 @@ const SPREAD = { arrow: 0.05, heart: 0.05, bullet: 0.015, cannon: 0.03, boulder:
 
 let NEXT_ID = 1;
 
+// A fresh standing body on whatever is underfoot at (x, z) (a roof, or the ground), or in the air for fliers.
+function standBody(x, z, S, fx, t) {
+  const b = buildBody(x, z, S, fx), g = groundH(x, z) + (t && t.fly ? t.fly : 0);
+  if (g) for (const p of b.pts) { p.y += g; p.py += g; }
+  b.climb = (t && t.climb ? t.climb : 30) * S;
+  return b;
+}
+
 class Unit {
   constructor(key, team, x, z) {
     this.key = key; this.t = TYPES[key]; this.team = team;
     this.id = NEXT_ID++;
     this.S = this.t.S;
     this.fx = team === 0 ? 1 : -1; this.fz = 0;
-    this.body = buildBody(x, z, this.S, this.fx);
+    this.body = standBody(x, z, this.S, this.fx, this.t);
     this.hp = this.t.hp; this.alive = true;
     this.mass = this.S * this.S * (this.t.heavy || 1);
     this.r = 9 * this.S * Math.sqrt(this.t.fat || 1);
@@ -215,7 +223,10 @@ class Unit {
     this.overclock = 0; this.hidden = false; this.revealed = false; this.rehired = false; this.rehireT = 0;
     this.paged = 0; this.pageCd = 4 + R() * 3; this.cast = false;
     this.frozen = 0; this.iced = 0; this.flee = 0; this.fled = false; this.barrageT = 0; this.zaCd = 4; this.rollerCd = 9; this.vanished = false;
-    this.held = null; this.grabbed = null; this.shots = 0; this.heat = 0; this.shifted = false; this.shiftT = 5;
+    this.held = null; this.grabbed = null; this.shots = 0; this.heat = 0; this.shifted = false; this.shiftT = this.t.shiftDelay || 5;
+    this.skT = null; this.skFor = null; this.casting = 0; this.castT = 0; this.castSk = null; this.castPose = null;
+    this.hard = 0; this.armorHP = this.t.armorHP || 0; this.armorOff = false; this.buff = 0; this.lives = this.t.lives || 0;
+    this.stuckT = 0; this.lastX = x; this.lastZ = z; this.detour = 0; this.detourSide = 1; this.slow = 0;
   }
   get P() { return this.body.pts[J.PELVIS]; }
 }
@@ -225,6 +236,7 @@ function nearestEnemy(u, units) {
   let best = null, bd = Infinity;
   for (const e of units) {
     if (!e.alive || e.team === u.team || e.burrow || e.hidden) continue;
+    if (e.t.fly && !u.t.range && !u.t.fly && !u.t.odm && !u.t.skills && e.P.y - groundH(e.P.x, e.P.z) > 60) continue;
     // Scarecrows are irresistible: they count as much closer than they are.
     const dx = e.P.x - p.x, dz = e.P.z - p.z, d = (dx * dx + dz * dz) * (e.t.taunt ? 0.2 : 1);
     if (d < bd) { bd = d; best = e; }
@@ -265,13 +277,18 @@ function turnToward(u, dx, dz, k) {
 function updateUnit(u, W, active) {
   if (u.hitFlash > 0) u.hitFlash -= DT;
   if (u.iced > 0) u.iced -= DT;
+  if (u.hard > 0) u.hard -= DT;
+  if (u.buff > 0) u.buff -= DT;
+  if (u.slow > 0) u.slow -= DT;
   if (u.frozen > 0) { u.frozen -= DT; return; }   // stopped time or a freeze ray: nothing moves, nothing acts
   if (!u.alive) {
     if (u.rehireT > 0) { u.rehireT -= DT; if (u.rehireT <= 0) rehire(u, W); }
     return;
   }
+  if (u.t.regen && u.hp < u.t.hp) u.hp = Math.min(u.t.hp, u.hp + u.t.regen * DT);
+  if (u.casting > 0) { u.casting -= DT; u.castT += DT; }
   if (u.stun > 0) {
-    u.stun -= DT; u.act = 'idle';
+    u.stun -= DT; u.act = 'idle'; u.casting = 0;
     if (u.stun <= 0) u.recover = 0;
   } else if (u.recover < 1) u.recover = Math.min(1, u.recover + DT / 0.7);
   const m = u.stun > 0 ? 0.04 : 0.15 + 0.85 * u.recover;
@@ -307,9 +324,9 @@ function updateUnit(u, W, active) {
     }
     // Eren: once he is hurt, or the enemy is close and he has had a few seconds, he becomes the Attack Titan.
     if (u.t.shift && !u.shifted && u.stun <= 0) {
-      const T0 = u.target, near = T0 && T0.alive && (T0.P.x - u.P.x) ** 2 + (T0.P.z - u.P.z) ** 2 < 260 * 260;
-      if (near) u.shiftT -= DT;
-      if (u.hp < u.t.hp * 0.6 || u.shiftT <= 0) { titanShift(u, W); return; }
+      const T0 = u.target, near = T0 && T0.alive && (T0.P.x - u.P.x) ** 2 + (T0.P.z - u.P.z) ** 2 < (u.t.shiftNear || 260) ** 2;
+      if (near || u.t.shiftNow) u.shiftT -= DT;
+      if (u.hp < u.t.hp * (u.t.shiftHp || 0.6) || u.shiftT <= 0) { titanShift(u, W); return; }
     }
     if (u.t.timeStop && (u.zaCd -= DT) <= 0 && u.target && u.target.alive) zaWarudo(u, W);
     if (u.t.roller && (u.rollerCd -= DT) <= 0 && u.target && u.target.alive) roadRoller(u, W);
@@ -350,7 +367,11 @@ function updateUnit(u, W, active) {
     const tp = T.P, dx = tp.x - pel.x, dz = tp.z - pel.z;
     const d = Math.sqrt(dx * dx + dz * dz) || 1;
     turnToward(u, dx / d, dz / d, 0.12);
-    if (u.flee > 0) {
+    const busy = active && !calm && (u.t.skills ? runSkills(u, W, T, d) : false);
+    if (busy) {
+      // Casting: stand and face the target until the ability is done.
+      if (u.castSk && u.castSk.walk) moving = d > (u.t.reach || 40) + T.r;
+    } else if (u.flee > 0) {
       // Nigerundayo: turn tail and run.
       turnToward(u, -dx / d, -dz / d, 0.4);
       moving = true;
@@ -364,13 +385,17 @@ function updateUnit(u, W, active) {
     } else {
       const ranged = !!u.t.range;
       const reach = ranged ? u.t.range : u.t.reach + T.r;
-      if (u.t.colossal) {
+      if (u.t.march) {
+        // Wall Titans never stop walking.
+        moving = true;
+        if (u.act !== 'attack' && u.cdT <= 0 && d < reach && u.recover > 0.6) startAttack(u);
+      } else if (u.t.colossal) {
         // Keeps striding through the enemy while the Specium Ray recharges.
         moving = d > 150 + T.r;
         if (u.act !== 'attack' && u.cdT <= 0 && d < reach && u.recover > 0.6 && !calm) startAttack(u);
       } else if (u.act !== 'attack') {
         if (u.t.leap && !u.leaping && u.leapCd <= 0 && d > 90 && d < (u.t.leapMax || 300) && !T.leaping && u.recover > 0.6 && !calm) leap(u, T, d);
-        else if (d > reach * (ranged ? 1 : 0.85)) moving = true;
+        else if (d > reach * (ranged ? 1 : 0.85) || (!ranged && Math.abs(T.P.y - pel.y) > (40 + u.t.reach) * Math.max(u.S, T.S) && !T.t.fly)) moving = true;
         else if (u.cdT <= 0 && u.recover > 0.6 && !calm) startAttack(u);
       }
     }
@@ -393,6 +418,21 @@ function updateUnit(u, W, active) {
     if (u.actT >= 1) u.act = 'idle';
   }
   if (u.held) holdVictim(u, W);
+  if (moving && TERRAIN.list.length) {
+    if ((u.stuckT += DT) > 0.6) {
+      const mv = (pel.x - u.lastX) ** 2 + (pel.z - u.lastZ) ** 2;
+      if (mv < (8 * u.S) ** 2 && u.detour <= 0) { u.detour = 0.9; u.detourSide = R() < 0.5 ? -1 : 1; }
+      u.stuckT = 0; u.lastX = pel.x; u.lastZ = pel.z;
+    }
+  }
+  if (u.detour > 0) {
+    u.detour -= DT;
+    if (moving && T) {
+      // Head off at an angle to the target to get round whatever is in the way.
+      const tx = T.P.x - pel.x, tz = T.P.z - pel.z, L = Math.sqrt(tx * tx + tz * tz) || 1, c = 0.26, s2 = 0.966 * u.detourSide;
+      turnToward(u, (tx * c - tz * s2) / L, (tz * c + tx * s2) / L, 0.35);
+    }
+  }
   musclePose(u, moving, m, cheer && W.over, W);
 }
 
@@ -452,6 +492,7 @@ function armPose(u, moving, cheer, time) {
   const sw = moving ? dsin(u.phase) * 3 : 0;
   const swing = (a, s) => [a[0] + s, a[1], a[2], a[3], a[4], a[5]];
   if (u.dance > 0 || u.t.aura === 'disco') return dancePose(u, time);
+  if (u.casting > 0 && u.castPose && CAST_POSES[u.castPose]) return CAST_POSES[u.castPose](u, u.castSk && u.castSk.lock ? clamp(u.castT / u.castSk.lock, 0, 1) : 0.5, time);
   if (u.leaping) return { r: [4, 16, 7, 0.2, 1, 0], l: [4, 16, -7, 0.2, 1, 0] };
   if (u.paged > 0) return { r: [4, 12, 5, 0, 1, 0], l: [6, -8, -5, 0.6, -0.5, 0] };   // phone to the ear
   if (u.t.clones && moving && u.act !== 'attack') return { r: [-10, -6, 6, -1, -0.3, 0], l: [-10, -6, -6, -1, -0.3, 0] };   // the Naruto run
@@ -567,9 +608,11 @@ function musclePose(u, moving, m, cheer, W) {
   const fx = u.fx, fz = u.fz, sx = -fz, sz = fx; // (sx, sz) points to the unit's right
   const vp = { x: pel.x - pel.px, y: pel.y - pel.py, z: pel.z - pel.pz };
   const hipH = (BONES.thigh + BONES.shin) * S * 0.92;
-  const footY = Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y);
+  const g0 = groundH(pel.x, pel.z) + (u.t.fly || 0);
+  const footY = Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) - g0;
   const mount = u.t.mount;      // riders' feet dangle beside the hog instead of walking
-  const grounded = !u.leaping && pel.y > -5 * S && onGround(pel) && (mount ? pel.y < hipH * 1.4 : footY < 6 * S || pel.y < 20 * S);
+  const grounded = u.t.fly ? m > 0.3 && u.alive
+    : !u.leaping && pel.y > g0 - 5 * S && onGround(pel) && (mount ? pel.y - g0 < hipH * 1.4 : footY < 6 * S || pel.y - g0 < 20 * S);
 
   if (!grounded) u.anchored = false;
   if (grounded && m > 0.3) {
@@ -579,7 +622,7 @@ function musclePose(u, moving, m, cheer, W) {
     // Light units (under a person's mass) get a boost that grows as mass drops, up to 2.5 times.
     // Short legs lose more to ground drag, so it climbs steeply for the smallest ones.
     const light = u.mass < 1 ? Math.min(2.5, Math.pow(u.mass, -0.75)) : 1;
-    const sp = moving ? u.t.speed * DT * light * (u.inspired > 0 ? 1.35 : 1) : 0;
+    const sp = moving ? u.t.speed * DT * light * (u.inspired > 0 ? 1.35 : 1) * (u.slow > 0 ? 0.5 : 1) * (u.buff > 0 && u.t.buffSpeed ? u.t.buffSpeed : 1) : 0;
     const k = 0.18 * m * ENV.traction;
     // Standing still, hold the spot where the unit stopped. The knees' forward pull reacts back on the
     // hips, and ground friction soaks up the forward half at the feet, so without this every idle unit
@@ -592,7 +635,7 @@ function musclePose(u, moving, m, cheer, W) {
     vp.x += (tvx - vp.x) * k;
     vp.z += (tvz - vp.z) * k;
     const hop = cheer ? Math.max(0, dsin(W.time * 9 + u.phase)) * 6 * S : 0;
-    vp.y += (0 - vp.y) * 0.25 * m + (hipH + hop - pel.y) * 0.12 * m;
+    vp.y += (0 - vp.y) * 0.25 * m + (g0 + hipH + hop - pel.y) * 0.12 * m;
     pel.px = pel.x - vp.x; pel.py = pel.y - vp.y; pel.pz = pel.z - vp.z;
   }
   if (m <= 0) return;
@@ -604,7 +647,7 @@ function musclePose(u, moving, m, cheer, W) {
   drive(pts[J.HEAD], cx + fx * 1.5 * S, cy + BONES.neck * S, cz + fz * 1.5 * S, 0.2 * m, 0.25 * m, vp, pts[J.CHEST]);
 
   const stride = moving ? 7 * S : 0, lift = moving ? 5 * S : 0;
-  const drop = Math.max(0, pel.y - hipH);
+  const drop = Math.max(0, pel.y - g0 - hipH);
   if (mount) for (const side of [-1, 1]) {
     const tx = pel.x + sx * side * 9 * S + fx * 2 * S, tz = pel.z + sz * side * 9 * S + fz * 2 * S;
     drive(pts[side < 0 ? J.LFOOT : J.RFOOT], tx, pel.y - 15 * S, tz, 0.25 * m, 0.3 * m, vp, pel);
@@ -612,7 +655,7 @@ function musclePose(u, moving, m, cheer, W) {
   }
   else for (const side of [-1, 1]) {
     const ph = u.phase + (side < 0 ? 0 : PI);
-    const fo = dsin(ph) * stride, ly = Math.max(0, dcos(ph)) * lift + drop;
+    const fo = dsin(ph) * stride, ly = Math.max(0, dcos(ph)) * lift + drop + g0;
     const tx = pel.x + fx * fo + sx * side * 4 * S, tz = pel.z + fz * fo + sz * side * 4 * S;
     drive(pts[side < 0 ? J.LFOOT : J.RFOOT], tx, ly, tz, 0.3 * m, 0.3 * m, vp, pel);
     drive(pts[side < 0 ? J.LKNEE : J.RKNEE], (pel.x + tx) / 2 + fx * 5 * S, (pel.y + ly) / 2, (pel.z + tz) / 2 + fz * 5 * S, 0.12 * m, 0.2 * m, vp, pel);
@@ -770,6 +813,7 @@ function strike(u, W) {
     const dx = e.P.x - pel.x, dz = e.P.z - pel.z, d = Math.sqrt(dx * dx + dz * dz);
     if (d > u.t.reach * 1.15 + e.r) continue;
     if ((dx * u.fx + dz * u.fz) / (d || 1) < 0.25) continue;
+    if (Math.abs(e.P.y - pel.y) > (u.t.reach + 30) * Math.max(u.S, e.S)) continue;
     victims.push({ d, e });
   }
   if (!victims.length) return;
@@ -779,9 +823,10 @@ function strike(u, W) {
     hit = [t || victims.reduce((a, b) => (b.d < a.d ? b : a))];
   }
   const up = st === 'punch' ? 0.75 : st === 'shove' ? 0.5 : st === 'thrust' || st === 'pounce' ? 0.25 : 0.4;
+  const boost = u.buff > 0 && u.t.buffDmg ? u.t.buffDmg : 1;
   for (const { e } of hit) {
-    const k = u.t.knock * (0.8 + R() * 0.4);
-    hurt(e, u.t.dmg * (0.8 + R() * 0.4), u.fx * k, up * k, u.fz * k, pel, W, u);
+    const k = u.t.knock * (0.8 + R() * 0.4) * boost;
+    hurt(e, u.t.dmg * (0.8 + R() * 0.4) * boost, u.fx * k, up * k, u.fz * k, pel, W, u, u.t.pierce || (u.buff > 0 && u.t.buffPierce) ? PIERCE : 0);
   }
   if (st === 'punch' || st === 'shove') { W.shake = Math.max(W.shake, 5); SFX.play('thud'); } else SFX.play(u.key === 'tung' ? 'tung' : 'hit');
 }
@@ -830,7 +875,7 @@ function polymorph(e, W) {
   puff(W, c.x, c.y, c.z, 8, '#d8c2ff', 60, 6);
   const t = TYPES.chicken;
   e.key = 'chicken'; e.t = t; e.S = t.S;
-  e.body = buildBody(p.x, p.z, e.S, e.fx >= 0 ? 1 : -1);
+  e.body = standBody(p.x, p.z, e.S, e.fx >= 0 ? 1 : -1, t);
   e.hp = t.hp; e.mass = e.S * e.S; e.r = 9 * e.S;
   e.act = 'idle'; e.stun = 0; e.recover = 0.3; e.target = null; e.retarget = 0; e.cdT = 0.5; e.inspired = 0; e.dance = 0;
   SFX.play('poof');
@@ -854,8 +899,19 @@ function jitter(v, a) {
 // from: where the blow came from ({x, z}), or null for blasts and lightning, which shields and dodges can't stop.
 // src: the unit to credit. Returns HIT, BLOCKED or DODGED.
 const HIT = 0, BLOCKED = 1, DODGED = 2;
-function hurt(e, dmg, ix, iy, iz, from, W, src) {
+// flags: PIERCE gets through crystal hardening and armour (the Jaw's bite, thunder spears); BLAST is an explosion.
+const PIERCE = 1, BLAST = 2;
+function hurt(e, dmg, ix, iy, iz, from, W, src, flags) {
   let res = HIT;
+  flags = flags || 0;
+  if (e.hard > 0 && !(flags & PIERCE)) { dmg *= 0.1; ix *= 0.3; iy *= 0.3; iz *= 0.3; }
+  if (e.t.armor && !e.armorOff) {
+    if (flags & (PIERCE | BLAST)) {
+      e.armorHP -= dmg;
+      if (e.armorHP <= 0 && e.alive) breakArmor(e, W);
+    } else { dmg *= 1 - e.t.armor; ix *= 0.6; iy *= 0.6; iz *= 0.6; }
+  }
+  if (e.t.onHurt && HURT_HOOKS[e.t.onHurt]) dmg = HURT_HOOKS[e.t.onHurt](e, dmg, from, W, src, flags);
   if (e.alive && from && e.stun <= 0) {
     if (e.t.dodge && R() < e.t.dodge) {
       // Sidestep: a quick hop to one side and no damage.
@@ -896,6 +952,8 @@ function kill(e, W, src) {
   W.lost[e.home]++;
   if (src) src.kills++;
   if (e.held) dropVictim(e);
+  e.casting = 0;
+  if (e.t.onDeath && DEATHS[e.t.onDeath]) DEATHS[e.t.onDeath](e, W, src);
   if (e.t.rehire && !e.rehired) e.rehireT = e.t.rehire;
   if (e.t.poof) { e.vanished = true; const q = e.body.pts[J.CHEST]; puff(W, q.x, q.y, q.z, 12, '#f4f4f4', 70, 7); SFX.play('poof'); }
   if (e.t.style === 'bomb' && !e.fired) {
@@ -1177,23 +1235,28 @@ function dropVictim(u) {
 // Eren bites his hand: lightning, a shockwave, and the Attack Titan stands where he was.
 function titanShift(u, W) {
   u.shifted = true;
-  const x = u.P.x, z = u.P.z, t = TYPES[u.t.shift];
-  W.bolts.push(boltPath({ x, y: 900, z }, { x, y: 0, z }));
-  W.flashes.push({ x, y: 30, z, life: 0.6, max: 0.6, r: 220, bolt: true });
-  W.shake = Math.max(W.shake, 14);
+  const x = u.P.x, z = u.P.z, t = TYPES[u.t.shift], from = u.t, g = groundH(x, z);
+  // The transformation blast: Colossal Titans level the district (friend and foe alike); everyone else just knocks people back.
+  const [bR, bDmg, bKnock, all] = t.blast || [140, 50, 900, false];
+  W.bolts.push(boltPath({ x, y: 900 + bR * 2, z }, { x, y: g, z }));
+  W.flashes.push({ x, y: g + 30, z, life: 0.6 + bR / 600, max: 0.6 + bR / 600, r: bR * 1.6, bolt: true });
+  W.shake = Math.max(W.shake, 14 + bR / 25);
   for (const e of W.units) {
-    if (!e.alive || e.team === u.team || e.burrow) continue;
+    if (!e.alive || e === u || (!all && e.team === u.team) || e.burrow) continue;
     const dx = e.P.x - x, dz = e.P.z - z, d = Math.sqrt(dx * dx + dz * dz) || 1;
-    if (d > 140 + e.r) continue;
-    hurt(e, 50, dx / d * 900, 500, dz / d * 900, null, W, u);
+    if (d > bR + e.r) continue;
+    const f = 1 - d / (bR + e.r) * 0.6;
+    hurt(e, bDmg * f, dx / d * bKnock * f, bKnock * 0.55 * f, dz / d * bKnock * f, null, W, u, BLAST);
   }
   if (u.held) dropVictim(u);
   u.key = u.t.shift; u.t = t; u.S = t.S;
-  u.body = buildBody(x, z, u.S, u.fx >= 0 ? 1 : -1);
+  u.body = standBody(x, z, u.S, u.fx >= 0 ? 1 : -1, t);
   u.hp = t.hp; u.mass = u.S * u.S * (t.heavy || 1); u.r = 9 * u.S * Math.sqrt(t.fat || 1);
-  Object.assign(u, { act: 'idle', stun: 0, recover: 0.3, cdT: 0.8, leaping: false, anchored: false, target: null, retarget: 0 });
-  puff(W, x, 40, z, 24, '#f4f4f4', 160, 14);
-  if (W.callouts) W.callouts.push({ x, y: 190, z, life: 1.8, max: 1.8, text: 'tatakae' });
+  u.armorHP = t.armorHP || 0; u.armorOff = false; u.lives = t.lives || 0; u.skT = null;
+  Object.assign(u, { act: 'idle', stun: 0, recover: 0.3, cdT: 0.8, leaping: false, anchored: false, target: null, retarget: 0, casting: 0 });
+  puff(W, x, g + 40, z, 24 + bR / 10, '#f4f4f4', 160 + bR / 2, 14 + bR / 20);
+  if (W.callouts) W.callouts.push({ x, y: g + 68 * u.S + 20, z, life: 1.8, max: 1.8, text: from.shiftCall || 'tatakae' });
+  if (bR > 200) { SFX.play('boom'); SFX.play('specium'); }
   SFX.play('zap'); SFX.play('roar');
 }
 
@@ -1217,6 +1280,139 @@ function rayTrace(u, T, W) {
     sparks(W, q.x, q.y, q.z, 4);
     cur = next;
   }
+}
+
+// ---------- abilities ----------
+// A unit type can list several abilities: t.skills = [{ id, cd, first, range, min, hp, lock, pose, call, color, ... }].
+// Each is on its own cooldown; when one is ready and its conditions hold, the unit stops and casts it (for `lock`
+// seconds, in pose `pose`), shouting `call`. SKILLS[id] = { cast(u, W, T, d, s), when(u, W, T, d, s) } does the work.
+const SKILLS = {};
+// Arm poses while casting, as armPose returns them; k runs 0 -> 1 over the cast.
+const CAST_POSES = {
+  cross: () => ({ r: [12, 2, 1, 0, 1, 0], l: [10, -2, -5, 0, 0, 1] }),                       // Specium: right forearm up, left across
+  L: () => ({ r: [8, 10, 6, 0, 1, 0], l: [10, 2, -2, 0, 0, 1] }),                              // Wide Shot / Metallium: an L
+  point: () => ({ r: [20, 4, 3, 1, 0.1, 0], l: [6, -6, -6, 0.6, -0.4, 0] }),                  // one arm straight at the target
+  both: () => ({ r: [18, 4, 4, 1, 0.1, 0], l: [18, 4, -4, 1, 0.1, 0] }),                      // both palms forward
+  raise: (u, k, t) => ({ r: [4, 18, 7, 0.1, 1, 0], l: [4, 18, -7, 0.1, 1, 0] }),              // both arms up
+  head: () => ({ r: [6, 14, 4, 0.2, 1, 0], l: [6, 14, -4, 0.2, 1, 0] }),                      // hands to the forehead (Eye Slugger)
+  throw: (u, k) => k < 0.45 ? { r: [-4, 17, 3, -0.3, 1, 0], l: [10, 2, -5, 1, 0, 0] } : { r: [18, 4, 3, 1, 0.1, 0], l: [6, -6, -5, 0.4, -0.6, 0] },
+  slam: (u, k) => k < 0.5 ? { r: [2, 18, 6, 0, 1, 0], l: [2, 18, -6, 0, 1, 0] } : { r: [18, -14, 5, 1, -1, 0], l: [18, -14, -5, 1, -1, 0] },
+  guard: () => ({ r: [10, 6, 2, 0.2, 1, -0.3], l: [10, 6, -2, 0.2, 1, 0.3] }),                // forearms up in front of the face
+  crouch: () => ({ r: [8, -14, 7, 0.4, -1, 0], l: [8, -14, -7, 0.4, -1, 0] }),
+  roar: (u, k, t) => ({ r: [6, -2, 10, 0.3, 0.2, 1], l: [6, -2, -10, 0.3, 0.2, -1] }),         // arms flung wide
+  chop: (u, k) => ({ r: k < 0.5 ? [-3, 13, 6, -0.5, 1, 0] : [17, -5, 5, 1, -0.7, 0], l: [8, -6, -6, 0.6, -0.5, 0] }),
+};
+const DEATHS = {};
+const HURT_HOOKS = {};
+function runSkills(u, W, T, d) {
+  const list = u.t.skills;
+  if (u.skFor !== u.t) { u.skT = list.map(s => s.first != null ? s.first : s.cd * (0.25 + R() * 0.5)); u.skFor = u.t; }
+  for (let i = 0; i < list.length; i++) if (u.skT[i] > 0) u.skT[i] -= DT;
+  if (u.casting > 0) return true;
+  if (u.act === 'attack' || u.recover < 0.6) return false;
+  for (let i = 0; i < list.length; i++) {
+    const s = list[i], def = SKILLS[s.id];
+    if (u.skT[i] > 0 || !def) continue;
+    if (s.range && d > s.range + (T ? T.r : 0)) continue;
+    if (s.min && d < s.min) continue;
+    if (s.hp && u.hp > u.t.hp * s.hp) continue;
+    if (s.crowd && enemiesNear(u, W, T.P.x, T.P.z, s.crowdR || 80).length < s.crowd) continue;
+    if (def.when && !def.when(u, W, T, d, s)) continue;
+    u.skT[i] = s.once ? Infinity : s.cd * (0.9 + R() * 0.2);
+    u.casting = s.lock || 0; u.castT = 0; u.castSk = s; u.castPose = s.pose || def.pose || null;
+    if (s.call) callout(W, u, s.call, s.color);
+    def.cast(u, W, T, d, s);
+    return u.casting > 0;
+  }
+  return false;
+}
+
+// Something to happen `t` seconds from now, in battle order (deterministic).
+function later(W, t, run) { (W.timers || (W.timers = [])).push({ t, run }); }
+function updateTimers(W) {
+  if (!W.timers || !W.timers.length) return;
+  const due = [];
+  for (const k of W.timers) if ((k.t -= DT) <= 0) due.push(k);
+  if (due.length) { W.timers = W.timers.filter(k => k.t > 0); for (const k of due) k.run(); }
+}
+
+// Words over a unit's head: either a key the painter knows ('tatakae') or the literal text to show.
+function callout(W, u, text, color, big) {
+  if (!W.callouts) return;
+  const h = u.body.pts[J.HEAD];
+  W.callouts.push({ x: h.x, y: h.y + 30 * Math.max(1, u.S * 0.6), z: h.z, life: 1.5, max: 1.5, text, color, big });
+}
+
+// Enemies of u whose pelvis is within r of (x, z).
+function enemiesNear(u, W, x, z, r) {
+  const out = [];
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const dx = e.P.x - x, dz = e.P.z - z;
+    if (dx * dx + dz * dz < (r + e.r) ** 2) out.push(e);
+  }
+  return out;
+}
+function alliesNear(u, W, x, z, r) {
+  const out = [];
+  for (const e of W.units) {
+    if (!e.alive || e.team !== u.team || e === u) continue;
+    const dx = e.P.x - x, dz = e.P.z - z;
+    if (dx * dx + dz * dz < (r + e.r) ** 2) out.push(e);
+  }
+  return out;
+}
+// Enemies within `width` of the line from (x, z) along unit vector (dx, dz) for `len`, nearest first.
+function enemiesOnLine(u, W, x, z, dx, dz, len, width) {
+  const out = [];
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const ex = e.P.x - x, ez = e.P.z - z, along = ex * dx + ez * dz;
+    if (along < -e.r || along > len + e.r) continue;
+    const side = Math.abs(ex * dz - ez * dx);
+    if (side < width + e.r) out.push({ e, along });
+  }
+  return out.sort((a, b) => a.along - b.along).map(o => o.e);
+}
+// Pushes e away from (x, z) with strength k (scaled down by mass, like any blow).
+function shove(e, x, z, k, up, W, src, dmg, flags) {
+  const dx = e.P.x - x, dz = e.P.z - z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+  return hurt(e, dmg || 0, dx / d * k, up, dz / d * k, null, W, src, flags);
+}
+// A straight beam from a point on the caster (`from`, default the chest) through the target, hitting everyone along it.
+// o: { dmg, knock, width, extra (length past the target), color, flags, life, from: {x,y,z}, flash }.
+function fireBeam(u, W, T, o) {
+  const S = u.S, c = u.body.pts[J.CHEST], tc = T.body.pts[J.CHEST];
+  const from = o.from || { x: c.x + u.fx * 10 * S, y: c.y - 4 * S, z: c.z + u.fz * 10 * S };
+  let dx = tc.x - from.x, dy = tc.y - from.y, dz = tc.z - from.z;
+  const L = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+  dx /= L; dy /= L; dz /= L;
+  let len = L + (o.extra != null ? o.extra : 200);
+  if (dy < 0) len = Math.min(len, (from.y - groundH(tc.x, tc.z)) / -dy + 5);
+  const end = { x: from.x + dx * len, y: from.y + dy * len, z: from.z + dz * len };
+  const hit = [];
+  for (const e of W.units) {
+    if (!e.alive || e.team === u.team || e.burrow) continue;
+    const q = e.body.pts[J.CHEST];
+    if (segDist(from.x, from.y, from.z, end.x, end.y, end.z, q.x, q.y, q.z) > (o.width || 30) + e.r) continue;
+    const k = o.knock || 0;
+    hurt(e, o.dmg, dx * k, k * 0.5, dz * k, null, W, u, o.flags || 0);
+    hit.push(e);
+  }
+  W.beams.push({ a: u, from, end, life: o.life || 0.5, specium: true, color: o.color, width: o.beamW });
+  if (o.flash !== false) W.flashes.push({ x: end.x, y: Math.max(end.y, 6), z: end.z, life: 0.4, max: 0.4, r: o.flashR || 90, bolt: true });
+  W.shake = Math.max(W.shake, o.shake || 5);
+  return hit;
+}
+
+// The Armoured Titan's plates come off once enough thunder spears (or jaws) have hit them.
+function breakArmor(e, W) {
+  e.armorOff = true;
+  const c = e.body.pts[J.CHEST];
+  sparks(W, c.x, c.y, c.z, 24);
+  puff(W, c.x, c.y, c.z, 12, '#e8e2d4', 120, 10);
+  callout(W, e, 'ARMOUR BROKEN', '#ffb347');
+  SFX.play('clank');
 }
 
 // Sam Altman: back on his feet, at full health, once per battle.
@@ -1285,7 +1481,7 @@ function emerge(u, W) {
 // Mega Knight: a high leap at the target, then a slam on landing.
 function leap(u, T, d) {
   const pts = u.body.pts;
-  if (Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) > 6 * u.S) return;
+  if (Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) - groundH(u.P.x, u.P.z) > 6 * u.S) return;
   const flight = u.t.leapFlight || 0.8, vy = GRAV * flight / 2, vh = d / flight;
   const dx = (T.P.x - u.P.x) / d, dz = (T.P.z - u.P.z) / d;
   for (const q of pts) addVel(q, dx * vh, vy, dz * vh);
@@ -1296,7 +1492,7 @@ function leap(u, T, d) {
 function checkLanding(u, W) {
   u.leapT += DT;
   const pts = u.body.pts;
-  if (u.leapT < 0.25 || Math.min(pts[J.LFOOT].y, pts[J.RFOOT].y) > 3 * u.S) {
+  if (u.leapT < 0.25 || Math.min(pts[J.LFOOT].y - groundH(pts[J.LFOOT].x, pts[J.LFOOT].z), pts[J.RFOOT].y - groundH(pts[J.RFOOT].x, pts[J.RFOOT].z)) > 3 * u.S) {
     if (u.leapT > 3) u.leaping = false;
     return;
   }
@@ -1336,16 +1532,17 @@ function breathe(u, W) {
 function stomp(u, W) {
   const S = u.S;
   for (const side of [0, 1]) {
-    const f = u.body.pts[side ? J.RFOOT : J.LFOOT];
-    if (f.y > 1.5 * S) { u.footUp[side] = true; continue; }
-    if (!u.footUp[side] || f.y > 0.3 * S) continue;
+    const f = u.body.pts[side ? J.RFOOT : J.LFOOT], fy = f.y - groundH(f.x, f.z);
+    if (fy > 1.5 * S) { u.footUp[side] = true; continue; }
+    if (!u.footUp[side] || fy > 0.3 * S) continue;
     u.footUp[side] = false;
-    const R0 = 4.5 * S;
+    const R0 = (u.t.stompR || 4.5) * S;
     for (const e of W.units) {
       if (!e.alive || e.team === u.team || e.burrow || e.t.colossal) continue;
       const dx = e.P.x - f.x, dz = e.P.z - f.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
       if (d > R0 + e.r) continue;
-      hurt(e, 90, dx / d * 450, 350, dz / d * 450, null, W, u);
+      hurt(e, u.t.stompDmg || 90, dx / d * 450, 350, dz / d * 450, null, W, u);
+      if (u.t.quake && e.alive && !e.t.titan) { e.stun = Math.max(e.stun, u.t.quake); e.act = 'idle'; }
     }
     W.shake = Math.max(W.shake, 3);
     W.flashes.push({ x: f.x, y: 4, z: f.z, life: 0.3, max: 0.3, r: R0 });
@@ -1380,7 +1577,7 @@ function speciumRay(u, W) {
 }
 
 function separate(units) {
-  const a = units.filter(u => u.alive && !u.burrow && !u.t.colossal && !(u.frozen > 0) && !u.grabbed).sort((p, q) => p.P.x - q.P.x);
+  const a = units.filter(u => u.alive && !u.burrow && !u.t.colossal && !(u.frozen > 0) && !u.grabbed && !(u.t.fly && u.alive)).sort((p, q) => p.P.x - q.P.x);
   for (let i = 0; i < a.length; i++) {
     const u = a[i], p = u.P;
     for (let j = i + 1; j < a.length; j++) {

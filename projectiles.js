@@ -22,6 +22,10 @@ const PROJ = {
   roller:  { speed: 100, g: 1.6, r: 30, life: 6 },
 };
 
+// Custom projectiles from ability files: PROJ_HOOKS[kind] = { tick(p, W), hit(p, e, W, nx, ny, nz, from) -> true to stop,
+// ground(p, W) } replace the built-in behaviour for that kind.
+const PROJ_HOOKS = {};
+
 function spawnProj(W, kind, from, vel, u) {
   const P0 = PROJ[kind];
   W.projs.push({
@@ -29,6 +33,7 @@ function spawnProj(W, kind, from, vel, u) {
     team: u.team, owner: u, dmg: u.t.dmg, knock: u.t.knock,
     g: GRAV * P0.g, r: P0.r, life: P0.life, stuck: null, hits: [], dead: false,
   });
+  return W.projs[W.projs.length - 1];
 }
 
 const HIT_JOINTS = [J.HEAD, J.CHEST, J.PELVIS];
@@ -51,6 +56,7 @@ const ROLLS = { boulder: 0.35, cannon: 0.35, ball: 0.72 };   // ground bouncines
 
 function updateProjectiles(W) {
   if (W.timeStop && (W.timeStop.t -= DT) <= 0) W.timeStop = null;
+  updateTimers(W);
   for (const p of W.projs) {
     // In stopped time, only the time-stopper's side keeps moving.
     if (W.timeStop && p.team !== W.timeStop.team && !p.stuck) continue;
@@ -69,6 +75,8 @@ function updateProjectiles(W) {
     if (p.kind === 'fire') flame(W, p.x, p.y, p.z);
     else if (p.kind === 'hex') glowBits(W, p.x, p.y, p.z, 1, ['#b56cff', '#e3c2ff'], 20, 2.5);
     else if (p.kind === 'rocket') { flame(W, p.x, p.y, p.z); if (Math.random() < 0.4) puff(W, p.x, p.y, p.z, 1, '#d8d4cc', 15, 4); }
+    const hook = PROJ_HOOKS[p.kind];
+    if (hook && hook.tick) { hook.tick(p, W); if (p.dead) continue; }
 
     const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
     const rolls = ROLLS[p.kind] !== undefined;
@@ -82,6 +90,7 @@ function updateProjectiles(W) {
       p.hits.push(e.id);
       const nx = p.vx / (speed || 1), ny = p.vy / (speed || 1), nz = p.vz / (speed || 1);
       const from = { x: ox, z: oz };
+      if (hook && hook.hit) { if (hook.hit(p, e, W, nx, ny, nz, from, j)) break; continue; }
       if (p.kind === 'freeze') {
         const res = hurt(e, p.dmg, nx * p.knock, 40, nz * p.knock, from, W, p.owner);
         if (res === DODGED) continue;
@@ -148,16 +157,31 @@ function updateProjectiles(W) {
     }
     if (p.dead || p.stuck) continue;
 
-    if (p.y <= p.r * 0.6) {
+    // Walls and houses stop what flies into them: a hit at the roof's height counts as the ground.
+    let floor = 0;
+    if (TERRAIN.list.length) {
+      const b = insideBlock(p.x, p.y, p.z);
+      if (b) {
+        if (oy >= b[4] - 1) floor = b[4];
+        else if (!(hook && hook.wall && hook.wall(p, W))) {
+          if (p.kind === 'arrow' || p.kind === 'heart') { p.x = ox; p.z = oz; p.stuck = { unit: null }; p.life = 6; continue; }
+          if (ROLLS[p.kind] !== undefined) { p.x = ox; p.z = oz; p.vx *= -0.3; p.vz *= -0.3; continue; }
+          floor = p.y + 1e6;   // anything else ends here, as if it hit the ground
+        } else continue;
+      } else floor = groundH(p.x, p.z);
+    }
+    if (hook && hook.ground) { if (p.y <= floor + p.r * 0.6) hook.ground(p, W, Math.min(floor, p.y)); continue; }
+    if (p.y <= floor + p.r * 0.6) {
+      if (floor > 1e5) floor = p.y;
       if (rolls) {
-        p.y = p.r * 0.6;
+        p.y = floor + p.r * 0.6;
         if (p.kind === 'ball') { if (p.vy < -120) SFX.play('boing'); }
         else if (p.vy < -160) { puff(W, p.x, 0, p.z, 5, '#cdbb98', 60, 6); SFX.play('thud'); }
         p.vy = p.vy < -60 ? -p.vy * ROLLS[p.kind] : 0;
         const fr = p.kind === 'ball' ? 0.985 : 0.97;
         p.vx *= fr; p.vz *= fr;
       } else if (p.kind === 'arrow' || p.kind === 'heart') {
-        p.y = 0; p.stuck = { unit: null }; p.life = 6;
+        p.y = floor; p.stuck = { unit: null }; p.life = 6;
       } else if (p.kind === 'bullet' || p.kind === 'token' || p.kind === 'clacker' || p.kind === 'freeze') {
         p.dead = true; puff(W, p.x, 0, p.z, 3, '#cdbb98', 40, 3);
       } else if (p.kind === 'pie') {
@@ -169,9 +193,9 @@ function updateProjectiles(W) {
         p.dead = true; glowBits(W, p.x, 2, p.z, 10, ['#b56cff', '#e3c2ff'], 60, 3);
       } else if (p.kind === 'peel') {
         p.dead = true;
-        W.hazards.push({ x: p.x, z: p.z, team: p.team, life: 25, spin: rand(0, TAU) });
+        if (floor < 1) W.hazards.push({ x: p.x, z: p.z, team: p.team, life: 25, spin: rand(0, TAU) });
       } else {
-        explode(W, p.x, 0, p.z, p.dmg, p.knock, 85, p.owner);
+        explode(W, p.x, floor, p.z, p.dmg, p.knock, 85, p.owner);
         p.dead = true;
       }
     }
@@ -209,15 +233,15 @@ function updateHazards(W) {
 }
 
 // Blast damage and knockback fall off with distance and hit every unit in range, friend or foe.
-function explode(W, x, y, z, dmg, knock, R0, owner) {
+function explode(W, x, y, z, dmg, knock, R0, owner, flags, friendly) {
   for (const e of W.units) {
-    if (e.burrow) continue;
+    if (e.burrow || (friendly && owner && e.team === owner.team)) continue;
     const c = e.body.pts[J.CHEST];
     const dx = c.x - x, dy = c.y - y, dz = c.z - z;
     const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (d > R0 + e.r) continue;
     const f = clamp(1 - d / (R0 + e.r), 0, 1), k = knock * f, n = d || 1;
-    hurt(e, e.alive ? dmg * f : 0, dx / n * k, Math.abs(dy) / n * k * 0.4 + k * 0.6, dz / n * k, null, W, owner);
+    hurt(e, e.alive ? dmg * f : 0, dx / n * k, Math.abs(dy) / n * k * 0.4 + k * 0.6, dz / n * k, null, W, owner, BLAST | (flags || 0));
   }
   W.shake = Math.max(W.shake, 8);
   W.flashes.push({ x, y: Math.max(y, 4), z, life: 0.35, max: 0.35, r: R0 });
@@ -276,6 +300,10 @@ function updateParticles(W) {
   W.bolts = W.bolts.filter(b => b.life > 0);
   for (const b of W.beams) b.life -= DT;
   W.beams = W.beams.filter(b => b.life > 0);
+  if (W.fx) {
+    for (const f of W.fx) f.life -= DT;
+    W.fx = W.fx.filter(f => f.life > 0);
+  }
   if (W.callouts) {
     for (const c of W.callouts) { c.life -= DT; c.y += 20 * DT; }
     W.callouts = W.callouts.filter(c => c.life > 0);

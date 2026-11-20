@@ -82,6 +82,12 @@ const LOOK = {
   ultraman: { torso: 'skin', limbs: '#d8262c', thigh: 'skin', shin: '#d8262c', hands: 'skin', boot: 'skin', belt: 'main', noEyes: true },
 };
 
+// Extension points for ability files (aot, ultras): each entry is called with `this` = the Painter.
+// BODIES[t.body](u, f, up, r, S, team, col) draws a whole custom body; HATS[t.hat](u, H, f, up, r, S, team, col);
+// WEAPONS[name](u, side, col, h, d, X, Z, along); PROJ_PAINT[kind](p, nx, ny, nz); FX_PAINT[kind](fx) for W.fx entries;
+// OVERLAYS are called for every unit after it is drawn: (u, f, up, r, S, team, col).
+const BODIES = {}, HATS = {}, WEAPONS = {}, PROJ_PAINT = {}, FX_PAINT = {}, OVERLAYS = [];
+
 const _colors = new Map();
 function C(hex) {
   let c = _colors.get(hex);
@@ -227,6 +233,7 @@ class Painter {
       overheat: new Batch(scene, plane, words('THERMAL THROTTLING', '#ff7a4a', 46), 16, false),
     };
     this.label = new Batch(scene, plane, words('databrick', '#ffffff', 96), Math.max(16, cap >> 2), false);
+    this.plane = plane; this.words = words; this.dynCallouts = new Map();
     this.all = [this.cyl, this.sph, this.dome, this.box, this.cone, this.torus, this.gsph, this.gcyl, this.gtorus, this.puff, this.flash, this.ice, this.ghostS, this.ghostC, this.qmark, this.hearts, this.label, ...Object.values(this.callouts)];
     // Scratch vectors for one unit's frame and one weapon's frame.
     this.f = V3(); this.u = V3(); this.r = V3();
@@ -283,6 +290,7 @@ class Painter {
     if (u.vanished) return;
     if (u.alive && u.iced > 0) this.iceBlock(u);
     if (u.burrow) { this.mound(u); return; }
+    if (BODIES[t.body]) { BODIES[t.body].call(this, u, f, up, r, S, team0, col0); for (const o of OVERLAYS) o.call(this, u, f, up, r, S, team0, col0); return; }
     if (t.body === 'duck') { this.duckBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'minion') { this.minionBody(u, f, up, r, S, team0, col0); return; }
     if (t.body === 'gpu') { this.gpuBody(u, f, up, r, S, team0, col0); return; }
@@ -359,11 +367,13 @@ class Painter {
     this.weapon(u, 'r', col);
     if (t.shield) this.shield(u, col);
     else this.weapon(u, 'l', col);
+    for (const o of OVERLAYS) o.call(this, u, f, up, r, S, team, col);
   }
 
   hat(u, H, f, up, r, S, team, col) {
     const t1 = this.t1, t2 = this.t2;
     const dome = (lift, rad, hex, sy) => this.axes(this.dome, this.at(t1, H, up, lift * S), r, up, f, rad * S, (sy || rad) * S, rad * S, col(hex));
+    if (HATS[u.t.hat]) { HATS[u.t.hat].call(this, u, H, f, up, r, S, team, col); return; }
     switch (u.t.hat) {
       case 'straw':
         this.seg(this.cyl, this.at(t1, H, up, 4.6 * S), this.at(t2, H, up, 5.8 * S), 14 * S, col(PAL.straw));
@@ -1110,6 +1120,7 @@ class Painter {
     this.weaponFrame(h, e);
     const d = this.wd, X = this.wx, Z = this.wz, t1 = this.t1, t2 = this.t2, t3 = this.t3;
     const along = (out, k) => this.at(out, h, d, k * S);
+    if (WEAPONS[w]) { WEAPONS[w].call(this, u, side, col, h, d, X, Z, along); return; }
     switch (w) {
       case 'fork': {
         this.seg(this.cyl, along(t1, -12), along(t2, 30), 1.1 * S, col(PAL.wood));
@@ -1317,6 +1328,7 @@ class Painter {
     const t1 = this.t1, t2 = this.t2;
     const sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz) || 1;
     const nx = p.vx / sp, ny = p.vy / sp, nz = p.vz / sp;
+    if (PROJ_PAINT[p.kind]) { PROJ_PAINT[p.kind].call(this, p, nx, ny, nz); return; }
     if (p.kind === 'arrow' || p.kind === 'heart') {
       const love = p.kind === 'heart';
       t1.set(p.x - nx * 17, p.y - ny * 17, p.z - nz * 17);
@@ -1378,6 +1390,19 @@ class Painter {
     }
   }
 
+  // A word texture for any callout text, made the first time it is needed.
+  calloutFor(text, color) {
+    const key = text + '|' + (color || '');
+    let b = this.dynCallouts.get(key);
+    if (!b) {
+      const size = Math.max(30, Math.min(96, Math.floor(820 / Math.max(4, text.length))));
+      b = new Batch(this.scene, this.plane, this.words(text, color || '#ffe14a', size), 24, false);
+      this.dynCallouts.set(key, b);
+      this.all.push(b);
+    }
+    return b;
+  }
+
   effects(W) {
     for (const q of W.parts) {
       const t = q.life / q.max;
@@ -1399,12 +1424,15 @@ class Painter {
     }
     for (const c of W.callouts || []) {
       const t = c.life / c.max;
-      const batch = this.callouts[c.text] || this.callouts.another;
-      this.billboard(batch, c, 18 + (1 - t) * 6, C('#ffffff'), 4);
+      const batch = this.callouts[c.text || 'another'] || this.calloutFor(c.text, c.color);
+      this.billboard(batch, c, (c.big ? 30 : 18) + (1 - t) * 6, C('#ffffff'), 4);
     }
+    for (const fx of W.fx || []) if (FX_PAINT[fx.kind]) FX_PAINT[fx.kind].call(this, fx);
     for (const bm of W.beams) {
       if (bm.specium) {
-        this.seg(this.gcyl, bm.from, bm.end, 6 + 14 * (bm.life / 0.5), C('#c9f6ff'));
+        const w = bm.width || 1;
+        this.seg(this.gcyl, bm.from, bm.end, (6 + 14 * Math.min(1, bm.life / 0.5)) * w, C(bm.color || '#c9f6ff'));
+        if (bm.color) this.seg(this.gcyl, bm.from, bm.end, (2 + 5 * Math.min(1, bm.life / 0.5)) * w, C('#ffffff'));
         continue;
       }
       let s = bm.a.body.pts[J.RHAND];

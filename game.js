@@ -280,7 +280,7 @@ function startBattle(seed) {
   NEXT_ID = 1; seedRng(seed);
   W.units = [];
   for (const team of [0, 1]) for (const a of G.armies[team]) W.units.push(new Unit(a.key, team, a.x, a.z));
-  W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.callouts = []; W.lost = [0, 0];
+  W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.callouts = []; W.lost = [0, 0]; W.fx = []; W.timers = [];
   W.total = [G.armies[0].length, G.armies[1].length];
   W.time = 0; W.battleTime = 0; W.state = 'battle'; W.over = false; W.winner = -1; W.endT = 0;
   G.bannerShown = false; hideBanner(); hover = null;
@@ -289,7 +289,7 @@ function startBattle(seed) {
 }
 
 function backToDeploy() {
-  W.state = 'place'; W.over = false; W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.callouts = [];
+  W.state = 'place'; W.over = false; W.projs = []; W.parts = []; W.flashes = []; W.bolts = []; W.beams = []; W.hazards = []; W.callouts = []; W.fx = []; W.timers = [];
   W.units = [];
   setArmy(0, G.armies[0]); setArmy(1, G.armies[1]);
   G.bannerShown = false; hideBanner(); hud();

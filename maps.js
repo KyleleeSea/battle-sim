@@ -98,4 +98,5 @@ const MAP_ORDER = ['meadow', 'court', 'office', 'arena', 'desert', 'winter', 'mo
 function setEnv(id) {
   Object.assign(ENV, ENV_DEFAULT, (MAPS[id] || MAPS.meadow).env);
   GRAV = ENV.grav;
+  buildTerrain();
 }
