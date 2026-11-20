@@ -4,7 +4,7 @@
 const DT = 1 / 60;
 let GRAV = 900;               // set per map by setEnv()
 // Ground behaviour for the current map; maps.js swaps these in before each battle.
-const ENV_DEFAULT = { grav: 900, friction: 0.7, bounce: 0.15, traction: 1, lava: false, pools: null, platform: null, wall: null, blocks: null };
+const ENV_DEFAULT = { grav: 900, friction: 0.7, bounce: 0.15, traction: 1, lava: false, pools: null, platform: null, wall: null, blocks: null, bounds: null };
 
 // Is there ground under (x, z)? Everywhere, except off the edge of a floating platform.
 function onGround(p) {
@@ -165,6 +165,12 @@ function stepBody(b) {
         p.x *= k; p.z = w.cz + (p.z - w.cz) * k;
         p.px = p.x; p.pz = p.z;
       }
+    }
+    if (ENV.bounds) {
+      // An invisible fence round the field: anything that reaches it stops dead.
+      const bd = ENV.bounds;
+      if (p.x > bd.x) { p.x = bd.x; p.px = p.x; } else if (p.x < -bd.x) { p.x = -bd.x; p.px = p.x; }
+      if (p.z > bd.z1) { p.z = bd.z1; p.pz = p.z; } else if (p.z < bd.z0) { p.z = bd.z0; p.pz = p.z; }
     }
     if (p.y < 0 && onGround(p)) {
       // Ground contact: a small bounce and a lot of scrubbing friction (less on ice, more bounce on jelly).

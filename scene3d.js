@@ -115,9 +115,21 @@ const View = (() => {
     if (!sized) { sized = true; resetView(); }
   }
 
+  // The point under the cursor: the nearest roof top it crosses (so units can be placed on buildings), or the ground.
   function pick(sx, sy) {
     ndc.set(sx / W0 * 2 - 1, -(sy / H0) * 2 + 1);
     ray.setFromCamera(ndc, camera);
+    const o = ray.ray.origin, d = ray.ray.direction;
+    let best = null, bt = Infinity;
+    if (d.y < -1e-6) {
+      for (const b of TERRAIN.list) {
+        const t = (b[4] - o.y) / d.y;
+        if (t <= 0 || t >= bt) continue;
+        const x = o.x + d.x * t, z = o.z + d.z * t;
+        if (x > b[0] && x < b[1] && z > b[2] && z < b[3]) { bt = t; best = { x, z }; }
+      }
+    }
+    if (best) return best;
     return ray.ray.intersectPlane(groundPlane, hit) ? { x: hit.x, z: hit.z } : null;
   }
 
@@ -140,13 +152,13 @@ const View = (() => {
     ghost.visible = !!g;
     if (g) {
       const r = g.erase ? 26 : 12 * TYPES[g.key].S * Math.sqrt(TYPES[g.key].fat || 1);
-      ghost.position.set(g.x, 2.2, g.z);
+      ghost.position.set(g.x, groundH(g.x, g.z) + 2.2, g.z);
       ghost.scale.set(r, r, r);
       ghost.material.color.set(g.erase ? '#ffffff' : g.ok ? TEAM[g.team].dark : '#2a2433');
       ghost.material.opacity = g.ok || g.erase ? 0.9 : 0.4;
     }
 
-    world.update(ui.clock);
+    world.update(ui.clock, camera);
     renderer.render(scene, camera);
   }
 

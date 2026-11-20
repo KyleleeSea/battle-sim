@@ -197,9 +197,9 @@ class Painter {
     this.cyl = new Batch(scene, cyl, solid, cap * 16 + 1200, true);
     this.sph = new Batch(scene, sph, solid, cap * 16 + 200, true);
     this.dome = new Batch(scene, dome, twoSided, cap * 2, true);
-    this.box = new Batch(scene, box, solid, cap * 5, true);
+    this.box = new Batch(scene, box, solid, cap * 8, true);
     this.cone = new Batch(scene, cone, solid, cap * 3 + 700, true);
-    this.torus = new Batch(scene, torus, solid, Math.max(16, cap >> 2), false);
+    this.torus = new Batch(scene, torus, solid, cap, false);
     this.gsph = new Batch(scene, sph, glow, cap * 2 + 2500, false);
     this.gcyl = new Batch(scene, cyl, glow, 2000, false);
     this.gtorus = new Batch(scene, torus, glow, 400, false);
@@ -330,6 +330,11 @@ class Painter {
       const el = B[side < 0 ? J.LELB : J.RELB], hn = B[side < 0 ? J.LHAND : J.RHAND];
       const sh = this.at(this.t3, ch, r, side * 6.4 * S * fat, up, -2.2 * S);
       this.ball(this.sph, sh, 3.4 * S * limbR, sleeve);
+      if (side < 0 && t.oneArm) {
+        // An empty sleeve, pinned up.
+        this.seg(this.cyl, sh, this.at(this.t4, sh, up, -6 * S, f, 2 * S), 2.6 * S, sleeve);
+        continue;
+      }
       this.seg(this.cyl, sh, el, 3.1 * S * limbR, sleeve);
       this.ball(this.sph, el, 3.0 * S * limbR, sleeve);
       this.seg(this.cyl, el, hn, 2.8 * S * limbR, sleeve);

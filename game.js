@@ -74,6 +74,7 @@ const SFX = (() => {
     chime: () => { tone(880, 1320, 0.25, 'sine', 0.07); tone(1320, 1760, 0.3, 'sine', 0.04); },
     tick: () => tone(660, 660, 0.12, 'square', 0.05),
     sizzle: () => noise(0.5, 'highpass', 3500, 0.2),
+    pikon: () => { tone(1320, 1320, 0.08, 'square', 0.05); setTimeout(() => tone(990, 990, 0.08, 'square', 0.05), 120); },
   };
   return {
     unlock() { init(); if (ac && ac.state === 'suspended') ac.resume(); },
@@ -141,6 +142,12 @@ function decodeArmy(str, team, budget) {
   return out;
 }
 
+// Exact placements for the lore battles: x is the distance from the centre line toward this side.
+function put(list, key, team, spots) {
+  const sign = team === 0 ? -1 : 1;
+  for (const [x, z] of spots) list.push({ key, x: sign * x, z });
+}
+
 function block(list, key, team, cols, rows, front, gap) {
   const sign = team === 0 ? -1 : 1, gz = Math.min(gap * 0.9, (FIELD_Z - 50) / Math.max(1, rows - 1));
   for (let c = 0; c < cols; c++) {
@@ -185,6 +192,72 @@ const PRESETS = {
   titans:  { name: 'Titans', build: (L, t) => { block(L, 'titan', t, 2, 2, 150, 140); block(L, 'giant', t, 1, 1, 330, 100); } },
   corps:   { name: 'Survey Corps', build: (L, t) => { block(L, 'scout', t, 2, 6, 120, 50); block(L, 'eren', t, 1, 1, 240, 60); block(L, 'healer', t, 1, 2, 300, 120); } },
   datacenter: { name: 'Datacenter', build: (L, t) => { block(L, 'squire', t, 1, 6, 110, 34); block(L, 'gpu', t, 2, 3, 220, 60); block(L, 'jensen', t, 1, 1, 330, 60); } },
+  // ----- Attack on Titan: the lore battles -----
+  trostHumans: { name: 'Trost: the 104th and the Garrison', build: (L, t) => {
+    put(L, 'eren', t, [[170, 280]]); put(L, 'mikasa', t, [[200, 245]]);
+    put(L, 'jean', t, [[260, 300]]); put(L, 'connie', t, [[250, 330]]); put(L, 'sasha', t, [[90, 168]]);
+    put(L, 'scout', t, [[120, 60], [180, 70], [300, 60], [120, 470], [200, 490], [320, 480], [360, 160], [420, 380]]);
+    put(L, 'garrison', t, [[150, 230], [150, 330], [230, 210], [230, 350], [400, 250], [400, 310], [480, 160], [480, 400]]);
+    put(L, 'pixis', t, [[590, 170]]); put(L, 'cannon', t, [[540, 150], [640, 200], [660, 300]]);
+  } },
+  trostTitans: { name: 'Trost: the Colossal Titan and the horde', build: (L, t) => {
+    put(L, 'kicker', t, [[700, 280]]);
+    put(L, 'titan', t, [[420, 200], [440, 360], [380, 280], [460, 120], [470, 470], [330, 420]]);
+    put(L, 'abnormal', t, [[300, 250], [380, 150], [450, 420]]);
+  } },
+  corps850: { name: 'Survey Corps, 850', build: (L, t) => {
+    put(L, 'erwin', t, [[300, 280]]);
+    put(L, 'scout', t, [[340, 200], [340, 250], [340, 310], [340, 360], [380, 220], [380, 280], [380, 340], [420, 250], [420, 310], [460, 280]]);
+    put(L, 'levi', t, [[200, 140]]); put(L, 'hange', t, [[220, 420]]); put(L, 'mikasa', t, [[150, 300]]); put(L, 'eren', t, [[130, 260]]);
+    put(L, 'jean', t, [[180, 380]]); put(L, 'connie', t, [[180, 190]]); put(L, 'sasha', t, [[260, 470]]);
+    put(L, 'thunder', t, [[120, 120], [120, 440], [160, 90], [160, 470], [220, 120], [220, 440], [260, 90], [260, 470], [100, 200], [100, 360], [140, 230], [140, 330]]);
+  } },
+  warriors850: { name: 'The Warriors, 850', build: (L, t) => {
+    // Bertholdt starts far out on the plain: he was thrown over the Wall later, in a barrel.
+    put(L, 'zeke', t, [[620, 280]]); put(L, 'reiner', t, [[260, 300]]); put(L, 'bertholdt', t, [[700, 520]]); put(L, 'pieck', t, [[660, 420]]);
+    put(L, 'titan', t, [[350, 220], [350, 360], [500, 200]]);
+  } },
+  liberioMarley: { name: 'Liberio: Marley', build: (L, t) => {
+    put(L, 'willy', t, [[110, 280]]); put(L, 'warhammer', t, [[180, 280]]);
+    put(L, 'porco', t, [[300, 200]]); put(L, 'pieck', t, [[300, 380]]); put(L, 'reiner', t, [[400, 280]]); put(L, 'gabi', t, [[250, 140]]);
+    put(L, 'marley', t, [[200, 190], [220, 210], [260, 200], [300, 215], [200, 390], [240, 400], [280, 395], [320, 410], [520, 200], [520, 400], [620, 200], [620, 400], [150, 450], [150, 110]]);
+    put(L, 'artillery', t, [[660, 280], [640, 100]]);
+  } },
+  liberioRaid: { name: 'Liberio: the Survey Corps raid', build: (L, t) => {
+    put(L, 'erenwh', t, [[220, 280]]);
+    put(L, 'levi', t, [[420, 200]]); put(L, 'mikasa', t, [[440, 320]]); put(L, 'hange', t, [[600, 280]]);
+    put(L, 'jean', t, [[460, 400]]); put(L, 'connie', t, [[460, 180]]); put(L, 'sasha', t, [[620, 420]]);
+    put(L, 'thunder', t, [[400, 120], [400, 440], [540, 150], [540, 420], [650, 140], [650, 450], [700, 280], [330, 280]]);
+    put(L, 'airship', t, [[640, 280]]);
+  } },
+  yeagerists: { name: 'Shiganshina, 854: Eren and the Yeagerists', build: (L, t) => {
+    put(L, 'erenwh', t, [[200, 280]]); put(L, 'zeke', t, [[450, 300]]);
+    put(L, 'mikasa', t, [[160, 220]]); put(L, 'armin', t, [[700, 540]]); put(L, 'jean', t, [[180, 360]]); put(L, 'connie', t, [[200, 170]]);
+    put(L, 'thunder', t, [[130, 100], [130, 460], [260, 120], [260, 440], [330, 220], [330, 350], [400, 150], [300, 420]]);
+    put(L, 'garrison', t, [[120, 250], [120, 310], [240, 250], [240, 310], [300, 280], [360, 280]]);
+  } },
+  marleyRaid: { name: 'Shiganshina, 854: Marley\'s raid', build: (L, t) => {
+    put(L, 'reiner', t, [[260, 280]]); put(L, 'pieck', t, [[420, 140]]); put(L, 'porco', t, [[380, 400]]);
+    put(L, 'falco', t, [[560, 280]]); put(L, 'gabi', t, [[480, 300]]);
+    put(L, 'marley', t, [[300, 180], [300, 380], [340, 230], [340, 330], [460, 180], [460, 380], [520, 230], [520, 330], [600, 180], [600, 380], [640, 280], [680, 280]]);
+    put(L, 'airship', t, [[620, 140], [620, 420]]); put(L, 'artillery', t, [[700, 100]]);
+  } },
+  alliance: { name: 'The Alliance at Fort Salta', build: (L, t) => {
+    put(L, 'mikasa', t, [[300, 260]]); put(L, 'levi', t, [[320, 330]]); put(L, 'jean', t, [[340, 200]]); put(L, 'connie', t, [[340, 380]]);
+    put(L, 'armin', t, [[700, 520]]);
+    put(L, 'reiner', t, [[250, 180]]); put(L, 'annie', t, [[250, 380]]); put(L, 'pieck', t, [[450, 120]]); put(L, 'falco', t, [[520, 280]]); put(L, 'gabi', t, [[560, 200]]);
+    put(L, 'artillery', t, [[620, 120], [620, 440], [680, 280]]);
+    put(L, 'thunder', t, [[380, 250], [380, 320], [420, 170], [420, 390], [300, 120], [300, 450], [460, 250], [460, 320], [340, 90], [340, 480]]);
+    put(L, 'marley', t, [[520, 100], [520, 160], [520, 400], [520, 460], [560, 330], [600, 230]]);
+  } },
+  rumbling: { name: 'The Rumbling', build: (L, t) => {
+    put(L, 'erenfounder', t, [[560, 280]]);
+    put(L, 'walltitan', t, [[650, 100], [700, 280], [650, 460]]);
+    put(L, 'pasttitan', t, [[380, 200], [380, 360]]);
+    put(L, 'bonetitan', t, [[300, 230], [300, 330]]);
+  } },
+  ultrabros: { name: 'Ultra Brothers', build: (L, t) => { block(L, 'ultraleo', t, 1, 1, 150, 60); block(L, 'ultrajack', t, 1, 1, 220, 60); block(L, 'ultraace', t, 1, 1, 290, 60); block(L, 'ultraseven', t, 1, 1, 360, 60); block(L, 'ultrataro', t, 1, 1, 430, 60); } },
+  monsters: { name: 'Monster Army', build: (L, t) => { block(L, 'giant', t, 1, 2, 140, 120); block(L, 'dragon', t, 1, 2, 300, 160); block(L, 'megaknight', t, 1, 3, 220, 90); block(L, 'titan', t, 1, 2, 380, 160); } },
   theduck: { name: 'The Duck', build: (L, t) => { block(L, 'duck', t, 1, 1, 200, 40); block(L, 'healer', t, 1, 2, 300, 120); } },
   bigtech: { name: 'Big Tech', build: (L, t) => { block(L, 'oncall', t, 1, 4, 110, 50); block(L, 'zuck', t, 1, 2, 160, 90); block(L, 'altman', t, 1, 2, 230, 90); block(L, 'jensen', t, 1, 1, 270, 40); block(L, 'swe', t, 1, 2, 300, 90); block(L, 'elon', t, 1, 2, 340, 90); } },
   startup: { name: 'Startup', build: (L, t) => { block(L, 'squire', t, 1, 9, 110, 30); block(L, 'nathan', t, 1, 2, 160, 90); block(L, 'spy', t, 1, 3, 200, 60); block(L, 'oncall', t, 1, 5, 230, 44); block(L, 'swe', t, 1, 3, 300, 60); block(L, 'holmes', t, 1, 1, 340, 40); } },
@@ -206,6 +279,12 @@ const SCENARIOS = {
   minions:  { name: 'Gru vs Hidden Leaf', sides: ['gru', 'leaf'] },
   duck:     { name: 'The Duck vs Peasant mob', sides: ['theduck', 'mob'] },
   aot:      { name: 'Attack on Titan', sides: ['corps', 'titans'] },
+  trost:    { name: 'AoT: The Battle of Trost', sides: ['trostHumans', 'trostTitans'], map: 'trost', unlimited: true },
+  maria:    { name: 'AoT: Retaking Wall Maria', sides: ['corps850', 'warriors850'], map: 'shiganshina', unlimited: true },
+  liberio:  { name: 'AoT: The Liberio raid', sides: ['liberioMarley', 'liberioRaid'], map: 'liberio', unlimited: true },
+  paradis:  { name: 'AoT: Marley\'s raid on Paradis', sides: ['yeagerists', 'marleyRaid'], map: 'shiganshina', unlimited: true },
+  heaven:   { name: 'AoT: The Rumbling (Fort Salta)', sides: ['alliance', 'rumbling'], map: 'rumbling', unlimited: true },
+  ultra:    { name: 'Ultra Brothers vs the Monster Army', sides: ['ultrabros', 'monsters'] },
   gpus:     { name: 'Datacenter vs Peasant mob', sides: ['datacenter', 'mob'] },
   animals:  { name: 'Big animals vs Shield wall', sides: ['critters', 'wall'] },
   reform:   { name: 'Reformation vs Tung tung tung', sides: ['reform', 'sahur'] },
@@ -432,6 +511,9 @@ function loadPreset(v) {
   const [kind, key] = v.split(':');
   if (kind === 's') {
     const s = SCENARIOS[key];
+    // Lore battles bring their own battlefield, and armies bigger than any budget.
+    if (s.map && MAPS[s.map]) applyMap(s.map);
+    if (s.unlimited) G.budgetIdx = G.budgets.length - 1;
     setArmy(0, presetArmy(s.sides[0], 0)); setArmy(1, presetArmy(s.sides[1], 1));
     armyChanged(0); armyChanged(1);
   } else {

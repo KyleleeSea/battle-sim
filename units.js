@@ -236,9 +236,11 @@ function nearestEnemy(u, units) {
   let best = null, bd = Infinity;
   for (const e of units) {
     if (!e.alive || e.team === u.team || e.burrow || e.hidden) continue;
-    if (e.t.fly && !u.t.range && !u.t.fly && !u.t.odm && !u.t.skills && e.P.y - groundH(e.P.x, e.P.z) > 60) continue;
+    if (e.t.fly && !u.t.range && !u.t.fly && !u.t.odm && e.P.y - groundH(e.P.x, e.P.z) > 60) continue;
+    // Someone up on a roof too high to climb is a last resort for anyone who can't shoot, swing or fly up there.
+    const high = !u.t.range && !u.t.odm && !u.t.fly && e.P.y - u.P.y > (u.body.climb || 30) + 20 * u.S;
     // Scarecrows are irresistible: they count as much closer than they are.
-    const dx = e.P.x - p.x, dz = e.P.z - p.z, d = (dx * dx + dz * dz) * (e.t.taunt ? 0.2 : 1);
+    const dx = e.P.x - p.x, dz = e.P.z - p.z, d = (dx * dx + dz * dz) * (e.t.taunt ? 0.2 : 1) * (high ? 30 : 1);
     if (d < bd) { bd = d; best = e; }
   }
   return best;
@@ -266,6 +268,15 @@ function nearestAlly(u, units) {
     if (d < bd) { bd = d; best = a; }
   }
   return best;
+}
+
+// Is there a wall or house between points a and b?
+function lineBlocked(a, b) {
+  for (let i = 1; i < 8; i++) {
+    const k = i / 8;
+    if (insideBlock(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k, a.z + (b.z - a.z) * k)) return true;
+  }
+  return false;
 }
 
 function turnToward(u, dx, dz, k) {
@@ -352,7 +363,7 @@ function updateUnit(u, W, active) {
     u.retarget -= DT;
     if (!u.target || !u.target.alive || u.retarget <= 0) {
       u.target = u.t.heal ? healTarget(u, W.units) || nearestAlly(u, W.units) : u.t.support ? nearestAlly(u, W.units)
-        : u.t.stealth ? mostValuable(u, W.units) : nearestEnemy(u, W.units);
+        : u.t.stealth ? mostValuable(u, W.units) : u.t.hunter ? biggestTitan(u, W.units) || nearestEnemy(u, W.units) : nearestEnemy(u, W.units);
       u.retarget = 0.35 + R() * 0.2;
     }
   } else u.target = null;
@@ -361,6 +372,9 @@ function updateUnit(u, W, active) {
   if (u.breath > 0) { u.breath -= DT; if (u.stun <= 0) breathe(u, W); }
   if (u.leaping) checkLanding(u, W);
   if (u.t.stomp && active) stomp(u, W);
+  if (active && u.t.onStart && u.startedFor !== u.t) { u.startedFor = u.t; STARTS[u.t.onStart](u, W); }
+  if (u.t.tick && TICKS[u.t.tick]) TICKS[u.t.tick](u, W, active, u.target);
+  if (!u.alive) return;
 
   const T = u.target, pel = u.P;
   if (T && u.stun <= 0 && !cheer && !(u.dance > 0) && !(u.daze > 0) && !(u.paged > 0)) {
@@ -396,6 +410,7 @@ function updateUnit(u, W, active) {
       } else if (u.act !== 'attack') {
         if (u.t.leap && !u.leaping && u.leapCd <= 0 && d > 90 && d < (u.t.leapMax || 300) && !T.leaping && u.recover > 0.6 && !calm) leap(u, T, d);
         else if (d > reach * (ranged ? 1 : 0.85) || (!ranged && Math.abs(T.P.y - pel.y) > (40 + u.t.reach) * Math.max(u.S, T.S) && !T.t.fly)) moving = true;
+        else if (ranged && TERRAIN.list.length && u.t.speed > 0 && ((u.losT = (u.losT || 0) - DT) > 0 ? u.losBlocked : (u.losT = 0.5, u.losBlocked = lineBlocked(u.body.pts[J.CHEST], T.body.pts[J.CHEST])))) moving = true;
         else if (u.cdT <= 0 && u.recover > 0.6 && !calm) startAttack(u);
       }
     }
@@ -418,7 +433,7 @@ function updateUnit(u, W, active) {
     if (u.actT >= 1) u.act = 'idle';
   }
   if (u.held) holdVictim(u, W);
-  if (moving && TERRAIN.list.length) {
+  if (moving && TERRAIN.list.length && u.t.speed > 0) {
     if ((u.stuckT += DT) > 0.6) {
       const mv = (pel.x - u.lastX) ** 2 + (pel.z - u.lastZ) ** 2;
       if (mv < (8 * u.S) ** 2 && u.detour <= 0) { u.detour = 0.9; u.detourSide = R() < 0.5 ? -1 : 1; }
@@ -893,6 +908,7 @@ function boltPath(a, b) {
 }
 
 function jitter(v, a) {
+  a = a || 0;
   return { x: v.x * (1 + RR(-a, a)), y: v.y * (1 + RR(-a, a)), z: v.z + RR(-a, a) * 60 };
 }
 
@@ -1116,6 +1132,20 @@ function summonUnits(u, W) {
   else { glowBits(W, p.x, 10, p.z, 12, ['#7fd6ff', '#c9f1ff'], 50, 3); SFX.play('bubble'); }
 }
 
+// Titan hunters (Levi, thunder spears) go for the biggest Titan within reach of their gear.
+function biggestTitan(u, units) {
+  const p = u.P;
+  let best = null, bs = -1;
+  for (const e of units) {
+    if (!e.alive || e.team === u.team || e.burrow || e.hidden || !e.t.titan || e.t.colossal) continue;
+    const dx = e.P.x - p.x, dz = e.P.z - p.z;
+    if (dx * dx + dz * dz > 900 * 900) continue;
+    const score = e.t.hp - Math.sqrt(dx * dx + dz * dz);
+    if (score > bs) { bs = score; best = e; }
+  }
+  return best;
+}
+
 // Spies pick the most expensive enemy they can see; the nearest one breaks ties.
 function mostValuable(u, units) {
   const p = u.P;
@@ -1209,6 +1239,17 @@ function holdVictim(u, W) {
   const v = u.held;
   if (!v.alive || u.act !== 'attack' || u.stun > 0 || v.grabbed !== u) { dropVictim(u); return; }
   const pts = v.body.pts;
+  if (u.actT >= 0.86 && u.t.eats) {
+    // Swallowed whole: gone in a puff of steam, and the Titan heals.
+    hurt(v, 9999, 0, 0, 0, null, W, u, PIERCE);
+    v.vanished = true;
+    const h = u.body.pts[J.HEAD];
+    puff(W, h.x, h.y, h.z, 14, '#f4f4f4', 70, 6 * u.S);
+    u.hp = Math.min(u.t.hp, u.hp + u.t.eats);
+    dropVictim(u);
+    SFX.play('slurp');
+    return;
+  }
   if (u.actT >= 0.86) {
     for (const p of pts) addVel(p, u.fx * 520, 380, u.fz * 520);
     hurt(v, u.t.dmg, 0, 0, 0, null, W, u);
@@ -1255,7 +1296,7 @@ function titanShift(u, W) {
   u.armorHP = t.armorHP || 0; u.armorOff = false; u.lives = t.lives || 0; u.skT = null;
   Object.assign(u, { act: 'idle', stun: 0, recover: 0.3, cdT: 0.8, leaping: false, anchored: false, target: null, retarget: 0, casting: 0 });
   puff(W, x, g + 40, z, 24 + bR / 10, '#f4f4f4', 160 + bR / 2, 14 + bR / 20);
-  if (W.callouts) W.callouts.push({ x, y: g + 68 * u.S + 20, z, life: 1.8, max: 1.8, text: from.shiftCall || 'tatakae' });
+  if (W.callouts && from.shiftCall !== null) W.callouts.push({ x, y: g + 68 * u.S + 20, z, life: 1.8, max: 1.8, text: from.shiftCall || 'tatakae', color: from.shiftColor, big: bR > 200 });
   if (bR > 200) { SFX.play('boom'); SFX.play('specium'); }
   SFX.play('zap'); SFX.play('roar');
 }
@@ -1304,9 +1345,12 @@ const CAST_POSES = {
 };
 const DEATHS = {};
 const HURT_HOOKS = {};
+// TICKS[t.tick](u, W, active, T) runs every step for a living unit; STARTS[t.onStart](u, W) once when it first fights.
+const TICKS = {};
+const STARTS = {};
 function runSkills(u, W, T, d) {
   const list = u.t.skills;
-  if (u.skFor !== u.t) { u.skT = list.map(s => s.first != null ? s.first : s.cd * (0.25 + R() * 0.5)); u.skFor = u.t; }
+  if (u.skFor !== u.t || !u.skT) { u.skT = list.map(s => s.first != null ? s.first : s.cd * (0.25 + R() * 0.5)); u.skFor = u.t; }
   for (let i = 0; i < list.length; i++) if (u.skT[i] > 0) u.skT[i] -= DT;
   if (u.casting > 0) return true;
   if (u.act === 'attack' || u.recover < 0.6) return false;

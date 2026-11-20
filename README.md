@@ -6,7 +6,7 @@ A wobbly 3D ragdoll battle sandbox in the browser. Place two armies, press **Fig
 
 ## Units
 
-71 of them. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
+109 of them, many with several abilities each. The serious ones: Peasant, Squire, Hoplite, Berserker, Knight, Ninja, Archer, Musketeer, Stone Thrower, Bomber,
 Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 
 | Unit | Trick |
@@ -71,6 +71,27 @@ Wizard, Storm Caller, Healer, Sumo and Giant. The less serious ones:
 Units lighter than a person (Chickens, Little Fish, Squirrels, Monkeys, Cupids, Grandmas) get a speed boost that grows
 as their mass drops, so the smallest ones scurry at more than twice a person's pace.
 
+### Attack on Titan
+
+| Unit | Trick |
+|---|---|
+| Scout, Garrison Soldier | ODM gear: they swing onto rooftops and up to the nape (triple damage to Titans). |
+| Thunder Spear Trooper | Harpoons that bite in, then explode: the answer to armour and hardening. |
+| Levi, Mikasa, Hange, Erwin, Jean, Connie, Sasha | Spinning ODM strikes, nape strikes, thunder spears, nets that pin Titans, Erwin's "Sasageyo!" charge on horseback, signal flares, Sasha's potato. |
+| Commander Pixis, Wall Cannon | Speeches that keep the army fighting; cannons on carriages. |
+| Marleyan Soldier, Gabi, Willy Tybur, Anti-Titan Artillery, Airship | Rifles, Gabi's anti-Titan rifle, Willy's declaration of war, armour-piercing shells, airships that bomb and drop paratroopers. |
+| Reiner, Bertholdt, Annie, Zeke, Pieck, Porco, Falco, Armin | Each shifts into their Titan: Armoured (plates only thunder spears and jaws break; a battering-ram charge; Reiner always crawls out alive), Colossal (a blast that levels everything, steam, the gate kick), Female (kicks, crystal cocoon, a scream that calls Pure Titans), Beast (rock barrages, fastballs, a scream that turns people into Titans), Cart (panzer unit: machine guns and a cannon), Jaw (bites through hardening), Falco's winged Jaw, and Armin's even bigger Colossal. |
+| Colossal Titan (845) | Appears in lightning, kicks in the gate, and vanishes in steam. |
+| War Hammer Titan | Lara Tybur: crystal spikes, hammer and crossbow. Her real body sleeps in a crystal behind the lines; while it lasts, the Titan re-forms. |
+| Eren, Eren (War Hammer), Eren (Founder) | My war, in three stages: the Attack Titan; then with the War Hammer's crystal; then the Founding Titan, a skeleton of a giant that calls Wall Titans, past Titans and bone Titans. Kill him and the Rumbling stops. |
+| Titan, Abnormal, Smiling Titan, Wall Titan, Bone Titan, Past Titan | Grabbing and throwing, leaping deviants, swallowing, marching Colossals whose footsteps knock everyone down, and the Nine's past holders called back through the Paths. Dead Titans steam away to nothing. |
+
+The battle menu recreates five battles on their own maps: **Trost**, **Retaking Wall Maria**, **the Liberio raid**, **Marley's raid on Paradis** and **the Rumbling at Fort Salta**.
+
+### Ultraman's brothers
+
+Ultraseven, Ultraman Jack, Ultraman Ace, Ultraman Taro and Ultraman Leo, smaller than the original, with five signature techniques each (Eye Slugger, Ultra Spark, Vertical Guillotine, Ultra Dynamite, Leo Kick and more). Every Ultra's Color Timer turns red and blinks when it's nearly out.
+
 ## Maps
 
 | Map | Twist |
@@ -85,6 +106,10 @@ as their mass drops, so the smallest ones scurry at more than twice a person's p
 | The Moon | Low gravity: hits send units much higher and further. |
 | Volcano | A rock island in a lava lake, with lava pools down the middle. Lava burns. |
 | Candy Land | Jelly ground: everything that falls bounces. |
+| Trost District | Streets of houses: soldiers go round them, ODM scouts and Titans go over them. The gate is kicked in. |
+| Shiganshina District | A ruined district inside Wall Maria and the open plain outside it. |
+| Liberio | Marley at night: tall brick blocks only ODM and Titans can climb, and the festival stage. |
+| Fort Salta | The Alliance's rocky plateau, and the Rumbling marching in from the horizon. |
 
 Online, the host picks the map.
 
@@ -120,7 +145,9 @@ then open http://localhost:8000.
 ## Files
 
 - `physics.js`: Verlet ragdolls, seeded random numbers, deterministic trig
-- `units.js`: unit roster, AI, poses and melee
+- `units.js`: unit roster, AI, poses, melee and the ability system
+- `aot.js`, `ultras.js`: the Attack on Titan and Ultra units and their abilities; `paint_aot.js`, `paint_ultras.js` draw them
+- `maps.js`, `world3d.js`: battlefields, their terrain and scenery
 - `projectiles.js`: arrows, bullets, boulders, fireballs, explosions, particles
 - `painter3d.js`, `scene3d.js`: three.js rendering, camera and scenery
 - `game.js`: deployment, battle loop and controls
